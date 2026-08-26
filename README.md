@@ -1,4 +1,4 @@
-Despues de haber echo la clonacion ponen este codigo para que descarguen las librerias que hacen falta por que el .gitattributes da la especificacion de que unas carpetas y unos archivos no deje:
+Despues de haber echo la clonacion ponen este codigo para que descarguen las librerias que hacen falta por que el .gitignore da la especificacion de que unas carpetas y unos archivos no deje:
 
 composer install
 
