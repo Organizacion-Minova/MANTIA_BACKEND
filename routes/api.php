@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DevAuthController;
 use App\Http\Controllers\MachineCategoryController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\LocationCategoryController;
+use App\Http\Controllers\LocationController;
 
 Route::post('/login', function (Request $request) {
     $request->validate([
@@ -41,3 +44,18 @@ Route::middleware('auth:sanctum')->get('/machine-categories', [MachineCategoryCo
 Route::middleware('auth:sanctum')->post('/machine-categories', [MachineCategoryController::class, 'store']);
 Route::middleware('auth:sanctum')->put('/machine-categories/{id}', [MachineCategoryController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('/machine-categories/{id}', [MachineCategoryController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->get('/company', [CompanyController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/company', [CompanyController::class, 'store']);
+Route::middleware('auth:sanctum')->put('/company/{id}', [CompanyController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('/company/{id}', [CompanyController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->get('/location-category', [LocationCategoryController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/location-category', [LocationCategoryController::class, 'store']);
+Route::middleware('auth:sanctum')->put('/location-category/{id}', [LocationCategoryController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('/location-category/{id}', [LocationCategoryController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->get('/location', [LocationController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/location', [LocationController::class, 'store']);
+Route::middleware('auth:sanctum')->put('/location/{id}', [LocationController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('/location/{id}', [LocationController::class, 'destroy']);
