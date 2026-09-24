@@ -5,24 +5,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DevAuthController;
 use App\Http\Controllers\MachineCategoryController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminApprovalController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\LocationCategoryController;
 use App\Http\Controllers\LocationController;
 
-Route::post('/login', function (Request $request) {
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
-
-    if (! Auth::attempt($request->only('email', 'password'))) {
-        return response()->json(['message' => 'Credenciales inválidas'], 401);
-    }
-
-    $request->session()->regenerate();
-
-    return response()->json(['user' => Auth::user()]);
-});
+// Auth públicas
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 Route::post('/logout', function (Request $request) {
     Auth::guard('web')->logout();
@@ -33,7 +26,14 @@ Route::post('/logout', function (Request $request) {
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    return $request->user()->load('roles');
+});
+
+// Admin Aprobaciones
+Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
+    Route::get('/admin/requests', [AdminApprovalController::class, 'pendingRequests']);
+    Route::post('/admin/approve/{id}', [AdminApprovalController::class, 'approve']);
+    Route::post('/admin/reject/{id}', [AdminApprovalController::class, 'reject']);
 });
 
 if (app()->environment('local')) {
