@@ -10,6 +10,8 @@ use App\Http\Controllers\AdminApprovalController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\LocationCategoryController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\CategoriesToolsController;
+use App\Http\Controllers\ToolsController;
 
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register']);
@@ -59,3 +61,26 @@ Route::middleware('auth:sanctum')->get('/location', [LocationController::class, 
 Route::middleware('auth:sanctum')->post('/location', [LocationController::class, 'store']);
 Route::middleware('auth:sanctum')->put('/location/{id}', [LocationController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('/location/{id}', [LocationController::class, 'destroy']);
+
+# Categorías de herramientas
+
+Route::middleware('auth:sanctum')->get('/category-tools', [CategoriesToolsController::class, 'index']);
+
+Route::middleware("auth:sanctum")->post('/category-tools', [CategoriesToolsController::class, 'store']);
+
+Route::middleware('auth:sanctum')->delete('/category-tools/{id}', [CategoriesToolsController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->put('/category-tools/{id}', [CategoriesToolsController::class, 'update']);
+
+Route::middleware('auth:sanctum')->get('/category-tools/{id}', [CategoriesToolsController::class, 'show']);
+
+# Herramientas
+
+Route::middleware('auth:sanctum')->get('/tools', [ToolsController::class, 'index']);
+
+Route::middleware('auth:sanctum')->post('/tools', [ToolsController::class, 'store']);
+
+Route::middleware('auth:sanctum')->put('/tools/{id}', [ToolsController::class, 'update']);
+
+Route::middleware('auth:sanctum')->delete('/tools/{id}', [ToolsController::class, 'destroy']);
+

@@ -24,6 +24,7 @@ return new class extends Migration
         Schema::create('category', function (Blueprint $table) {
             $table->id();
             $table->string('name', 50)->unique();
+            $table->text('description');
             $table->string('status', 45);
             $table->foreignId('category_group_id')->constrained('category_group');
         });
@@ -91,11 +92,16 @@ return new class extends Migration
         Schema::create('tool', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
-            $table->enum('condition', ['good', 'fair', 'poor']);
-            $table->integer('stock')->default(0);
-            $table->string('status', 20);
             $table->foreignId('location_id')->constrained('location');
             $table->foreignId('category_id')->constrained('category');
+        });
+
+        Schema::create('tool_stock_condition', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('tool_id')->constrained('tool')->onDelete('cascade');
+            $table->string('condition', 20);
+            $table->integer('stock')->default(0);
+            $table->unique(['tool_id', 'condition']);
         });
 
         Schema::create('inspection', function (Blueprint $table) {
@@ -140,6 +146,7 @@ return new class extends Migration
         Schema::dropIfExists('gas_measurement');
         Schema::dropIfExists('inspection');
         Schema::dropIfExists('tool');
+        Schema::dropIfExists('tool_stock_condition');
         Schema::dropIfExists('machine');
         Schema::dropIfExists('equipment');
         Schema::dropIfExists('location');
