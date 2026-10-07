@@ -4,25 +4,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DevAuthController;
-use App\Http\Controllers\MachineController;
-use App\Models\Location;
-use App\Models\MachineCategory;
+use App\Http\Controllers\MachineCategoryController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminApprovalController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\LocationCategoryController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\CategoriesToolsController;
+use App\Http\Controllers\ToolsController;
 
-Route::post('/login', function (Request $request) {
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
-
-    if (! Auth::attempt($request->only('email', 'password'))) {
-        return response()->json(['message' => 'Credenciales inválidas'], 401);
-    }
-
-    $request->session()->regenerate();
-
-    return response()->json(['user' => Auth::user()]);
-});
+// Auth públicas
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 Route::post('/logout', function (Request $request) {
     Auth::guard('web')->logout();
@@ -33,35 +28,59 @@ Route::post('/logout', function (Request $request) {
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    return $request->user()->load('roles');
+});
+
+// Admin Aprobaciones
+Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
+    Route::get('/admin/requests', [AdminApprovalController::class, 'pendingRequests']);
+    Route::post('/admin/approve/{id}', [AdminApprovalController::class, 'approve']);
+    Route::post('/admin/reject/{id}', [AdminApprovalController::class, 'reject']);
 });
 
 if (app()->environment('local')) {
     Route::post('/dev-login/{letra}', [DevAuthController::class, 'quickLogin']);
 }
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/notificaciones', fn (Request $request) => $request->user()->notifications);
-    Route::get('/notificaciones/no-leidas', fn (Request $request) => $request->user()->unreadNotifications);
-    Route::post('/notificaciones/{id}/leer', function (Request $request, $id) {
-        $request->user()->notifications()->findOrFail($id)->markAsRead();
-        return response()->json(['ok' => true]);
-    });
-});
+Route::middleware('auth:sanctum')->get('/machine-categories', [MachineCategoryController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/machine-categories', [MachineCategoryController::class, 'store']);
+Route::middleware('auth:sanctum')->put('/machine-categories/{id}', [MachineCategoryController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('/machine-categories/{id}', [MachineCategoryController::class, 'destroy']);
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/locations', fn () => Location::where('status', 'active')->orderBy('name')->get());
-    Route::get('/machine-categories', fn () => MachineCategory::where('status', 'active')->orderBy('name')->get());
-    Route::get('/machines', [MachineController::class, 'index']);
-    Route::post('/machines', [MachineController::class, 'store']);
-});
+Route::middleware('auth:sanctum')->get('/company', [CompanyController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/company', [CompanyController::class, 'store']);
+Route::middleware('auth:sanctum')->put('/company/{id}', [CompanyController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('/company/{id}', [CompanyController::class, 'destroy']);
 
-// Route::get('/login', function () {
-//     return response()->json(['message' => 'No autenticado.'], 401);
-// })->name('login');
+Route::middleware('auth:sanctum')->get('/location-category', [LocationCategoryController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/location-category', [LocationCategoryController::class, 'store']);
+Route::middleware('auth:sanctum')->put('/location-category/{id}', [LocationCategoryController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('/location-category/{id}', [LocationCategoryController::class, 'destroy']);
 
+Route::middleware('auth:sanctum')->get('/location', [LocationController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/location', [LocationController::class, 'store']);
+Route::middleware('auth:sanctum')->put('/location/{id}', [LocationController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('/location/{id}', [LocationController::class, 'destroy']);
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/location-categories', fn () => \App\Models\LocationCategory::where('status', 'active')->orderBy('name')->get());
-    Route::post('/locations', [LocationController::class, 'store']);
-});
+# Categorías de herramientas
+
+Route::middleware('auth:sanctum')->get('/category-tools', [CategoriesToolsController::class, 'index']);
+
+Route::middleware("auth:sanctum")->post('/category-tools', [CategoriesToolsController::class, 'store']);
+
+Route::middleware('auth:sanctum')->delete('/category-tools/{id}', [CategoriesToolsController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->put('/category-tools/{id}', [CategoriesToolsController::class, 'update']);
+
+Route::middleware('auth:sanctum')->get('/category-tools/{id}', [CategoriesToolsController::class, 'show']);
+
+# Herramientas
+
+Route::middleware('auth:sanctum')->get('/tools', [ToolsController::class, 'index']);
+
+Route::middleware('auth:sanctum')->post('/tools', [ToolsController::class, 'store']);
+
+Route::middleware('auth:sanctum')->put('/tools/{id}', [ToolsController::class, 'update']);
+
+Route::middleware('auth:sanctum')->delete('/tools/{id}', [ToolsController::class, 'destroy']);
+

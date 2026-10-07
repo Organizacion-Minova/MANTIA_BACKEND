@@ -2,14 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Location;
 use Illuminate\Http\Request;
+use App\Models\Location;
+use App\Models\LocationCategory;
+use Illuminate\Database\QueryException;
 
 class LocationController extends Controller
 {
     public function index()
     {
-        return Location::with('locationCategory')->orderBy('name')->get();
+        $ubicaciones = Location::with(['locationCategory'])->get();
+        $categorias = LocationCategory::all();
+        return response()->json([
+            'ubicaciones' => $ubicaciones,
+            'categorias' => $categorias
+        ], 200);
     }
 
     public function store(Request $request)

@@ -5,18 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class MachineCategory extends Model
+class CategoryTools extends Model
 {
     use HasFactory;
 
-    protected $table = 'machine_category';
+    protected $table='category';
 
     public $timestamps = false;
-    
+
     protected $fillable = [
         'name',
         'description',
-        'status'
+        'status',
+        'category_group_id'
     ];
-    
+
+    public function tipo()
+    {
+        return $this->belongsTo(CategoryGroupTools::class, 'category_group_id');
+    }
+
 }

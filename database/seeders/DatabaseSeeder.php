@@ -18,6 +18,14 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             DevUsersSeeder::class,
+            RoleAndAdminSeeder::class,
+            CategoryLocationSeeder::class,
+            LocationSeeder::class,
+            CategoryGroupToolsSeeder::class,
+            CategoryMachineSeeder::class,
+            CategoryToolsSeeder::class,
+            ToolsSeeder::class,
+            ToolStockConditionSeeder::class,
         ]);
     }
 }
