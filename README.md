@@ -1,212 +1,191 @@
-# MANTIA — Backend
+![Vista previa de MANTIA](/src/assets/img/logo%20-%20Mantia_readme.png)
 
-Sistema web de gestión de inventario y mantenimiento para elementos utilizados en entornos mineros: máquinas, equipos, herramientas, ubicaciones, usuarios, alertas, uso diario e inspecciones.
+MANTIA — Backend
 
-## Tecnologías
+Sistema web de gestión de inventario y mantenimiento para elementos utilizados en entornos mineros: máquinas, equipos, herramientas, ubicaciones, usuarios, alertas e inspecciones.
 
-- **Laravel 13** (PHP 8.3) — Framework backend
-- **Laravel Sanctum** — Autenticación API (tokens SPA + sesiones)
-- **Spatie Laravel Permission** — Gestión de roles y permisos
-- **Tailwind CSS 4** — Estilos
-- **Vite** — Bundler de assets
-- **PostgreSQL** (default) — Base de datos (soporta también SQLite, MySQL, MariaDB, SQL Server)
-- **Redis** — Cache y colas
-- **Laravel Queues** — Procesamiento de jobs en segundo plano
+Este repositorio contiene la API (Laravel). El frontend (React + Vite) vive en un repositorio aparte y corre en http://localhost:5173.
 
-## Instalación
-
-### Requisitos previos
-
-- PHP 8.3 o superior
-- Composer
-- Node.js 18+ y npm
-- PostgreSQL 14+ (o el gestor de base de datos que prefieras)
-
-### 1. Clonar el repositorio
-
-```bash
+Tecnologías
+Laravel 13 (PHP 8.3+)
+Laravel Sanctum — autenticación SPA con cookies de sesión
+Spatie Laravel Permission — roles y permisos
+PostgreSQL 14+ — base de datos
+Colas y caché en base de datos (QUEUE_CONNECTION=database, CACHE_STORE=database)
+Vite 
+Instalación
+Requisitos previos
+PHP 8.3 o superior
+Composer
+Node.js 18+ y npm
+PostgreSQL 14+
+1. Clonar el repositorio
+bash
 git clone https://github.com/Organizacion-Minova/MANTIA_BACKEND.git
 cd MANTIA_BACKEND
-```
-
-### 2. Instalar dependencias PHP
-
-```bash
+2. Instalar dependencias
+bash
 composer install
-```
-
-### 3. Instalar dependencias frontend (Node)
-
-```bash
 npm install
-```
-
-### 4. Configurar el archivo `.env`
-
-El archivo `.env` está en `.gitignore` y **nunca debe subirse al repositorio**. Copia el archivo de ejemplo y configura tus credenciales:
-
-```bash
+3. Configurar el .env
+bash
 cp .env.example .env
-```
 
-Edita el `.env` con tus datos. Variables clave:
+Abre el .env y completa estos datos:
 
-```env
-APP_NAME=MANTIA
-APP_URL=http://localhost
-
+env
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_DATABASE=Mantia_db
 DB_USERNAME=postgres
-DB_PASSWORD=cambia_esto_por_tu_contraseña
+DB_PASSWORD=tu_contraseña
 
 SANCTUM_STATEFUL_DOMAINS=localhost:5173
 SESSION_DOMAIN=localhost
-SESSION_DRIVER=database
-SESSION_LIFETIME=120
 
-QUEUE_CONNECTION=database
-CACHE_STORE=redis
-REDIS_HOST=127.0.0.1
-```
+MAIL_USERNAME=tu_correo@gmail.com
+MAIL_PASSWORD=tu_contraseña_de_aplicacion
 
-> ⚠️ **Seguridad:** Nunca commits tu `.env` con credenciales reales. Si necesitas compartir configuración, usa `.env.example` como referencia.
+Crea antes la base de datos Mantia_db en PostgreSQL.
 
-### 5. Generar la clave de la aplicación y ejecutar migraciones
+El correo se usa para las notificaciones de cuentas y la recuperación de contraseña. Con Gmail necesitas una contraseña de aplicación, no tu contraseña normal.
 
-```bash
+4. Generar la clave y crear la base de datos
+bash
 php artisan key:generate
 php artisan migrate:fresh --seed
-```
-
-Esto creará todas las tablas necesarias (usuarios, permisos, roles, tablas de negocio como `company`, `machine`, `equipment`, `tool`, `location`, `inspection`, `gas_measurement`, etc.) y sembrará datos iniciales.
-
-### 6. Ejecutar el servidor de desarrollo
-
-```bash
+5. Ejecutar el proyecto
+bash
 composer dev
-```
 
-Este comando ejecuta simultáneamente:
-- Servidor Laravel (`php artisan serve`)
-- Listener de colas (`php artisan queue:listen`)
-- Pail (logs en consola)
-- Vite dev server (`npm run dev`)
+Este comando levanta a la vez el servidor Laravel, el listener de colas, los logs (Pail) y Vite.
 
-O manualmente:
+O manualmente, en tres terminales:
 
-```bash
-# Terminal 1: Servidor PHP
+bash
 php artisan serve
-
-# Terminal 2: Colas
 php artisan queue:listen
-
-# Terminal 3: Vite
 npm run dev
-```
 
-## Estructura del proyecto
+La API queda en http://localhost:8000.
 
-```
+Estructura del proyecto
 app/
-├── Http/
-│   ├── Controllers/
-│   │   ├── Controller.php
-│   │   └── DevAuthController.php       # Login rápido por letra (solo local)
-├── Models/
-│   └── User.php
+├── Http/Controllers/      # Controladores de la API
+├── Listeners/             # Registro de inicio y cierre de sesión
+├── Models/                # Modelos Eloquent
+├── Notifications/         # Correos y alertas del sistema
+├── Observers/             # Generan alertas al crear, editar o eliminar
 ├── Providers/
-├── routes/
-│   ├── api.php                         # Rutas de la API
-│   ├── web.php
-│   └── console.php
-database/
-├── migrations/                         # Migraciones del sistema
-├── seeders/                            # Seeders de datos
-└── factories/
-resources/
-├── css/
-├── js/
-└── views/
+└── Services/              # AlertaService (envío de alertas)
 config/
-├── auth.php                            # Configuración de autenticación
-├── sanctum.php                         # Configuración de Sanctum
-├── permission.php                      # Configuración de Spatie Permission
-├── database.php                        # Conexiones de base de datos
-├── queue.php                           # Configuración de colas
-└── ...
-```
+├── alertas.php            # Límites de gases y stock mínimo
+├── cors.php, sanctum.php, permission.php, ...
+database/
+├── migrations/
+└── seeders/
+routes/
+├── api.php                # Rutas de la API
+└── web.php
+Roles y estados de usuario
 
-## API Endpoints principales
+Roles (se crean con RoleAndAdminSeeder):
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `POST` | `/api/login` | Iniciar sesión con email y contraseña |
-| `POST` | `/api/logout` | Cerrar sesión |
-| `GET` | `/api/user` | Obtener usuario autenticado |
-| `POST` | `/api/dev-login/{letra}` | Login rápido por letra (solo local) |
-| `GET` | `/api/machine-categories` | Listar categorías de máquinas |
-| `POST` | `/api/machine-categories` | Crear categoría de máquina |
-| `PUT` | `/api/machine-categories/{id}` | Actualizar categoría de máquina |
-| `DELETE` | `/api/machine-categories/{id}` | Eliminar categoría de máquina |
+Administrador
+Tecnico
+Recepcionista
 
-## Autenticación
+Estados de usuario: pending (recién registrado), approved y rejected. Un usuario nuevo queda en pending hasta que un administrador lo apruebe; mientras tanto no puede iniciar sesión.
 
-El sistema utiliza **Laravel Sanctum** para la autenticación. El frontend (React en `localhost:5173`) envía las credenciales y recibe una cookie de sesión con estado (stateful). Para proteger rutas se usa el middleware `auth:sanctum`.
+API Endpoints
 
-### Login rápido (entorno local)
+Todas las rutas empiezan con /api.
 
-Para desarrollo, existe un login por letra que accede directamente sin contraseña:
+Autenticación (públicas)
+Método	Ruta	Descripción
+POST	/register	Registrar usuario (queda pendiente de aprobación)
+POST	/login	Iniciar sesión con correo y contraseña
+POST	/logout	Cerrar sesión
+POST	/forgot-password	Envía un código de 6 dígitos al correo
+POST	/reset-password	Cambia la contraseña usando el código
+POST	/dev-login/{letra}	Login rápido por letra (solo entorno local)
+Usuario autenticado (auth:sanctum)
+Método	Ruta	Descripción
+GET	/user	Usuario actual con sus roles
+Administración (rol Administrador)
+Método	Ruta	Descripción
+GET	/admin/requests	Solicitudes de cuenta pendientes
+POST	/admin/approve/{id}	Aprobar solicitud
+POST	/admin/reject/{id}	Rechazar solicitud
+Recursos (requieren auth:sanctum)
 
-```
-POST /api/dev-login/D  → Usuario Daniela
-POST /api/dev-login/S  → Usuario Santiago
-POST /api/dev-login/J  → Usuario Joan
-POST /api/dev-login/L  → Usuario Leonardo
-POST /api/dev-login/K  → Usuario Kevin
-```
+Cada recurso tiene GET (listar), POST (crear), PUT /{id} (actualizar) y DELETE /{id} (eliminar).
 
-## Base de datos
+Ruta base	Recurso
+/machine-categories	Categorías de máquinas
+/company	Empresas
+/location-category	Categorías de ubicación
+/location	Ubicaciones
+/category-tools	Categorías de herramientas (además tiene GET /{id})
+/tools	Herramientas
+Autenticación
 
-### Tablas principales del sistema
+Se usa Laravel Sanctum en modo SPA: el frontend (localhost:5173) pide la cookie CSRF en /sanctum/csrf-cookie, inicia sesión y el navegador guarda la cookie de sesión. Las rutas protegidas usan el middleware auth:sanctum.
 
-- `users` — Usuarios del sistema
-- `company` — Empresas/compañías
-- `category_group` / `category` — Grupos y categorías de elementos
-- `machine_category` — Categorías de máquinas
-- `location_category` / `location` — Categorías y ubicaciones
-- `equipment` — Equipos
-- `machine` — Máquinas
-- `tool` — Herramientas
-- `inspection` — Inspecciones
-- `gas_measurement` / `gas_measurement_location` — Mediciones de gases
-- `personal_access_tokens` — Tokens Sanctum
-- `permissions`, `roles`, `model_has_permissions`, `model_has_roles`, `role_has_permissions` — Roles y permisos (Spatie)
-- `jobs`, `failed_jobs`, `job_batches` — Colas
+Para que funcione en local, SANCTUM_STATEFUL_DOMAINS y SESSION_DOMAIN deben coincidir con el dominio del frontend (ver .env), y config/cors.php debe permitir ese origen.
 
-## Seeders
+Login rápido (solo desarrollo)
 
-- `UserSeeder` — Crea un usuario de prueba (`test@mantia.com` / `password123`)
-- `DevUsersSeeder` — Crea 5 usuarios de desarrollo con login por letra
-- `CategoryMachineSeeder` — Categorías de máquinas (referenciado, pendiente de implementación)
+Entra sin contraseña usando la letra de un usuario de desarrollo:
 
-## Testing
+POST /api/dev-login/D  → Daniela
+POST /api/dev-login/S  → Santiago
+POST /api/dev-login/J  → Joan
+POST /api/dev-login/L  → Leonardo
+POST /api/dev-login/K  → Kevin
 
-```bash
+Solo existe cuando APP_ENV=local. Nunca lo dejes activo en producción.
+
+Alertas
+
+Los observers de app/Observers crean alertas automáticamente cuando se registra, cambia de estado o se elimina un elemento (empresas, categorías, ubicaciones, máquinas, equipos, herramientas, inspecciones y mediciones de gases).
+
+Las alertas se guardan en la tabla notifications (canal database).
+Cada alerta tiene un nivel: info, warning o danger.
+Las mediciones de gases se comparan con los límites de config/alertas.php (oxígeno, metano, CO₂, H₂S, CO y NO₂). Si algún valor está fuera de rango, la alerta sale como danger.
+config/alertas.php también define el stock mínimo de herramientas.
+Base de datos
+Grupo	Tablas
+Usuarios y sesión	users, password_reset_tokens, sessions, personal_access_tokens
+Roles y permisos (Spatie)	permissions, roles, model_has_permissions, model_has_roles, role_has_permissions
+Empresas y categorías	company, category_group, category, machine_category, location_category
+Inventario	location, equipment, machine, tool, tool_stock_condition
+Inspecciones y gases	inspection, gas_measurement, gas_measurement_location
+Sistema	notifications, cache, cache_locks, jobs, job_batches, failed_jobs
+Seeders
+
+php artisan migrate:fresh --seed ejecuta DatabaseSeeder, que llama a:
+
+Seeder	Qué crea
+UserSeeder	Usuario de prueba (solo desarrollo)
+DevUsersSeeder	5 usuarios de desarrollo para el login por letra
+RoleAndAdminSeeder	Roles y el usuario administrador inicial
+CategoryLocationSeeder / LocationSeeder	Categorías y ubicaciones iniciales
+CategoryGroupToolsSeeder / CategoryToolsSeeder	Grupos y categorías de herramientas
+CategoryMachineSeeder	Categorías de máquinas (Compresores, Motores)
+ToolsSeeder / ToolStockConditionSeeder	Herramientas y estados de stock
+
+Las credenciales de los usuarios sembrados están en los seeders. Cámbialas antes de usar el sistema en producción.
+
+Pruebas
+bash
 php artisan test
-```
-
-## Seguridad
-
-- El archivo `.env` contiene credenciales sensibles (contraseñas de base de datos, claves API, credenciales de correo). Está en `.gitignore` y **nunca debe subirse al repositorio**.
-- Usa `.env.example` como plantilla para nuevos entornos.
-- El archivo `.env` real contiene credenciales locales (DB password, mail password, APP_KEY) que son específicas de cada desarrollador.
-- En producción, cambia las credenciales por defecto y genera una nueva `APP_KEY` con `php artisan key:generate`.
-- El login rápido por letra (`/api/dev-login/{letra}`) solo funciona en entorno `local`.
-
-## Licencia
+Seguridad
+El .env contiene credenciales y nunca debe subirse. Usa .env.example (sin valores reales) como plantilla.
+Cada desarrollador usa su propio .env local.
+En producción: APP_ENV=production, APP_DEBUG=false, una APP_KEY nueva (php artisan key:generate) y contraseñas distintas a las de desarrollo.
+Si una contraseña o clave se sube por error a GitHub, cámbiala de inmediato: borrar el archivo después no la elimina del historial.
+Licencia
 
 MIT
