@@ -12,6 +12,7 @@ use App\Http\Controllers\LocationCategoryController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\CategoriesToolsController;
 use App\Http\Controllers\ToolsController;
+use App\Http\Controllers\EquipmentController;
 
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register']);
@@ -84,3 +85,6 @@ Route::middleware('auth:sanctum')->put('/tools/{id}', [ToolsController::class, '
 
 Route::middleware('auth:sanctum')->delete('/tools/{id}', [ToolsController::class, 'destroy']);
 
+# Equipos
+
+Route::middleware('auth:sanctum')->get('/equipment', [EquipmentController::class, 'index']);
