@@ -36,4 +36,12 @@ class Machine extends Model
     {
         return $this->belongsTo(MachineCategory::class, 'machine_category_id');
     }
+    public function ubicacion()
+    {
+        return $this->belongsTo(Location::class, 'location_id');
+    }
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'company_id');
+    }
 }

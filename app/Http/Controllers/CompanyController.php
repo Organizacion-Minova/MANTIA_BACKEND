@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Company;
 use Illuminate\Database\QueryException;
+use Illuminate\Validation\Rule;
 
 class CompanyController extends Controller
 {
@@ -51,14 +52,25 @@ class CompanyController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, $tax_id)
+    public function update(Request $request, $id)
     {
-        $empresa = Company::findOrFail($tax_id);
+        $empresa = Company::findOrFail($id);
 
         $datosValidados = $request->validate([
             'nombre' => 'required|string|max:55',
-            'telefono' => 'required|string|max:20|unique:company,phone,|regex:/^\+?[0-9\s\-()]+$/' . $tax_id . ',tax_id',
-            'correo' => 'required|email|max:100|unique:company,email,' . $tax_id . ',tax_id',
+            'telefono' => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('company', 'phone')->ignore($empresa->id),
+                'regex:/^\+?[0-9\s\-()]+$/',
+            ],
+            'correo' => [
+                'required',
+                'email',
+                'max:100',
+                Rule::unique('company', 'email')->ignore($empresa->id),
+            ],
             'direccion' => 'required|string|max:100',
         ], [
             'nombre.max' => 'El nombre no puede superar los 55 caracteres.',
@@ -85,10 +97,10 @@ class CompanyController extends Controller
         ], 200);
     }
 
-    public function destroy($tax_id)
+    public function destroy($id)
     {
         try {
-            $empresa = Company::findOrFail($tax_id);
+            $empresa = Company::findOrFail($id);
             $empresa->delete();
 
             return response()->json([
