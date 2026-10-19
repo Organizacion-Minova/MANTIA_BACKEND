@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Notifications\AccountApprovedNotification;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 class AdminApprovalController extends Controller
 {
@@ -15,18 +16,22 @@ class AdminApprovalController extends Controller
     }
 
     // Aprobar usuario
-    public function approve($id, Request $request)
-    {
-        $user = User::findOrFail($id);
-        $user->status = 'approved';
-        $user->save();
+   
 
-        // Enviar correo de aprobación
-        $user->notify(new AccountApprovedNotification());
+public function approve($id, Request $request)
+{
+    $user = User::findOrFail($id);
+    $user->status = 'approved';
+    $user->save();
 
-        return response()->json(['message' => 'Cuenta aprobada exitosamente']);
+    if ($user->requested_role && Role::where('name', $user->requested_role)->exists()) {
+        $user->syncRoles([$user->requested_role]);
     }
 
+    $user->notify(new AccountApprovedNotification());
+
+    return response()->json(['message' => 'Cuenta aprobada exitosamente']);
+}
     // Rechazar usuario
     public function reject($id, Request $request)
     {
