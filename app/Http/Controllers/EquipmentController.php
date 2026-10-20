@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Equipment;
+use Illuminate\Support\Facades\Storage;
 class EquipmentController extends Controller
 {
     /**
@@ -12,8 +13,7 @@ class EquipmentController extends Controller
     public function index()
     {
         $equipments = Equipment::with('ubicacion', 'company')
-            ->get()
-            ->makeHidden('image');
+            ->get();
 
         return response()->json($equipments);
     }
@@ -24,34 +24,38 @@ class EquipmentController extends Controller
     public function store(Request $request)
     {
         $validado = $request->validate([
-            'code' => 'required|string|max:50|unique:equipment,code',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'serial_number' => 'nullable|string|max:100',
-            'responsible' => 'nullable|string|max:255',
-            'status' => 'required|string|in:active,inactive',
+            'code' => 'required|string|max:20|unique:equipment,code',
+            'name' => 'required|string|max:100',
+            'description' => 'required|string',
+            'serial_number' => 'required|string|max:20|unique:equipment,serial_number',
+            'responsible' => 'required|string|max:100',
+            'status' => 'required|string|in:active,inactive,maintenance',
             'registration_date' => 'required|date',
             'company_id' => 'required|exists:company,id',
             'location_id' => 'required|exists:location,id',
-            'image' => 'nullable|image|max:2048', // 2048 KB = 2 MB
-            'model' => 'nullable|string|max:100',
+            'model' => 'required|string|max:20',
+            'image' => 'required|image|max:10240',
+        ], [
+            'code.required' => 'El código es obligatorio.',
+            'code.string' => 'El código debe ser texto.',
+            'code.max' => 'El código no puede superar los 20 caracteres.',
+            'code.unique' => 'Este código ya está registrado. Ingresa un código diferente.',
         ]);
 
-        if ($request->hasFile('image')) {
-            $validado['image'] = $request->file('image')->store('equipos', 'public');
-        }
+        $validado['image'] = $request->file('image')->store('equipos', 'public');
 
         $equipo = Equipment::create($validado);
 
-        return response()->json($equipo, 201);
-        }
+        return response()->json($equipo->load(['company', 'ubicacion']), 201);
+    }
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        //
+        $equipo = Equipment::with('ubicacion', 'company')->findOrFail($id);
+        return response()->json($equipo);
     }
 
     /**
@@ -59,7 +63,39 @@ class EquipmentController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $equipo = Equipment::findOrFail($id);
+
+        $validado = $request->validate([
+            'code' => 'required|string|max:20|unique:equipment,code,' . $equipo->id,
+            'name' => 'required|string|max:100',
+            'description' => 'required|string',
+            'serial_number' => 'required|string|max:20|unique:equipment,serial_number,' . $equipo->id,
+            'responsible' => 'required|string|max:100',
+            'status' => 'required|string|in:active,inactive,maintenance',
+            'registration_date' => 'required|date',
+            'company_id' => 'required|exists:company,id',
+            'location_id' => 'required|exists:location,id',
+            'model' => 'required|string|max:20',
+            'image' => 'nullable|image|max:10240',
+        ], [
+            'code.required' => 'El código es obligatorio.',
+            'code.string' => 'El código debe ser texto.',
+            'code.max' => 'El código no puede superar los 20 caracteres.',
+            'code.unique' => 'Este código ya está asignado a otro equipo.',
+        ]);
+
+        if ($request->hasFile('image')) {
+            $imagenAnterior = $equipo->image;
+            $validado['image'] = $request->file('image')->store('equipos', 'public');
+        }
+
+        $equipo->update($validado);
+
+        if (isset($imagenAnterior) && $imagenAnterior) {
+            Storage::disk('public')->delete($imagenAnterior);
+        }
+
+        return response()->json($equipo->load(['company', 'ubicacion']));
     }
 
     /**
@@ -67,6 +103,8 @@ class EquipmentController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $equipment = Equipment::findOrFail($id);
+        $equipment->delete();
+        return response()->json(['message' => 'Equipo eliminado correctamente']);
     }
 }

@@ -61,7 +61,7 @@ return new class extends Migration
             $table->date('registration_date');
             $table->foreignId('company_id')->constrained('company');
             $table->foreignId('location_id')->constrained('location');
-            $table->binary('image');
+            $table->string('image')->nullable();
             $table->string('model', 20);
         });
 
@@ -75,7 +75,7 @@ return new class extends Migration
             $table->decimal('acquisition_cost', 15, 2)->nullable();
             $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
             $table->integer('warranty')->nullable();
-            $table->binary('image')->nullable();
+            $table->string('image')->nullable();
             $table->foreignId('location_id')->constrained('location');
             $table->foreignId('machine_category_id')->constrained('machine_category');
             $table->foreignId('company_id')->constrained('company');

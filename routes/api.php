@@ -14,6 +14,7 @@ use App\Http\Controllers\CategoriesToolsController;
 use App\Http\Controllers\ToolsController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\GasMeasurementController;
+use App\Http\Controllers\MachinesController;
 
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register']);
@@ -93,6 +94,25 @@ Route::middleware('auth:sanctum')->delete('/tools/{id}', [ToolsController::class
 
 Route::middleware('auth:sanctum')->get('/equipment', [EquipmentController::class, 'index']);
 
+Route::middleware('auth:sanctum')->post('/equipment', [EquipmentController::class, 'store']);
+
+Route::middleware('auth:sanctum')->put('/equipment/{id}', [EquipmentController::class, 'update']);
+
+Route::middleware('auth:sanctum')->delete('/equipment/{id}', [EquipmentController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->get('/equipment/{id}', [EquipmentController::class, 'show']);
+
+# Maquinas
+
+Route::middleware('auth:sanctum')->get('/machines',[MachinesController::class, 'index']);
+
+Route::middleware('auth:sanctum')->post('/machines', [MachinesController::class, 'store']);
+
+Route::middleware('auth:sanctum')->get('/machines/{id}', [MachinesController::class, 'show']);
+
+Route::middleware('auth:sanctum')->put('/machines/{id}', [MachinesController::class, 'update']);
+
+Route::middleware('auth:sanctum')->delete('/machines/{id}', [MachinesController::class, 'destroy']);
 # Medición de gases
 Route::middleware('auth:sanctum')->get('/gas-measurements', [GasMeasurementController::class, 'index']);
 Route::middleware('auth:sanctum')->post('/gas-measurements', [GasMeasurementController::class, 'store']);
