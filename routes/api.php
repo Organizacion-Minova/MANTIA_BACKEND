@@ -12,6 +12,7 @@ use App\Http\Controllers\LocationCategoryController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\CategoriesToolsController;
 use App\Http\Controllers\ToolsController;
+use App\Http\Controllers\NotificacionController;
 
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register']);
@@ -84,3 +85,9 @@ Route::middleware('auth:sanctum')->put('/tools/{id}', [ToolsController::class, '
 
 Route::middleware('auth:sanctum')->delete('/tools/{id}', [ToolsController::class, 'destroy']);
 
+// Notificaciones / alertas
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/notificaciones', [NotificacionController::class, 'index']);
+    Route::post('/notificaciones/leer-todas', [NotificacionController::class, 'leerTodas']);
+    Route::post('/notificaciones/{id}/leer', [NotificacionController::class, 'leer']);
+});

@@ -13,6 +13,7 @@ use App\Models\Equipment;
 use App\Models\Tool;
 use App\Models\Inspection;
 use App\Models\GasMeasurement;
+use App\Models\Tools;
 
 use App\Observers\CompanyObserver;
 use App\Observers\CategoryGroupObserver;
@@ -53,5 +54,6 @@ class AppServiceProvider extends ServiceProvider
         Tool::observe(ToolObserver::class);
         Inspection::observe(InspectionObserver::class);
         GasMeasurement::observe(GasMeasurementObserver::class);
+        Tools::observe(ToolObserver::class);
     }
 }
