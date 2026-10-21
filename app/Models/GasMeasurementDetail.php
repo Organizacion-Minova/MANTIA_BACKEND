@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class GasMeasurementDetail extends Model
 {
-    protected $table = 'gas_measurement_details';
+    protected $table = 'gas_measurement_detail';
     protected $primaryKey = 'id';
     public $incrementing = true;
     public $timestamps = true;

@@ -10,7 +10,7 @@ class GasMeasurementObserver extends AlertaObserverBase
 {
     protected function tipo(): string { return 'gas'; }
     protected function etiqueta(Model $model): string { return "Medición en {$model->location}"; }
-    protected function rolDestino(): ?string { return 'admin'; }
+    protected function rolDestino(): ?string { return 'Administrador'; }
 
     public function created(Model $model): void
     {
@@ -35,7 +35,7 @@ class GasMeasurementObserver extends AlertaObserverBase
         }
 
         AlertaService::porRol(
-            'admin',
+            'Administrador',
             $this->tipo(),
             $riesgos ? "Riesgo detectado en {$model->location}: " . implode('; ', $riesgos)
             : "Medición de gases en {$model->location} dentro de rangos normales",

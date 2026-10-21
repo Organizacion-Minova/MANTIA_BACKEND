@@ -20,7 +20,7 @@ class GasMeasurement extends Model
         'sst_signature',
     ];
 
-    public function details(): HasMany
+    public function detail(): HasMany
     {
         return $this->hasMany(GasMeasurementDetail::class, 'gas_measurement_id');
     }
