@@ -13,6 +13,7 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\CategoriesToolsController;
 use App\Http\Controllers\ToolsController;
 use App\Http\Controllers\NotificacionController;
+use App\Http\Controllers\AiController;
 
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register']);
@@ -91,3 +92,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notificaciones/leer-todas', [NotificacionController::class, 'leerTodas']);
     Route::post('/notificaciones/{id}/leer', [NotificacionController::class, 'leer']);
 });
+// Asistente de IA (MANTIA IA): solo usuarios autenticados, máx. 20 mensajes por minuto
+Route::middleware(['auth:sanctum', 'throttle:20,1'])->post('/ai/chat', [AiController::class, 'chat']);
