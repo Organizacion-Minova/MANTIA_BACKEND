@@ -108,3 +108,5 @@ class EquipmentController extends Controller
         return response()->json(['message' => 'Equipo eliminado correctamente']);
     }
 }
+
+
