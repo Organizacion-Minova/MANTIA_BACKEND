@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             ToolStockConditionSeeder::class,
             MachinesSeeder::class,
             EquipmentsSeeder::class,
+            DailyUseSeeder::class,
         ]);
     }
 }
