@@ -134,10 +134,22 @@ return new class extends Migration
             $table->foreignId('location_id')->constrained('location');
             $table->primary(['gas_measurement_id', 'location_id']);
         });
+
+        Schema::create('daily_use', function (Blueprint $table) {
+            $table->id();
+            $table->date('date');
+            $table->string('operating_status', 50);
+            $table->string('operation_start', 50)->nullable();
+            $table->string('operation_end', 50)->nullable();
+            $table->string('responsible', 100)->nullable();
+            $table->string('observations', 255)->nullable();
+            $table->foreignId('machine_id')->constrained('machine');
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('daily_use');
         Schema::dropIfExists('gas_measurement_location');
         Schema::dropIfExists('gas_measurement');
         Schema::dropIfExists('inspection');

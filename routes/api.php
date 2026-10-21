@@ -15,14 +15,15 @@ use App\Http\Controllers\ToolsController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\GasMeasurementController;
 use App\Http\Controllers\MachinesController;
-
+use App\Http\Controllers\NotificacionController;
+use App\Http\Controllers\DashboardController;
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
-Route::post('/logout', function (Request $request) {
+Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
     Auth::guard('web')->logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
@@ -120,3 +121,13 @@ Route::middleware('auth:sanctum')->get('/gas-measurements/{id}', [GasMeasurement
 Route::middleware('auth:sanctum')->put('/gas-measurements/detail/{detailId}', [GasMeasurementController::class, 'updateDetail']);
 Route::middleware('auth:sanctum')->put('/gas-measurements/header/{id}', [GasMeasurementController::class, 'updateHeader']);
 Route::middleware('auth:sanctum')->delete('/gas-measurements/{id}', [GasMeasurementController::class, 'destroy']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/notificaciones', [NotificacionController::class, 'index']);
+    Route::post('/notificaciones/leer-todas', [NotificacionController::class, 'leerTodas']);
+    Route::post('/notificaciones/{id}/leer', [NotificacionController::class, 'leer']);
+});
+
+Route::middleware('auth:sanctum')->prefix('dashboard')->group(function () {
+    Route::get('/', [DashboardController::class, 'index']);
+    Route::get('/{section}', [DashboardController::class, 'show'])->where('section', '[a-z-]+');
+});
