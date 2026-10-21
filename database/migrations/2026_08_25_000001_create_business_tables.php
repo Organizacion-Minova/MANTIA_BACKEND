@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('company', function (Blueprint $table) {
-            $table->integer('tax_id')->primary();
+            $table->id();
             $table->string('name', 55);
             $table->string('phone', 20);
             $table->string('email', 100);
@@ -59,12 +59,10 @@ return new class extends Migration
             $table->string('responsible', 100);
             $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
             $table->date('registration_date');
-            $table->integer('company_id');
+            $table->foreignId('company_id')->constrained('company');
             $table->foreignId('location_id')->constrained('location');
-            $table->binary('image');
+            $table->string('image')->nullable();
             $table->string('model', 20);
-
-            $table->foreign('company_id')->references('tax_id')->on('company');
         });
 
         Schema::create('machine', function (Blueprint $table) {
@@ -77,16 +75,14 @@ return new class extends Migration
             $table->decimal('acquisition_cost', 15, 2)->nullable();
             $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
             $table->integer('warranty')->nullable();
-            $table->binary('image')->nullable();
+            $table->string('image')->nullable();
             $table->foreignId('location_id')->constrained('location');
             $table->foreignId('machine_category_id')->constrained('machine_category');
-            $table->integer('company_id');
+            $table->foreignId('company_id')->constrained('company');
             $table->string('responsible', 45);
             $table->string('machine_usage', 45);
             $table->boolean('in_operation')->default(true);
             $table->text('characteristics');
-
-            $table->foreign('company_id')->references('tax_id')->on('company');
         });
 
         Schema::create('tool', function (Blueprint $table) {
@@ -138,10 +134,22 @@ return new class extends Migration
             $table->foreignId('location_id')->constrained('location');
             $table->primary(['gas_measurement_id', 'location_id']);
         });
+
+        Schema::create('daily_use', function (Blueprint $table) {
+            $table->id();
+            $table->date('date');
+            $table->string('operating_status', 50);
+            $table->string('operation_start', 50)->nullable();
+            $table->string('operation_end', 50)->nullable();
+            $table->string('responsible', 100)->nullable();
+            $table->string('observations', 255)->nullable();
+            $table->foreignId('machine_id')->constrained('machine');
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('daily_use');
         Schema::dropIfExists('gas_measurement_location');
         Schema::dropIfExists('gas_measurement');
         Schema::dropIfExists('inspection');

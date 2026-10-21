@@ -12,16 +12,19 @@ use App\Http\Controllers\LocationCategoryController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\CategoriesToolsController;
 use App\Http\Controllers\ToolsController;
-use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\AiController;
-
+use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\GasMeasurementController;
+use App\Http\Controllers\MachinesController;
+use App\Http\Controllers\NotificacionController;
+use App\Http\Controllers\DashboardController;
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
-Route::post('/logout', function (Request $request) {
+Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
     Auth::guard('web')->logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
@@ -49,16 +52,19 @@ Route::middleware('auth:sanctum')->post('/machine-categories', [MachineCategoryC
 Route::middleware('auth:sanctum')->put('/machine-categories/{id}', [MachineCategoryController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('/machine-categories/{id}', [MachineCategoryController::class, 'destroy']);
 
+# Empresas
 Route::middleware('auth:sanctum')->get('/company', [CompanyController::class, 'index']);
 Route::middleware('auth:sanctum')->post('/company', [CompanyController::class, 'store']);
 Route::middleware('auth:sanctum')->put('/company/{id}', [CompanyController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('/company/{id}', [CompanyController::class, 'destroy']);
 
+# Categorías de ubicaciones
 Route::middleware('auth:sanctum')->get('/location-category', [LocationCategoryController::class, 'index']);
 Route::middleware('auth:sanctum')->post('/location-category', [LocationCategoryController::class, 'store']);
 Route::middleware('auth:sanctum')->put('/location-category/{id}', [LocationCategoryController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('/location-category/{id}', [LocationCategoryController::class, 'destroy']);
 
+# Ubicaciones
 Route::middleware('auth:sanctum')->get('/location', [LocationController::class, 'index']);
 Route::middleware('auth:sanctum')->post('/location', [LocationController::class, 'store']);
 Route::middleware('auth:sanctum')->put('/location/{id}', [LocationController::class, 'update']);
@@ -87,6 +93,36 @@ Route::middleware('auth:sanctum')->put('/tools/{id}', [ToolsController::class, '
 Route::middleware('auth:sanctum')->delete('/tools/{id}', [ToolsController::class, 'destroy']);
 
 // Notificaciones / alertas
+# Equipos
+
+Route::middleware('auth:sanctum')->get('/equipment', [EquipmentController::class, 'index']);
+
+Route::middleware('auth:sanctum')->post('/equipment', [EquipmentController::class, 'store']);
+
+Route::middleware('auth:sanctum')->put('/equipment/{id}', [EquipmentController::class, 'update']);
+
+Route::middleware('auth:sanctum')->delete('/equipment/{id}', [EquipmentController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->get('/equipment/{id}', [EquipmentController::class, 'show']);
+
+# Maquinas
+
+Route::middleware('auth:sanctum')->get('/machines',[MachinesController::class, 'index']);
+
+Route::middleware('auth:sanctum')->post('/machines', [MachinesController::class, 'store']);
+
+Route::middleware('auth:sanctum')->get('/machines/{id}', [MachinesController::class, 'show']);
+
+Route::middleware('auth:sanctum')->put('/machines/{id}', [MachinesController::class, 'update']);
+
+Route::middleware('auth:sanctum')->delete('/machines/{id}', [MachinesController::class, 'destroy']);
+# Medición de gases
+Route::middleware('auth:sanctum')->get('/gas-measurements', [GasMeasurementController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/gas-measurements', [GasMeasurementController::class, 'store']);
+Route::middleware('auth:sanctum')->get('/gas-measurements/{id}', [GasMeasurementController::class, 'show']);
+Route::middleware('auth:sanctum')->put('/gas-measurements/detail/{detailId}', [GasMeasurementController::class, 'updateDetail']);
+Route::middleware('auth:sanctum')->put('/gas-measurements/header/{id}', [GasMeasurementController::class, 'updateHeader']);
+Route::middleware('auth:sanctum')->delete('/gas-measurements/{id}', [GasMeasurementController::class, 'destroy']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notificaciones', [NotificacionController::class, 'index']);
     Route::post('/notificaciones/leer-todas', [NotificacionController::class, 'leerTodas']);
@@ -94,3 +130,8 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 // Asistente de IA (MANTIA IA): solo usuarios autenticados, máx. 20 mensajes por minuto
 Route::middleware(['auth:sanctum', 'throttle:20,1'])->post('/ai/chat', [AiController::class, 'chat']);
+
+Route::middleware('auth:sanctum')->prefix('dashboard')->group(function () {
+    Route::get('/', [DashboardController::class, 'index']);
+    Route::get('/{section}', [DashboardController::class, 'show'])->where('section', '[a-z-]+');
+});

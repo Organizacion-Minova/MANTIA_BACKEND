@@ -13,37 +13,46 @@ use Illuminate\Auth\Events\PasswordReset;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-        ]);
+   public function register(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users',
+        'password' => 'required|string|min:8',
+        'document_type' => 'required|in:CC,CE,TI,PA',
+        'document_number' => 'required|string|max:20|unique:users',
+        'requested_role' => 'required|in:Administrador,Invitado,Tecnico',
+        'technician_type' => 'required_if:requested_role,Tecnico|nullable|in:Electricista,Minero,Mecanico',
+    ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'status' => 'pending', // Queda pendiente de aprobación
-        ]);
+    $user = User::create([
+        'name' => $request->name,
+        'last_name' => $request->last_name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'status' => 'pending',
+        'document_type' => $request->document_type,
+        'document_number' => $request->document_number,
+        'requested_role' => $request->requested_role,
+        'technician_type' => $request->requested_role === 'Tecnico' ? $request->technician_type : null,
+    ]);
 
-        // Notificar a todos los administradores
-        $admins = User::role('Administrador')->get();
-        if ($admins->isNotEmpty()) {
-            Notification::send($admins, new NewAccountRequestNotification($user));
-        } else {
-            // Fallback si no hay rol asignado, notificar al primer usuario o admin principal
-            $fallbackAdmin = User::where('email', 'mantiaadso@gmail.com')->first();
-            if ($fallbackAdmin) {
-                $fallbackAdmin->notify(new NewAccountRequestNotification($user));
-            }
+    // Notificar a todos los administradores
+    $admins = User::role('Administrador')->get();
+    if ($admins->isNotEmpty()) {
+        Notification::send($admins, new NewAccountRequestNotification($user));
+    } else {
+        $fallbackAdmin = User::where('email', 'mantiaadso@gmail.com')->first();
+        if ($fallbackAdmin) {
+            $fallbackAdmin->notify(new NewAccountRequestNotification($user));
         }
-
-        return response()->json([
-            'message' => 'Registro exitoso. Tu cuenta está pendiente de aprobación por un administrador.',
-        ], 201);
     }
+
+    return response()->json([
+        'message' => 'Registro exitoso. Tu cuenta está pendiente de aprobación',
+    ], 201);
+}
 
     public function login(Request $request)
     {

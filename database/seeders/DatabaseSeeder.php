@@ -21,11 +21,17 @@ class DatabaseSeeder extends Seeder
             RoleAndAdminSeeder::class,
             CategoryLocationSeeder::class,
             LocationSeeder::class,
+            CompaniesSeeder::class,
             CategoryGroupToolsSeeder::class,
             CategoryMachineSeeder::class,
             CategoryToolsSeeder::class,
             ToolsSeeder::class,
             ToolStockConditionSeeder::class,
+            MachinesSeeder::class,
+            EquipmentsSeeder::class,
+            GasMeasurementSeeder::class,
+            GasMeasurementDetailSeeder::class,
+            DailyUseSeeder::class,
         ]);
     }
 }

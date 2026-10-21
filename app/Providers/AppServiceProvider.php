@@ -34,11 +34,32 @@ use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
+use App\Dashboard\DashboardService;
+use App\Dashboard\Sections\{
+    ActivitySection, ConsumablesSection, DailyUsageSection, EquipmentsSection,
+    GasesSection, LocationsSection, MachinesSection, NonConsumablesSection
+};
+
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        //REGISTRAR SECCIONES DEL DASHBOARD LOL XD, CON ESTO SE PUEDE HACER UN IDENTIFICADOR PARA QUE EL DASHBOARD SERVICE PUEDA OBTENER TODAS LAS SECCIONES
+        $this->app->tag([
+        MachinesSection::class,
+        EquipmentsSection::class,
+        ConsumablesSection::class,
+        NonConsumablesSection::class,
+        ActivitySection::class,
+        DailyUsageSection::class,
+        LocationsSection::class,
+        GasesSection::class,
+    ], 'dashboard.sections');
+    //hace que se cree un solo servicio por petición. No guarda estado entre peticiones, así que es seguro.
+    $this->app->singleton(
+        DashboardService::class,
+        fn ($app) => new DashboardService($app->tagged('dashboard.sections')),
+    );
     }
 
     public function boot(): void
