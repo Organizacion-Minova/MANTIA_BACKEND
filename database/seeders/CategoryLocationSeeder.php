@@ -22,5 +22,9 @@ class CategoryLocationSeeder extends Seeder
             ['name' => 'Taller'],
             ['description' => 'Ubicación de reparación y mantenimiento de herramientas y equipos']
         );
+        LocationCategory::firstOrCreate(
+            ['name' => 'Mina'],
+            ['description' => 'Ubicación de la mina didáctica SENA centro minero']
+        );
     }
 }

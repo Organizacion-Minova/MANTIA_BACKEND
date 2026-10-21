@@ -14,7 +14,7 @@ class GasMeasurementController extends Controller
 {
     public function index()
     {
-        $mediciones = GasMeasurement::select('id', 'measurement_date', 'measurement_time')->with('details.location')->orderBy('measurement_date', 'desc')->get();
+        $mediciones = GasMeasurement::select('id', 'measurement_date', 'measurement_time')->with('detail.location')->orderBy('measurement_date', 'desc')->get();
 
         return response()->json([
             'status' => 'success',
@@ -69,7 +69,7 @@ class GasMeasurementController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Medición de gases registrada correctamente.',
-                'data' => $medicion->load('details.location')
+                'data' => $medicion->load('detail.location')
             ], 201);
 
         } catch (QueryException $e) {
@@ -84,8 +84,8 @@ class GasMeasurementController extends Controller
     public function show($id)
     {
         $medicion = GasMeasurement::with([
-            'details' => fn ($query) => $query->orderBy('id'),
-            'details.location',
+            'detail' => fn ($query) => $query->orderBy('id'),
+            'detail.location',
         ])->findOrFail($id);
 
         return response()->json([
@@ -109,16 +109,22 @@ class GasMeasurementController extends Controller
             'observation' => 'nullable|string|max:100',
         ], [
             'oxygen.numeric' => 'El valor de oxígeno debe ser un número.',
+            'oxygen.min' => 'El oxígeno no puede ser menor a el 0%.',
             'oxygen.max' => 'El oxígeno no puede superar el 100%.',
             'methane.numeric' => 'El valor de metano debe ser un número.',
+            'methane.min' => 'El metano no puede ser menor a el 0%.',
             'methane.max' => 'El metano no puede superar el 100%.',
             'carbon_dioxide.numeric' => 'El valor de dióxido de carbono debe ser numérico.',
+            'carbon_dioxide.min' => 'El dióxido de carbono no puede ser menor a el 0%.',
             'carbon_dioxide.max' => 'El dióxido de carbono no puede superar el 100%.',
             'hydrogen_sulfide.numeric' => 'El valor del ácido sulfhídrico debe ser numérico.',
+            'hydrogen_sulfide.min' => 'El ácido sulfhídrico no puede ser menor a 0.',
             'hydrogen_sulfide.max' => 'El ácido sulfhídrico no puede superar 999.',
             'carbon_monoxide.numeric' => 'El valor de monóxido de carbono debe ser numérico.',
+            'carbon_monoxide.min' => 'El monóxido de carbono no puede ser menor a 0.',
             'carbon_monoxide.max' => 'El monóxido de carbono no puede superar 999.',
             'nitrogen_dioxide.numeric' => 'El valor de dióxido de nitrógeno debe ser numérico.',
+            'nitrogen_dioxide.min' => 'El dióxido de nitrógeno no puede ser menor a 0.',
             'nitrogen_dioxide.max' => 'El dióxido de nitrógeno no puede superar 999.',
             'responsible_name.max' => 'El nombre del responsable no puede superar los 100 caracteres.',
             'observation.max' => 'La observación no puede superar los 100 caracteres.',

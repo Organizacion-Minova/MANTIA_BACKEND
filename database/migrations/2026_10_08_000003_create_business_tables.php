@@ -23,7 +23,7 @@ return new class extends Migration
         });
 
         // Detalle por cada ubicación
-        Schema::create('gas_measurement_details', function (Blueprint $table) {
+        Schema::create('gas_measurement_detail', function (Blueprint $table) {
             $table->id();
            
             $table->foreignId('gas_measurement_id')
@@ -48,7 +48,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('gas_measurement_details');
+        Schema::dropIfExists('gas_measurement_detail');
         Schema::dropIfExists('gas_measurement');
     }
 };

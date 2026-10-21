@@ -29,6 +29,8 @@ class DatabaseSeeder extends Seeder
             ToolStockConditionSeeder::class,
             MachinesSeeder::class,
             EquipmentsSeeder::class,
+            GasMeasurementSeeder::class,
+            GasMeasurementDetailSeeder::class,
             DailyUseSeeder::class,
         ]);
     }
