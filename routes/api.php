@@ -12,6 +12,7 @@ use App\Http\Controllers\LocationCategoryController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\CategoriesToolsController;
 use App\Http\Controllers\ToolsController;
+use App\Http\Controllers\AiController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\GasMeasurementController;
 use App\Http\Controllers\MachinesController;
@@ -91,6 +92,7 @@ Route::middleware('auth:sanctum')->put('/tools/{id}', [ToolsController::class, '
 
 Route::middleware('auth:sanctum')->delete('/tools/{id}', [ToolsController::class, 'destroy']);
 
+// Notificaciones / alertas
 # Equipos
 
 Route::middleware('auth:sanctum')->get('/equipment', [EquipmentController::class, 'index']);
@@ -126,6 +128,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notificaciones/leer-todas', [NotificacionController::class, 'leerTodas']);
     Route::post('/notificaciones/{id}/leer', [NotificacionController::class, 'leer']);
 });
+// Asistente de IA (MANTIA IA): solo usuarios autenticados, máx. 20 mensajes por minuto
+Route::middleware(['auth:sanctum', 'throttle:20,1'])->post('/ai/chat', [AiController::class, 'chat']);
 
 Route::middleware('auth:sanctum')->prefix('dashboard')->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
