@@ -28,7 +28,11 @@ public function approve($id, Request $request)
         $user->syncRoles([$user->requested_role]);
     }
 
-    $user->notify(new AccountApprovedNotification());
+        try {
+        $user->notify(new AccountApprovedNotification());
+    } catch (\Throwable $e) {
+        report($e);
+    }
 
     return response()->json(['message' => 'Cuenta aprobada exitosamente']);
 }

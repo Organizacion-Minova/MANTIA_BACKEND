@@ -19,12 +19,12 @@ class AiTools
     private const LIMITE_MAXIMO = 20;
 
     /** Descripción de cada herramienta, tal como la ve el modelo. */
-    public function definitions(): array
+    public function definitions(?User $usuario = null): array
     {
         $sinParametros = ['type' => 'object', 'properties' => new \stdClass()];
         $limite = ['type' => 'integer', 'description' => 'Cantidad máxima de resultados (1 a 20).'];
 
-        return [
+        $definiciones = [
             [
                 'name' => 'general_summary',
                 'description' => 'Conteos generales de MANTIA: empresas, ubicaciones, herramientas, máquinas y equipos por estado, inspecciones y mediciones de gas. Úsala para preguntas generales como "¿cómo está todo?".',
@@ -44,11 +44,12 @@ class AiTools
             ],
             [
                 'name' => 'gas_measurements',
-                'description' => 'Últimas mediciones de gases (oxígeno, metano, CO2, CO, H2S, NO2) con los límites permitidos y cuáles gases están fuera de rango.',
+                'description' => 'Últimas mediciones de gases por ubicación (oxígeno, metano, CO2, CO, H2S, NO2), con responsable, los límites permitidos y cuáles gases están fuera de rango.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => [
                         'ubicacion' => ['type' => 'string', 'description' => 'Texto para filtrar por ubicación (ej: "túnel 1").'],
+                        'fecha' => ['type' => 'string', 'description' => 'Fecha exacta en formato AAAA-MM-DD.'],
                         'solo_fuera_de_rango' => ['type' => 'boolean', 'description' => 'true para mostrar solo mediciones con algún gas fuera de rango.'],
                         'limite' => $limite,
                     ],
@@ -68,7 +69,7 @@ class AiTools
             ],
             [
                 'name' => 'machines_status',
-                'description' => 'Máquinas registradas con su estado (active, inactive, maintenance), si están en operación, responsable, categoría y ubicación. Incluye el conteo por estado.',
+                'description' => 'Máquinas registradas con su estado (active, inactive, maintenance), si están en operación, responsable, empresa, categoría y ubicación. Incluye el conteo por estado.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => [
@@ -80,7 +81,7 @@ class AiTools
             ],
             [
                 'name' => 'equipment_status',
-                'description' => 'Equipos registrados con su estado (active, inactive, maintenance), responsable y ubicación. Incluye el conteo por estado.',
+                'description' => 'Equipos registrados con su estado (active, inactive, maintenance), responsable, empresa y ubicación. Incluye el conteo por estado.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => [
@@ -101,7 +102,45 @@ class AiTools
                     ],
                 ],
             ],
+            [
+                'name' => 'daily_usage',
+                'description' => 'Registros de uso diario de las máquinas: fecha, si operó, hora de inicio y fin, responsable y observaciones. Úsala para "¿qué máquinas trabajaron hoy/ayer?" o el historial de uso de una máquina.',
+                'input_schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'maquina' => ['type' => 'string', 'description' => 'Texto para filtrar por nombre o código de la máquina.'],
+                        'fecha' => ['type' => 'string', 'description' => 'Fecha exacta en formato AAAA-MM-DD.'],
+                        'limite' => $limite,
+                    ],
+                ],
+            ],
+            [
+                'name' => 'catalogs',
+                'description' => 'Catálogos de MANTIA: ubicaciones (con su categoría y cuántas máquinas, equipos y herramientas tiene cada una), empresas, categorías de ubicación, categorías de máquinas y categorías de herramientas (consumibles y no consumibles).',
+                'input_schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'tipo' => [
+                            'type' => 'string',
+                            'enum' => ['ubicaciones', 'empresas', 'categorias_ubicacion', 'categorias_maquina', 'categorias_herramienta'],
+                            'description' => 'Qué catálogo consultar.',
+                        ],
+                        'buscar' => ['type' => 'string', 'description' => 'Texto para filtrar por nombre.'],
+                    ],
+                ],
+            ],
         ];
+
+        // Solo los administradores pueden consultar solicitudes de cuenta
+        if ($this->esAdmin($usuario)) {
+            $definiciones[] = [
+                'name' => 'pending_account_requests',
+                'description' => 'Solicitudes de cuenta pendientes de aprobación: nombre, rol solicitado, tipo de técnico y fecha. Solo para administradores.',
+                'input_schema' => $sinParametros,
+            ];
+        }
+
+        return $definiciones;
     }
 
     /** Ejecuta una herramienta y devuelve un arreglo listo para enviarle al modelo. */
@@ -116,6 +155,11 @@ class AiTools
                 'machines_status' => $this->estadoMaquinas($entrada),
                 'equipment_status' => $this->estadoEquipos($entrada),
                 'recent_inspections' => $this->inspeccionesRecientes($entrada),
+                'daily_usage' => $this->usoDiario($entrada),
+                'catalogs' => $this->catalogos($entrada),
+                'pending_account_requests' => $this->esAdmin($usuario)
+                    ? $this->solicitudesPendientes()
+                    : ['error' => 'Esta información solo está disponible para administradores.'],
                 default => ['error' => "Herramienta desconocida: {$nombre}"],
             };
         } catch (Throwable $e) {
@@ -191,9 +235,20 @@ class AiTools
         $limites = config('alertas.gas');
         $soloFuera = !empty($in['solo_fuera_de_rango']);
 
-        $consulta = DB::table('gas_measurement')->orderByDesc('id');
+        // Cada medición (gas_measurement) tiene un detalle por ubicación (gas_measurement_detail)
+        $consulta = DB::table('gas_measurement_detail as d')
+            ->join('gas_measurement as g', 'g.id', '=', 'd.gas_measurement_id')
+            ->leftJoin('location as l', 'l.id', '=', 'd.location_id')
+            ->select('g.id as medicion', 'g.measurement_date', 'g.measurement_time', 'l.name as ubicacion', 'd.*')
+            ->orderByDesc('g.measurement_date')
+            ->orderByDesc('g.measurement_time')
+            ->orderByDesc('d.id');
+
         if (!empty($in['ubicacion'])) {
-            $consulta->whereRaw('LOWER(location) LIKE ?', ['%' . mb_strtolower((string) $in['ubicacion']) . '%']);
+            $consulta->whereRaw('LOWER(l.name) LIKE ?', ['%' . mb_strtolower((string) $in['ubicacion']) . '%']);
+        }
+        if (!empty($in['fecha'])) {
+            $consulta->whereDate('g.measurement_date', (string) $in['fecha']);
         }
         // Si se filtra por riesgo, se revisan más filas y luego se recorta
         $filas = $consulta->limit($soloFuera ? 200 : $limite)->get();
@@ -205,9 +260,11 @@ class AiTools
                 continue;
             }
             $mediciones[] = [
+                'medicion_numero' => $f->medicion,
                 'fecha' => $f->measurement_date,
                 'hora' => $f->measurement_time,
-                'ubicacion' => $f->location,
+                'ubicacion' => $f->ubicacion,
+                'responsable' => $f->responsible_name,
                 'oxigeno' => $this->numero($f->oxygen),
                 'metano' => $this->numero($f->methane),
                 'dioxido_de_carbono' => $this->numero($f->carbon_dioxide),
@@ -216,6 +273,7 @@ class AiTools
                 'dioxido_de_nitrogeno' => $this->numero($f->nitrogen_dioxide),
                 'observacion' => Str::limit((string) $f->observation, 150),
                 'gases_fuera_de_rango' => $problemas,
+                'enlace' => "/gases/gas_format/{$f->medicion}",
             ];
             if (count($mediciones) >= $limite) {
                 break;
@@ -233,7 +291,7 @@ class AiTools
         $limite = $this->limite($in['limite'] ?? null, 10);
         $minimo = (int) config('alertas.stock_minimo_herramienta');
 
-        $consulta = Tools::with(['ubicacion:id,name', 'categoria:id,name', 'condiciones'])->orderBy('name');
+        $consulta = Tools::with(['ubicacion:id,name', 'categoria:id,name,category_group_id', 'condiciones'])->orderBy('name');
         if (!empty($in['buscar'])) {
             $consulta->whereRaw('LOWER(name) LIKE ?', ['%' . mb_strtolower((string) $in['buscar']) . '%']);
         }
@@ -250,6 +308,7 @@ class AiTools
                 'regular' => (int) ($stock['regular'] ?? 0),
                 'malo' => (int) ($stock['malo'] ?? 0),
                 'stock_bajo' => $total <= $minimo,
+                'enlace' => $this->enlaceCategoriaHerramienta($h->categoria),
             ];
         });
 
@@ -271,7 +330,8 @@ class AiTools
         $consulta = DB::table('machine as m')
             ->leftJoin('location as l', 'l.id', '=', 'm.location_id')
             ->leftJoin('machine_category as c', 'c.id', '=', 'm.machine_category_id')
-            ->select('m.code', 'm.name', 'm.model', 'm.status', 'm.in_operation', 'm.responsible', 'l.name as ubicacion', 'c.name as categoria')
+            ->leftJoin('company as co', 'co.id', '=', 'm.company_id')
+            ->select('m.id', 'm.code', 'm.name', 'm.model', 'm.status', 'm.in_operation', 'm.responsible', 'l.name as ubicacion', 'c.name as categoria', 'co.name as empresa')
             ->orderBy('m.name');
 
         if (!empty($in['estado'])) {
@@ -290,7 +350,9 @@ class AiTools
             'en_operacion' => (bool) $m->in_operation,
             'responsable' => $m->responsible,
             'categoria' => $m->categoria,
+            'empresa' => $m->empresa,
             'ubicacion' => $m->ubicacion,
+            'enlace' => "/machines/cardMachine/{$m->id}",
         ])->all();
 
         return [
@@ -305,7 +367,8 @@ class AiTools
 
         $consulta = DB::table('equipment as e')
             ->leftJoin('location as l', 'l.id', '=', 'e.location_id')
-            ->select('e.code', 'e.name', 'e.model', 'e.status', 'e.responsible', 'l.name as ubicacion')
+            ->leftJoin('company as co', 'co.id', '=', 'e.company_id')
+            ->select('e.id', 'e.code', 'e.name', 'e.model', 'e.status', 'e.responsible', 'l.name as ubicacion', 'co.name as empresa')
             ->orderBy('e.name');
 
         if (!empty($in['estado'])) {
@@ -322,7 +385,9 @@ class AiTools
             'modelo' => $e->model,
             'estado' => $e->status,
             'responsable' => $e->responsible,
+            'empresa' => $e->empresa,
             'ubicacion' => $e->ubicacion,
+            'enlace' => "/equipment/cardequipment/{$e->id}",
         ])->all();
 
         return [
@@ -336,7 +401,7 @@ class AiTools
         $limite = $this->limite($in['limite'] ?? null, 5);
 
         $consulta = DB::table('inspection')
-            ->select('inspection_date', 'area', 'equipment_name', 'reviewed_by', 'observations')
+            ->select('machine_id', 'inspection_date', 'area', 'equipment_name', 'reviewed_by', 'observations')
             ->orderByDesc('inspection_date');
 
         if (!empty($in['equipo'])) {
@@ -349,9 +414,99 @@ class AiTools
             'equipo' => $i->equipment_name,
             'revisado_por' => $i->reviewed_by,
             'observaciones' => Str::limit((string) $i->observations, 300),
+            'enlace' => "/machines/cardMachine/{$i->machine_id}",
         ])->all();
 
         return ['inspecciones' => $inspecciones];
+    }
+
+    private function usoDiario(array $in): array
+    {
+        $limite = $this->limite($in['limite'] ?? null, 10);
+
+        $consulta = DB::table('daily_use as u')
+            ->join('machine as m', 'm.id', '=', 'u.machine_id')
+            ->select('u.date', 'u.operating_status', 'u.operation_start', 'u.operation_end', 'u.responsible', 'u.observations', 'm.id', 'm.code', 'm.name')
+            ->orderByDesc('u.date');
+
+        if (!empty($in['maquina'])) {
+            $texto = '%' . mb_strtolower((string) $in['maquina']) . '%';
+            $consulta->where(fn ($q) => $q->whereRaw('LOWER(m.name) LIKE ?', [$texto])->orWhereRaw('LOWER(m.code) LIKE ?', [$texto]));
+        }
+        if (!empty($in['fecha'])) {
+            $consulta->whereDate('u.date', (string) $in['fecha']);
+        }
+
+        $registros = $consulta->limit($limite)->get()->map(fn ($u) => [
+            'fecha' => $u->date,
+            'maquina' => $u->name,
+            'codigo' => $u->code,
+            'opero' => $u->operating_status,
+            'inicio' => $u->operation_start,
+            'fin' => $u->operation_end,
+            'responsable' => $u->responsible,
+            'observaciones' => Str::limit((string) $u->observations, 150),
+            'enlace' => "/machines/cardMachine/{$u->id}",
+        ])->all();
+
+        return ['registros' => $registros];
+    }
+
+    private function catalogos(array $in): array
+    {
+        $tipo = $in['tipo'] ?? 'ubicaciones';
+        $buscar = !empty($in['buscar']) ? '%' . mb_strtolower((string) $in['buscar']) . '%' : null;
+        $filtrar = fn ($q, string $columna) => $buscar ? $q->whereRaw("LOWER({$columna}) LIKE ?", [$buscar]) : $q;
+
+        return match ($tipo) {
+            'empresas' => ['empresas' => $filtrar(DB::table('company'), 'name')
+                ->orderBy('name')->limit(self::LIMITE_MAXIMO)
+                ->get(['nit', 'name as nombre', 'phone as telefono', 'address as direccion'])->all()],
+
+            'categorias_ubicacion' => ['categorias_ubicacion' => $filtrar(DB::table('location_category'), 'name')
+                ->orderBy('name')->limit(self::LIMITE_MAXIMO)
+                ->get(['name as nombre', 'description as descripcion'])->all()],
+
+            'categorias_maquina' => ['categorias_maquina' => $filtrar(DB::table('machine_category'), 'name')
+                ->orderBy('name')->limit(self::LIMITE_MAXIMO)
+                ->get(['name as nombre', 'description as descripcion', 'status as estado'])->all()],
+
+            'categorias_herramienta' => ['categorias_herramienta' => $filtrar(
+                DB::table('category as c')->leftJoin('category_group as g', 'g.id', '=', 'c.category_group_id'), 'c.name')
+                ->orderBy('g.name')->orderBy('c.name')->limit(self::LIMITE_MAXIMO)
+                ->get(['c.id', 'c.category_group_id', 'c.name as nombre', 'g.name as grupo', 'c.status as estado'])
+                ->map(fn ($c) => [
+                    'nombre' => $c->nombre,
+                    'grupo' => $c->grupo,
+                    'estado' => $c->estado,
+                    'enlace' => $this->enlaceCategoriaHerramienta($c),
+                ])->all()],
+
+            default => ['ubicaciones' => $filtrar(
+                DB::table('location as l')->leftJoin('location_category as c', 'c.id', '=', 'l.location_category_id'), 'l.name')
+                ->select('l.name as nombre', 'l.status as estado', 'c.name as categoria')
+                ->selectSub(DB::table('machine')->selectRaw('count(*)')->whereColumn('location_id', 'l.id'), 'maquinas')
+                ->selectSub(DB::table('equipment')->selectRaw('count(*)')->whereColumn('location_id', 'l.id'), 'equipos')
+                ->selectSub(DB::table('tool')->selectRaw('count(*)')->whereColumn('location_id', 'l.id'), 'herramientas')
+                ->orderBy('l.name')->limit(self::LIMITE_MAXIMO)
+                ->get()->all()],
+        };
+    }
+
+    private function solicitudesPendientes(): array
+    {
+        $pendientes = User::where('status', 'pending')->latest()->limit(self::LIMITE_MAXIMO)
+            ->get(['name', 'last_name', 'requested_role', 'technician_type', 'created_at']);
+
+        return [
+            'total_pendientes' => User::where('status', 'pending')->count(),
+            'solicitudes' => $pendientes->map(fn ($u) => [
+                'nombre' => trim($u->name . ' ' . $u->last_name),
+                'rol_solicitado' => $u->requested_role,
+                'tipo_tecnico' => $u->technician_type,
+                'fecha' => $u->created_at?->timezone('America/Bogota')->format('Y-m-d H:i'),
+            ])->all(),
+        ];
     }
 
     // ------------------------------------------------------------------
@@ -382,6 +537,21 @@ class AiTools
         }
 
         return $problemas;
+    }
+
+    /** Grupo 1 = consumibles, grupo 2 = no consumibles (igual que pages/Tools/types.jsx). */
+    private function enlaceCategoriaHerramienta(?object $categoria): ?string
+    {
+        if (!$categoria?->id) {
+            return null;
+        }
+        $grupo = (int) $categoria->category_group_id === 2 ? 'noconsumables' : 'consumables';
+        return "/types/{$grupo}/tools/{$categoria->id}";
+    }
+
+    private function esAdmin(?User $usuario): bool
+    {
+        return (bool) $usuario?->hasRole('Administrador');
     }
 
     private function limite(mixed $valor, int $defecto): int
