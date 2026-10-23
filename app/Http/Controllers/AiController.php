@@ -17,13 +17,16 @@ class AiController extends Controller
             'historial' => 'sometimes|array|max:20',
             'historial.*.role' => 'required|in:user,assistant',
             'historial.*.content' => 'required|string|max:4000',
+            // Ruta del frontend donde está el usuario (ej: /machines/cardMachine/5)
+            'pantalla' => 'sometimes|nullable|string|max:120',
         ]);
 
         try {
             $respuesta = $ai->reply(
                 $datos['mensaje'],
                 $datos['historial'] ?? [],
-                $request->user()
+                $request->user(),
+                $datos['pantalla'] ?? null
             );
         } catch (Throwable $e) {
             // El detalle técnico queda en storage/logs/laravel.log; al usuario solo un mensaje amable
