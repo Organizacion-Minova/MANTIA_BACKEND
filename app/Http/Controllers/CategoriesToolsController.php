@@ -26,6 +26,15 @@ class CategoriesToolsController extends Controller
             'description' => 'nullable|string',
             'status' => 'required|string|in:Activo,Inactivo,activo,inactivo,active,inactive',
             'category_group_id' => 'required|exists:category_group,id'
+        ],[
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser texto.',
+            'name.max' => 'El nombre no puede superar los 255 caracteres.',
+            'status.required' => 'El estado es obligatorio.',
+            'status.string' => 'El estado debe ser texto.',
+            'status.in' => 'El estado debe ser uno de los valores permitidos.',
+            'category_group_id.required' => 'El grupo de categoría es obligatorio.',
+            'category_group_id.exists' => 'El grupo de categoría seleccionado no existe.'
         ]);
 
         $validado['status'] = in_array(strtolower($validado['status']), ['activo', 'active'])
@@ -58,6 +67,15 @@ class CategoriesToolsController extends Controller
             'description' => 'nullable|string',
             'status' => 'required|string|in:Activo,Inactivo,activo,inactivo,active,inactive',
             'category_group_id' => 'required|exists:category_group,id'
+        ],[
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser texto.',
+            'name.max' => 'El nombre no puede superar los 255 caracteres.',
+            'status.required' => 'El estado es obligatorio.',
+            'status.string' => 'El estado debe ser texto.',
+            'status.in' => 'El estado debe ser uno de los valores permitidos.',
+            'category_group_id.required' => 'El grupo de categoría es obligatorio.',
+            'category_group_id.exists' => 'El grupo de categoría seleccionado no existe.'
         ]);
 
         $categoria->update($validado);
