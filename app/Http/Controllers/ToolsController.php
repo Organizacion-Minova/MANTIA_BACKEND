@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use App\Models\Tools;
+use Illuminate\Validation\Rule;
 
 class ToolsController extends Controller
 {
@@ -24,7 +25,12 @@ class ToolsController extends Controller
     {
         $validado = $request->validate([
             'name' => 'required|string|max:100|unique:tool,name',
-            'location_id' => 'required|exists:location,id',
+            'location_id' => [
+                'required',
+                Rule::exists('location', 'id')->where(function ($query) {
+                    $query->where('status', 'active');
+                }),
+            ],
             'category_id' => 'required|exists:category,id',
             'condiciones' => 'required|array',
             'condiciones.bueno' => 'required|integer|min:0|max:1000',
@@ -90,7 +96,12 @@ class ToolsController extends Controller
 
     $validado = $request->validate([
         'name' => 'required|string|max:100|unique:tool,name,' . $tool->id,
-        'location_id' => 'required|exists:location,id',
+        'location_id' => [
+                'required',
+                Rule::exists('location', 'id')->where(function ($query) {
+                    $query->where('status', 'active');
+                }),
+            ],
         'category_id' => 'required|exists:category,id',
         'condiciones' => 'required|array',
         'condiciones.bueno' => 'required|integer|min:0|max:1000',

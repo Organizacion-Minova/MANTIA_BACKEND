@@ -40,13 +40,14 @@ return new class extends Migration
             $table->id();
             $table->string('name', 45);
             $table->text('description');
+            $table->enum('status', ['active', 'inactive'])->default('active');
         });
 
         Schema::create('location', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
-            $table->text('description')->nullable();
-            $table->string('status', 20)->default('active');
+            $table->text('description');
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->foreignId('location_category_id')->constrained('location_category');
         });
 

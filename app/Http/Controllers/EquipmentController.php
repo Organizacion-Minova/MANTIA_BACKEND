@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Equipment;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+
 class EquipmentController extends Controller
 {
     /**
@@ -32,7 +34,12 @@ class EquipmentController extends Controller
             'status' => 'required|string|in:active,inactive,maintenance',
             'registration_date' => 'required|date',
             'company_id' => 'required|exists:company,id',
-            'location_id' => 'required|exists:location,id',
+            'location_id' => [
+                'required',
+                Rule::exists('location', 'id')->where(function ($query) {
+                    $query->where('status', 'active');
+                }),
+            ],
             'model' => 'required|string|max:20',
             'image' => 'required|image|max:10240',
         ], [
@@ -99,7 +106,12 @@ class EquipmentController extends Controller
             'status' => 'required|string|in:active,inactive,maintenance',
             'registration_date' => 'required|date',
             'company_id' => 'required|exists:company,id',
-            'location_id' => 'required|exists:location,id',
+            'location_id' => [
+                'required',
+                Rule::exists('location', 'id')->where(function ($query) {
+                    $query->where('status', 'active');
+                }),
+            ],
             'model' => 'required|string|max:20',
             'image' => 'nullable|image|max:10240',
         ], [
