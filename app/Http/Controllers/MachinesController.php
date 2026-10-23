@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Machine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class MachinesController extends Controller
 {
@@ -35,7 +36,12 @@ class MachinesController extends Controller
             'status' => 'required|string|in:active,inactive,maintenance',
             'warranty' => 'required|nullable|integer|min:0',
             'image' => 'nullable|image|max:10240',
-            'location_id' => 'required|exists:location,id',
+            'location_id' => [
+                'required',
+                Rule::exists('location', 'id')->where(function ($query) {
+                    $query->where('status', 'active');
+                }),
+            ],
             'machine_category_id' => 'required|exists:machine_category,id',
             'company_id' => 'required|exists:company,id',
             'responsible' => 'required|string|max:45',
@@ -112,7 +118,12 @@ class MachinesController extends Controller
             'status' => 'required|string|in:active,inactive,maintenance',
             'warranty' => 'required|nullable|integer|min:0',
             'image' => 'nullable|image|max:10240',
-            'location_id' => 'required|exists:location,id',
+            'location_id' => [
+                'required',
+                Rule::exists('location', 'id')->where(function ($query) {
+                    $query->where('status', 'active');
+                }),
+            ],
             'machine_category_id' => 'required|exists:machine_category,id',
             'company_id' => 'required|exists:company,id',
             'responsible' => 'required|string|max:45',
