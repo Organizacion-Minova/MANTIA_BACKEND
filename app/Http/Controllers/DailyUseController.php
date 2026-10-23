@@ -39,6 +39,11 @@ class DailyUseController extends Controller
             'machine_id' => 'required|exists:machine,id',
         ], [
             'date.unique' => 'Ya existe un registro para esta máquina en la fecha de hoy.',
+            'operating_status.required' => 'El estado de funcionamiento es obligatorio.',
+            'operation_start.required' => 'La hora de inicio de operación es obligatoria.',
+            'operation_end.required' => 'La hora de finalización de operación es obligatoria.',
+            'responsible.required' => 'El responsable es obligatorio.',
+            'observations.string' => 'Las observaciones deben ser texto.',
         ]);
         $dailyuse = DailyUse::create($validado);
         return response()->json($dailyuse->load(['machine']), 201);
@@ -74,6 +79,11 @@ class DailyUseController extends Controller
             'machine_id' => 'required|exists:machine,id',
         ], [
             'date.unique' => 'Ya existe un registro para esta máquina en la fecha de hoy.',
+            'operating_status.required' => 'El estado de funcionamiento es obligatorio.',
+            'operation_start.required' => 'La hora de inicio de operación es obligatoria.',
+            'operation_end.required' => 'La hora de finalización de operación es obligatoria.',
+            'responsible.required' => 'El responsable es obligatorio.',
+            'observations.string' => 'Las observaciones deben ser texto.',
         ]);
         $dailyuse = DailyUse::findOrFail($id);
         $dailyuse->update($validado);

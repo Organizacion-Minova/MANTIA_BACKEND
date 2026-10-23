@@ -22,8 +22,13 @@ class MachineCategoryController extends Controller
     public function store(Request $request)
     {
         $validado = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:machine_categories,name',
             'description' => 'nullable|string',
+        ],[
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser texto.',
+            'name.max' => 'El nombre no puede superar los 255 caracteres.',
+            'description.string' => 'La descripción debe ser texto.',
         ]);
 
         $categoria = MachineCategory::create($validado);
@@ -47,9 +52,17 @@ class MachineCategoryController extends Controller
         $categoria = MachineCategory::findOrFail($id);
 
         $validado = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:machine_categories,name,' . $categoria->id    ,
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
+        ],[
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser texto.',
+            'name.max' => 'El nombre no puede superar los 255 caracteres.',
+            'name.unique' => 'El nombre ya está en uso. Por favor, elige otro nombre.',
+            'description.string' => 'La descripción debe ser texto.',
+            'status.required' => 'El estado es obligatorio.',
+            'status.in' => 'El estado debe ser "active" o "inactive".',
         ]);
 
         $categoria->update($validado);

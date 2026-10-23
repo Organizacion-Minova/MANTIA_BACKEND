@@ -18,6 +18,7 @@ use App\Http\Controllers\GasMeasurementController;
 use App\Http\Controllers\MachinesController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DailyUseController;
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -135,3 +136,14 @@ Route::middleware('auth:sanctum')->prefix('dashboard')->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
     Route::get('/{section}', [DashboardController::class, 'show'])->where('section', '[a-z-]+');
 });
+
+
+# Uso diario
+
+Route::middleware('auth:sanctum')->get('/dailyuse', [DailyUseController::class, 'index']);
+
+Route::middleware('auth:sanctum')->post('/dailyuse', [DailyUseController::class, 'store']);
+
+Route::middleware('auth:sanctum')->delete('/dailyuse/{id}', [DailyUseController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->put('/dailyuse/{id}', [DailyUseController::class, 'update']);
