@@ -55,10 +55,10 @@ Contacto de soporte: mantiaadso@gmail.com.
 Si un valor está fuera de rango se debe avisar de inmediato al responsable de seguridad (SST) y no ingresar a la zona hasta que se verifique.
 
 # Cuentas y roles
-- Registro: en la pantalla de inicio de sesión, enlace de registro. Se pide nombre, apellido, correo, contraseña (mínimo 8 caracteres) y su confirmación, tipo de documento (Cédula de ciudadanía, Cédula de extranjería, Tarjeta de identidad o Pasaporte), número de documento y rol solicitado: Administrador, Invitado o Técnico. Si es Técnico se elige el tipo: Electricista, Minero o Mecánico.
-- La cuenta queda pendiente hasta que un Administrador la apruebe desde su Perfil. Mientras esté pendiente o si fue rechazada no se puede iniciar sesión.
+- Registro: en la pantalla de inicio de sesión, enlace de registro. Se pide nombre, apellido, correo, contraseña (mínimo 8 caracteres) y su confirmación, tipo de documento (Cédula de ciudadanía, Cédula de extranjería, Tarjeta de identidad o Pasaporte) y número de documento. El rol no se escoge: toda cuenta nueva empieza como Visitante.
+- Después de registrarse llega un correo con un enlace que hay que abrir en las siguientes 24 horas para activar la cuenta; si no se abre, la cuenta se borra sola. Luego el Jefe de mina le asigna el rol que corresponde desde el panel de administración.
 - Contraseña olvidada: en el inicio de sesión, enlace "¿No recuerdas tu contraseña? Restablecer". Se escribe el correo, llega un código de 6 dígitos y con ese código se crea la nueva contraseña.
-- Roles del sistema: Administrador (gestiona todo y aprueba cuentas), Técnico, Recepcionista e Invitado.
+- Roles del sistema: Jefe de mina (todo, incluido el panel de administración y los usuarios), SST (todo lo de la página, sin panel de administración), Mantenimiento (crea, edita y elimina formatos; no ve gases), Operario de mantenimiento (solo crea registros de mantenimiento), Operario de gases (solo medición de gases), Almacenista (solo herramientas) y Visitante (solo ve hojas de vida y herramientas). Cada rol solo ve y puede consultar lo que le corresponde.
 
 # Cómo hacer tareas comunes
 - Registrar algo nuevo (máquina, equipo, herramienta, ubicación, empresa o categoría): entrar al módulo desde el menú lateral y usar el botón de agregar/nuevo de esa pantalla; completar el formulario y guardar. Los campos con * son obligatorios.

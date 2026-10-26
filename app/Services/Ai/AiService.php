@@ -31,7 +31,7 @@ class AiService
 
         try {
             for ($vuelta = 0; $vuelta < self::MAX_VUELTAS; $vuelta++) {
-                $respuesta = $this->llamarApi($contenidos);
+                $respuesta = $this->llamarApi($contenidos, $usuario);
                 $partes = $respuesta['candidates'][0]['content']['parts'] ?? [];
 
                 $llamadas = array_values(array_filter($partes, fn ($p) => isset($p['functionCall'])));
@@ -70,7 +70,7 @@ class AiService
         return 'Esa consulta es demasiado amplia. Intenta con una pregunta más concreta.';
     }
 
-    private function llamarApi(array $contenidos): array
+    private function llamarApi(array $contenidos, ?User $usuario = null): array
     {
         $clave = config('services.gemini.key');
         if (!$clave) {
@@ -86,7 +86,7 @@ class AiService
             ->post($url, [
                 'systemInstruction' => ['parts' => [['text' => $this->instrucciones()]]],
                 'contents' => $contenidos,
-                'tools' => [['functionDeclarations' => $this->declaraciones()]],
+                'tools' => [['functionDeclarations' => $this->declaraciones($usuario)]],
                 'generationConfig' => [
                     'maxOutputTokens' => 2048,
                     'temperature' => 0.3,
@@ -105,7 +105,7 @@ class AiService
     }
 
     /** Convierte las herramientas de AiTools al formato "functionDeclarations" de Gemini. */
-    private function declaraciones(): array
+    private function declaraciones(?User $usuario = null): array
     {
         return array_map(function ($def) {
             $declaracion = [
@@ -126,7 +126,7 @@ class AiService
             }
 
             return $declaracion;
-        }, $this->tools->definitions());
+        }, $this->tools->definitions($usuario));
     }
 
     private function instrucciones(): string
