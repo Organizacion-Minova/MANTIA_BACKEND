@@ -24,8 +24,10 @@ public function approve($id, Request $request)
     $user->status = 'approved';
     $user->save();
 
-    if ($user->requested_role && Role::where('name', $user->requested_role)->exists()) {
-        $user->syncRoles([$user->requested_role]);
+    // El rol nunca viene de lo que pidió la persona: si no tiene rol, queda como Visitante.
+    // El Jefe de mina cambia el rol después desde el panel.
+    if ($user->roles()->count() === 0) {
+        $user->assignRole('Visitante');
     }
 
         try {

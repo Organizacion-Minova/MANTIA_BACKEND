@@ -26,12 +26,12 @@ class NewAccountRequestNotification extends Notification
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Nueva solicitud de cuenta en MANTIA')
-            ->greeting('¡Hola, Administrador!')
-            ->line('Se ha registrado una nueva solicitud de cuenta en el sistema con los siguientes datos:')
+            ->subject('Nueva cuenta verificada en MANTIA')
+            ->greeting('¡Hola, Jefe de mina!')
+            ->line('Una persona nueva verificó su correo y quedó como Visitante. Datos:')
             ->line('• Nombre: ' . $this->newUser->name)
             ->line('• Correo: ' . $this->newUser->email)
-            ->action('Gestionar Solicitudes', url('http://localhost:5173/login'))
-            ->line('Por favor, ingresa al sistema para aprobar o rechazar esta solicitud.');
+            ->action('Ir a MANTIA', url('http://localhost:5173/login'))
+            ->line('Si es una persona real, asígnale su rol desde el panel de administración. Si no, puedes desactivarla.');
     }
 }

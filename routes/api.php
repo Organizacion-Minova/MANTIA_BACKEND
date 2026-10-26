@@ -19,9 +19,13 @@ use App\Http\Controllers\MachinesController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DailyUseController;
+use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\RoleManagementController;
+use App\Http\Controllers\BackupController;
 // Auth públicas
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,10');
+Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
@@ -34,96 +38,116 @@ Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user()->load('roles');
+    $user = $request->user()->load('roles');
+    // Lista de permisos para que el frontend sepa qué botones mostrar
+    $user->setAttribute('permission_names', $user->getAllPermissions()->pluck('name')->values());
+    return $user;
 });
 
-// Admin Aprobaciones
-Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:Jefe de mina'])->group(function () {
     Route::get('/admin/requests', [AdminApprovalController::class, 'pendingRequests']);
     Route::post('/admin/approve/{id}', [AdminApprovalController::class, 'approve']);
     Route::post('/admin/reject/{id}', [AdminApprovalController::class, 'reject']);
+
+    Route::get('/admin/users', [UserManagementController::class, 'index']);
+    Route::put('/admin/users/{id}/toggle-active', [UserManagementController::class, 'toggleActive']);
+    Route::put('/admin/users/{id}/password', [UserManagementController::class, 'resetPassword']);
+    Route::put('/admin/users/{id}/role', [UserManagementController::class, 'changeRole']);
+
+    Route::get('/admin/roles', [RoleManagementController::class, 'index']);
+    Route::post('/admin/roles', [RoleManagementController::class, 'store']);
+    Route::put('/admin/roles/{id}', [RoleManagementController::class, 'update']);
+    Route::put('/admin/roles/{id}/toggle-active', [RoleManagementController::class, 'toggleActive']);
+    Route::delete('/admin/roles/{id}', [RoleManagementController::class, 'destroy']);
+
+    Route::get('/admin/backups/options', [BackupController::class, 'options']);
+    Route::get('/admin/backups', [BackupController::class, 'index']);
+    Route::post('/admin/backups', [BackupController::class, 'store']);
+    Route::get('/admin/backups/{archivo}/download', [BackupController::class, 'download']);
+    Route::get('/admin/permissions', [RoleManagementController::class, 'permissionsDisponibles']);
+    Route::delete('/admin/backups/{archivo}', [BackupController::class, 'destroy']);
 });
 
 if (app()->environment('local')) {
     Route::post('/dev-login/{letra}', [DevAuthController::class, 'quickLogin']);
 }
 
-Route::middleware('auth:sanctum')->get('/machine-categories', [MachineCategoryController::class, 'index']);
-Route::middleware('auth:sanctum')->post('/machine-categories', [MachineCategoryController::class, 'store']);
-Route::middleware('auth:sanctum')->put('/machine-categories/{id}', [MachineCategoryController::class, 'update']);
-Route::middleware('auth:sanctum')->delete('/machine-categories/{id}', [MachineCategoryController::class, 'destroy']);
+Route::middleware(['auth:sanctum', 'permission:machine-category.view'])->get('/machine-categories', [MachineCategoryController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:machine-category.create'])->post('/machine-categories', [MachineCategoryController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:machine-category.update'])->put('/machine-categories/{id}', [MachineCategoryController::class, 'update']);
+Route::middleware(['auth:sanctum', 'permission:machine-category.delete'])->delete('/machine-categories/{id}', [MachineCategoryController::class, 'destroy']);
 
 # Empresas
-Route::middleware('auth:sanctum')->get('/company', [CompanyController::class, 'index']);
-Route::middleware('auth:sanctum')->post('/company', [CompanyController::class, 'store']);
-Route::middleware('auth:sanctum')->put('/company/{id}', [CompanyController::class, 'update']);
-Route::middleware('auth:sanctum')->delete('/company/{id}', [CompanyController::class, 'destroy']);
+Route::middleware(['auth:sanctum', 'permission:company.view'])->get('/company', [CompanyController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:company.create'])->post('/company', [CompanyController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:company.update'])->put('/company/{id}', [CompanyController::class, 'update']);
+Route::middleware(['auth:sanctum', 'permission:company.delete'])->delete('/company/{id}', [CompanyController::class, 'destroy']);
 
 # Categorías de ubicaciones
-Route::middleware('auth:sanctum')->get('/location-category', [LocationCategoryController::class, 'index']);
-Route::middleware('auth:sanctum')->post('/location-category', [LocationCategoryController::class, 'store']);
-Route::middleware('auth:sanctum')->put('/location-category/{id}', [LocationCategoryController::class, 'update']);
-Route::middleware('auth:sanctum')->delete('/location-category/{id}', [LocationCategoryController::class, 'destroy']);
+Route::middleware(['auth:sanctum', 'permission:location-category.view'])->get('/location-category', [LocationCategoryController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:location-category.create'])->post('/location-category', [LocationCategoryController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:location-category.update'])->put('/location-category/{id}', [LocationCategoryController::class, 'update']);
+Route::middleware(['auth:sanctum', 'permission:location-category.delete'])->delete('/location-category/{id}', [LocationCategoryController::class, 'destroy']);
 
 # Ubicaciones
-Route::middleware('auth:sanctum')->get('/location', [LocationController::class, 'index']);
-Route::middleware('auth:sanctum')->post('/location', [LocationController::class, 'store']);
-Route::middleware('auth:sanctum')->put('/location/{id}', [LocationController::class, 'update']);
-Route::middleware('auth:sanctum')->delete('/location/{id}', [LocationController::class, 'destroy']);
+Route::middleware(['auth:sanctum', 'permission:location.view'])->get('/location', [LocationController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:location.create'])->post('/location', [LocationController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:location.update'])->put('/location/{id}', [LocationController::class, 'update']);
+Route::middleware(['auth:sanctum', 'permission:location.delete'])->delete('/location/{id}', [LocationController::class, 'destroy']);
 
 # Categorías de herramientas
 
-Route::middleware('auth:sanctum')->get('/category-tools', [CategoriesToolsController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:category-tools.view'])->get('/category-tools', [CategoriesToolsController::class, 'index']);
 
-Route::middleware("auth:sanctum")->post('/category-tools', [CategoriesToolsController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:category-tools.create'])->post('/category-tools', [CategoriesToolsController::class, 'store']);
 
-Route::middleware('auth:sanctum')->delete('/category-tools/{id}', [CategoriesToolsController::class, 'destroy']);
+Route::middleware(['auth:sanctum', 'permission:category-tools.delete'])->delete('/category-tools/{id}', [CategoriesToolsController::class, 'destroy']);
 
-Route::middleware('auth:sanctum')->put('/category-tools/{id}', [CategoriesToolsController::class, 'update']);
+Route::middleware(['auth:sanctum', 'permission:category-tools.update'])->put('/category-tools/{id}', [CategoriesToolsController::class, 'update']);
 
-Route::middleware('auth:sanctum')->get('/category-tools/{id}', [CategoriesToolsController::class, 'show']);
+Route::middleware(['auth:sanctum', 'permission:category-tools.view'])->get('/category-tools/{id}', [CategoriesToolsController::class, 'show']);
 
 # Herramientas
 
-Route::middleware('auth:sanctum')->get('/tools', [ToolsController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:tool.view'])->get('/tools', [ToolsController::class, 'index']);
 
-Route::middleware('auth:sanctum')->post('/tools', [ToolsController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:tool.create'])->post('/tools', [ToolsController::class, 'store']);
 
-Route::middleware('auth:sanctum')->put('/tools/{id}', [ToolsController::class, 'update']);
+Route::middleware(['auth:sanctum', 'permission:tool.update'])->put('/tools/{id}', [ToolsController::class, 'update']);
 
-Route::middleware('auth:sanctum')->delete('/tools/{id}', [ToolsController::class, 'destroy']);
+Route::middleware(['auth:sanctum', 'permission:tool.delete'])->delete('/tools/{id}', [ToolsController::class, 'destroy']);
 
 // Notificaciones / alertas
 # Equipos
 
-Route::middleware('auth:sanctum')->get('/equipment', [EquipmentController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:equipment.view'])->get('/equipment', [EquipmentController::class, 'index']);
 
-Route::middleware('auth:sanctum')->post('/equipment', [EquipmentController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:equipment.create'])->post('/equipment', [EquipmentController::class, 'store']);
 
-Route::middleware('auth:sanctum')->put('/equipment/{id}', [EquipmentController::class, 'update']);
+Route::middleware(['auth:sanctum', 'permission:equipment.update'])->put('/equipment/{id}', [EquipmentController::class, 'update']);
 
-Route::middleware('auth:sanctum')->delete('/equipment/{id}', [EquipmentController::class, 'destroy']);
+Route::middleware(['auth:sanctum', 'permission:equipment.delete'])->delete('/equipment/{id}', [EquipmentController::class, 'destroy']);
 
-Route::middleware('auth:sanctum')->get('/equipment/{id}', [EquipmentController::class, 'show']);
+Route::middleware(['auth:sanctum', 'permission:equipment.view'])->get('/equipment/{id}', [EquipmentController::class, 'show']);
 
 # Maquinas
 
-Route::middleware('auth:sanctum')->get('/machines',[MachinesController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('/machines',[MachinesController::class, 'index']);
 
-Route::middleware('auth:sanctum')->post('/machines', [MachinesController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:machine.create'])->post('/machines', [MachinesController::class, 'store']);
 
-Route::middleware('auth:sanctum')->get('/machines/{id}', [MachinesController::class, 'show']);
+Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('/machines/{id}', [MachinesController::class, 'show']);
 
-Route::middleware('auth:sanctum')->put('/machines/{id}', [MachinesController::class, 'update']);
+Route::middleware(['auth:sanctum', 'permission:machine.update'])->put('/machines/{id}', [MachinesController::class, 'update']);
 
-Route::middleware('auth:sanctum')->delete('/machines/{id}', [MachinesController::class, 'destroy']);
+Route::middleware(['auth:sanctum', 'permission:machine.delete'])->delete('/machines/{id}', [MachinesController::class, 'destroy']);
 # Medición de gases
-Route::middleware('auth:sanctum')->get('/gas-measurements', [GasMeasurementController::class, 'index']);
-Route::middleware('auth:sanctum')->post('/gas-measurements', [GasMeasurementController::class, 'store']);
-Route::middleware('auth:sanctum')->get('/gas-measurements/{id}', [GasMeasurementController::class, 'show']);
-Route::middleware('auth:sanctum')->put('/gas-measurements/detail/{detailId}', [GasMeasurementController::class, 'updateDetail']);
-Route::middleware('auth:sanctum')->put('/gas-measurements/header/{id}', [GasMeasurementController::class, 'updateHeader']);
-Route::middleware('auth:sanctum')->delete('/gas-measurements/{id}', [GasMeasurementController::class, 'destroy']);
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements', [GasMeasurementController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.create'])->post('/gas-measurements', [GasMeasurementController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/{id}', [GasMeasurementController::class, 'show']);
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.update'])->put('/gas-measurements/detail/{detailId}', [GasMeasurementController::class, 'updateDetail']);
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.update'])->put('/gas-measurements/header/{id}', [GasMeasurementController::class, 'updateHeader']);
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.delete'])->delete('/gas-measurements/{id}', [GasMeasurementController::class, 'destroy']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notificaciones', [NotificacionController::class, 'index']);
     Route::post('/notificaciones/leer-todas', [NotificacionController::class, 'leerTodas']);
@@ -140,10 +164,10 @@ Route::middleware('auth:sanctum')->prefix('dashboard')->group(function () {
 
 # Uso diario
 
-Route::middleware('auth:sanctum')->get('/dailyuse', [DailyUseController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:daily-use.view'])->get('/dailyuse', [DailyUseController::class, 'index']);
 
-Route::middleware('auth:sanctum')->post('/dailyuse', [DailyUseController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:daily-use.create'])->post('/dailyuse', [DailyUseController::class, 'store']);
 
-Route::middleware('auth:sanctum')->delete('/dailyuse/{id}', [DailyUseController::class, 'destroy']);
+Route::middleware(['auth:sanctum', 'permission:daily-use.delete'])->delete('/dailyuse/{id}', [DailyUseController::class, 'destroy']);
 
-Route::middleware('auth:sanctum')->put('/dailyuse/{id}', [DailyUseController::class, 'update']);
+Route::middleware(['auth:sanctum', 'permission:daily-use.update'])->put('/dailyuse/{id}', [DailyUseController::class, 'update']);
