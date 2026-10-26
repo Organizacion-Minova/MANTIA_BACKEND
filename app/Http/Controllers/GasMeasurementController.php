@@ -39,14 +39,14 @@ class GasMeasurementController extends Controller
             ], 422);
         }
 
-        $ubicacionesMina = Location::whereHas('locationCategory', function ($query) {
+        $ubicacionesMina = Location::where('status', 'active')->whereHas('locationCategory', function ($query) {
             $query->where('name', 'Mina');
         })->get();
 
         if ($ubicacionesMina->isEmpty()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'No se encontraron ubicaciones para la medición de gases.'
+                'message' => 'No se encontraron ubicaciones activas para la medición de gases.'
             ], 422);
         }
 
@@ -99,16 +99,22 @@ class GasMeasurementController extends Controller
         $detalle = GasMeasurementDetail::findOrFail($detailId);
 
         $datosValidados = $request->validate([
-            'oxygen' => 'nullable|numeric|min:0|max:100',
-            'methane' => 'nullable|numeric|min:0|max:100',
-            'carbon_dioxide' => 'nullable|numeric|min:0|max:100',
-            'hydrogen_sulfide' => 'nullable|numeric|min:0|max:999',
-            'carbon_monoxide' => 'nullable|numeric|min:0|max:999',
-            'nitrogen_dioxide' => 'nullable|numeric|min:0|max:999',
-            'responsible_name' => 'nullable|string|max:100',
-            'observation' => 'nullable|string|max:100',
+            'oxygen' => 'nullable|numeric|decimal:0,2|min:0|max:100',
+            'methane' => 'nullable|numeric|decimal:0,2|min:0|max:100',
+            'carbon_dioxide' => 'nullable|numeric|decimal:0,2|min:0|max:100',
+            'hydrogen_sulfide' => 'nullable|numeric|decimal:0,2|min:0|max:999',
+            'carbon_monoxide' => 'nullable|numeric|decimal:0,2|min:0|max:999',
+            'nitrogen_dioxide' => 'nullable|numeric|decimal:0,2|min:0|max:999',
+            'responsible_name' => 'nullable', 'string', 'max:100', "regex:/^[\p{L}\s.'\-]+$/u",
+            'observation' => 'nullable', 'string', 'max:100', 'regex:/^[\p{L}\p{N}\s.,;:()\-\/%°#¿?¡!]+$/u',
         ], [
             'oxygen.numeric' => 'El valor de oxígeno debe ser un número.',
+            'oxygen.decimal' => 'El valor admite máximo 2 decimales.',
+            'methane.decimal' => 'El valor admite máximo 2 decimales.',
+            'carbon_dioxide.decimal' => 'El valor admite máximo 2 decimales.',
+            'hydrogen_sulfide.decimal' => 'El valor admite máximo 2 decimales.',
+            'carbon_monoxide.decimal' => 'El valor admite máximo 2 decimales.',
+            'nitrogen_dioxide.decimal' => 'El valor admite máximo 2 decimales.',
             'oxygen.min' => 'El oxígeno no puede ser menor a el 0%.',
             'oxygen.max' => 'El oxígeno no puede superar el 100%.',
             'methane.numeric' => 'El valor de metano debe ser un número.',
@@ -127,7 +133,9 @@ class GasMeasurementController extends Controller
             'nitrogen_dioxide.min' => 'El dióxido de nitrógeno no puede ser menor a 0.',
             'nitrogen_dioxide.max' => 'El dióxido de nitrógeno no puede superar 999.',
             'responsible_name.max' => 'El nombre del responsable no puede superar los 100 caracteres.',
+            'responsible_name.regex' => 'El nombre del responsable solo puede contener letras, espacios, puntos, apóstrofes y guiones.',
             'observation.max' => 'La observación no puede superar los 100 caracteres.',
+            'observation.regex' => 'La observación contiene caracteres no permitidos.',
         ]);
 
         $detalle->update($datosValidados);
@@ -145,13 +153,13 @@ class GasMeasurementController extends Controller
 
         $datosValidados = $request->validate([
             'measurement_time' => 'nullable|date_format:H:i',
-            'chief_signature' => 'nullable|string|starts_with:data:image/|max:3000000',
-            'sst_signature' => 'nullable|string|starts_with:data:image/|max:3000000',
+            'chief_signature' => ['nullable', 'string', 'max:3000000', 'regex:/^data:image\/(png|jpeg|webp);base64,/'],
+            'sst_signature' => ['nullable', 'string', 'max:3000000', 'regex:/^data:image\/(png|jpeg|webp);base64,/'],
         ], [
             'measurement_time.date_format' => 'La hora de ingreso debe tener el formato HH:MM.',
-            'chief_signature.starts_with' => 'La firma del jefe de mina debe ser una imagen.',
+            'chief_signature.regex' => 'La firma del jefe de mina debe ser una imagen PNG, JPG o WEBP.',
             'chief_signature.max' => 'La firma del jefe de mina es demasiado pesada (máx. 2 MB).',
-            'sst_signature.starts_with' => 'La firma del líder SST debe ser una imagen.',
+            'sst_signature.regex' => 'La firma del líder SST debe ser una imagen PNG, JPG o WEBP.',
             'sst_signature.max' => 'La firma del líder SST es demasiado pesada (máx. 2 MB).',
         ]);
 
