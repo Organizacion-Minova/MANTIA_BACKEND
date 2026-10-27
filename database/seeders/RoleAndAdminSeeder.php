@@ -17,7 +17,7 @@ class RoleAndAdminSeeder extends Seeder
 
         // 1) Permisos: modulo.accion
         $modulos = [
-            'company', 'location', 'location-category',
+            'location', 'location-category',
             'machine', 'machine-category', 'equipment',
             'tool', 'category-tools',
             'gas-measurements',
@@ -46,7 +46,7 @@ class RoleAndAdminSeeder extends Seeder
         // 3) Permisos de cada rol
         $consulta = [ // lo que se necesita para llenar formatos
             'machine.view', 'equipment.view', 'location.view',
-            'location-category.view', 'machine-category.view', 'company.view',
+            'location-category.view', 'machine-category.view',
         ];
         $formatos = [
             'daily-use.view', 'daily-use.create', 'daily-use.update', 'daily-use.delete',

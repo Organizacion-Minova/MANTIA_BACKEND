@@ -93,7 +93,7 @@ php artisan key:generate
 php artisan migrate:fresh --seed
 ```
 
-Esto creará todas las tablas necesarias (usuarios, permisos, roles, tablas de negocio como `company`, `machine`, `equipment`, `tool`, `location`, `inspection`, `gas_measurement`, etc.) y sembrará datos iniciales.
+Esto creará todas las tablas necesarias (usuarios, permisos, roles, tablas de negocio como `machine`, `equipment`, `tool`, `location`, `inspection`, `gas_measurement`, etc.) y sembrará datos iniciales.
 
 ### 6. Ejecutar el servidor de desarrollo
 
@@ -186,7 +186,6 @@ POST /api/dev-login/K  → Usuario Kevin
 ### Tablas principales del sistema
 
 - `users` — Usuarios del sistema
-- `company` — Empresas/compañías
 - `category_group` / `category` — Grupos y categorías de elementos
 - `machine_category` — Categorías de máquinas
 - `location_category` / `location` — Categorías y ubicaciones

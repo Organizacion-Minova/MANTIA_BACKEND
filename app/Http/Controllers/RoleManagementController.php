@@ -11,7 +11,6 @@ class RoleManagementController extends Controller
     public function permissionsDisponibles()
 {
     $modulos = [
-        'company' => 'Empresas',
         'location' => 'Ubicaciones',
         'location-category' => 'Categorías de ubicación',
         'machine' => 'Máquinas',

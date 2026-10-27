@@ -7,7 +7,6 @@ use App\Http\Controllers\DevAuthController;
 use App\Http\Controllers\MachineCategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminApprovalController;
-use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\LocationCategoryController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\CategoriesToolsController;
@@ -81,12 +80,6 @@ Route::middleware(['auth:sanctum', 'permission:machine-category.view'])->get('/m
 Route::middleware(['auth:sanctum', 'permission:machine-category.create'])->post('/machine-categories', [MachineCategoryController::class, 'store']);
 Route::middleware(['auth:sanctum', 'permission:machine-category.update'])->put('/machine-categories/{id}', [MachineCategoryController::class, 'update']);
 Route::middleware(['auth:sanctum', 'permission:machine-category.delete'])->delete('/machine-categories/{id}', [MachineCategoryController::class, 'destroy']);
-
-# Empresas
-Route::middleware(['auth:sanctum', 'permission:company.view'])->get('/company', [CompanyController::class, 'index']);
-Route::middleware(['auth:sanctum', 'permission:company.create'])->post('/company', [CompanyController::class, 'store']);
-Route::middleware(['auth:sanctum', 'permission:company.update'])->put('/company/{id}', [CompanyController::class, 'update']);
-Route::middleware(['auth:sanctum', 'permission:company.delete'])->delete('/company/{id}', [CompanyController::class, 'destroy']);
 
 # Categorías de ubicaciones
 Route::middleware(['auth:sanctum', 'permission:location-category.view'])->get('/location-category', [LocationCategoryController::class, 'index']);

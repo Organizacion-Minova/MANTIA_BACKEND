@@ -21,7 +21,6 @@ class DatabaseSeeder extends Seeder
             RoleAndAdminSeeder::class,
             CategoryLocationSeeder::class,
             LocationSeeder::class,
-            CompaniesSeeder::class,
             CategoryGroupToolsSeeder::class,
             CategoryMachineSeeder::class,
             CategoryToolsSeeder::class,
