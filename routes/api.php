@@ -25,6 +25,7 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\InspectionQuestionController;
 use App\Http\Controllers\InspectionQuestionEquipmentController;
 use App\Http\Controllers\InspectionEquipmentController;
+use App\Http\Controllers\GasMeasurementExportController;
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,10');
 Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
@@ -194,6 +195,13 @@ Route::middleware('auth:sanctum')->put('/equipment-questions/reorder', [Inspecti
 
 Route::middleware('auth:sanctum')->apiResource('equipment-inspections', InspectionEquipmentController::class)->only(['index', 'store', 'show']);
 
+# Exportaciones unitarias Medición de gases
+Route::middleware('auth:sanctum')->get('/gas-measurements/{id}/export/excel', [GasMeasurementExportController::class, 'exportarUnitarioExcel']);
+Route::middleware('auth:sanctum')->get('/gas-measurements/{id}/export/pdf', [GasMeasurementExportController::class, 'exportarUnitarioPdf']);
+
+# Exportaciones por rango de fechas Medición de gases
+Route::middleware('auth:sanctum')->get('/gas-measurements/export/range/excel', [GasMeasurementExportController::class, 'exportarRangoExcel']);
+Route::middleware('auth:sanctum')->get('/gas-measurements/export/range/pdf', [GasMeasurementExportController::class, 'exportarRangoPdf']);
 
 
 
