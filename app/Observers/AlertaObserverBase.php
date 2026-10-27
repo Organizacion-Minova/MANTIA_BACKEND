@@ -15,9 +15,14 @@ abstract class AlertaObserverBase
         return null;
     }
 
+    protected function enlace(Model $model, bool $eliminado = false): ?string
+    {
+        return null;
+    }
+
     public function created(Model $model): void
     {
-        $this->notificar("Se registró: {$this->etiqueta($model)}", 'info');
+        $this->notificar("Se registró: {$this->etiqueta($model)}", 'info', $this->enlace($model));
     }
 
     public function updated(Model $model): void
@@ -28,20 +33,20 @@ abstract class AlertaObserverBase
                 'maintenance' => 'warning',
                 default => 'info',
             };
-            $this->notificar("{$this->etiqueta($model)} cambió a estado: {$model->status}", $nivel);
+            $this->notificar("{$this->etiqueta($model)} cambió a estado: {$model->status}", $nivel, $this->enlace($model));
         }
     }
 
     public function deleted(Model $model): void
     {
-        $this->notificar("Se eliminó: {$this->etiqueta($model)}", 'warning');
+        $this->notificar("Se eliminó: {$this->etiqueta($model)}", 'warning', $this->enlace($model, true));
     }
 
-    private function notificar(string $mensaje, string $nivel): void
+    protected function notificar(string $mensaje, string $nivel, ?string $enlace = null): void
     {
         $rol = $this->rolDestino();
         $rol
-            ? AlertaService::porRol($rol, $this->tipo(), $mensaje, $nivel)
-            : AlertaService::todos($this->tipo(), $mensaje, $nivel);
+            ? AlertaService::porRol($rol, $this->tipo(), $mensaje, $nivel, $enlace)
+            : AlertaService::todos($this->tipo(), $mensaje, $nivel, $enlace);
     }
 }

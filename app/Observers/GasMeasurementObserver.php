@@ -39,7 +39,8 @@ class GasMeasurementObserver extends AlertaObserverBase
                 'Administrador',
                 $this->tipo(),
                 "Se abrió la {$this->etiqueta($model)}",
-                'info'
+                'info',
+                "/gases/gas_format/{$model->id}"
             );
             return;
         }

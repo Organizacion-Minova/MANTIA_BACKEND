@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 class DevUsersSeeder extends Seeder
 {
@@ -19,8 +20,11 @@ class DevUsersSeeder extends Seeder
             ['dev_letter' => 'K', 'name' => 'Kevin',    'email' => 'kevin@mantia.dev'],
         ];
 
+        // Este seeder corre antes que RoleAndAdminSeeder: el rol se asegura aquí
+        $admin = Role::firstOrCreate(['name' => 'Administrador']);
+
         foreach ($equipo as $miembro) {
-            User::firstOrCreate(
+            $usuario = User::firstOrCreate(
                 ['dev_letter' => $miembro['dev_letter']],
                 [
                     'name' => $miembro['name'],
@@ -30,6 +34,11 @@ class DevUsersSeeder extends Seeder
                     'password' => Hash::make(Str::random(40)),
                 ]
             );
+
+            // Aprobados y con rol: si quedan "pending" no reciben ninguna alerta del sistema
+            // (AlertaService solo avisa a usuarios aprobados) y solo verían las de inicio de sesión.
+            $usuario->update(['status' => 'approved']);
+            $usuario->assignRole($admin);
         }
     }
 }

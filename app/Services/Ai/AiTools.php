@@ -13,6 +13,9 @@ use Throwable;
  * Herramientas de SOLO LECTURA que la IA puede usar para consultar datos de MANTIA.
  * Ninguna escribe ni borra, y ninguna expone contraseñas, correos de usuarios ni firmas.
  * Cada una devuelve como máximo 20 registros para controlar el costo y el tamaño de la respuesta.
+ *
+ * Los administradores tienen además las herramientas de AiAdminTools, que solo PROPONEN
+ * acciones: nada cambia hasta que el administrador pulsa "Confirmar" en el chat.
  */
 class AiTools
 {
@@ -167,6 +170,9 @@ class AiTools
                 'description' => 'Solicitudes de cuenta pendientes de aprobación: nombre, rol solicitado, tipo de técnico y fecha. Solo para administradores.',
                 'input_schema' => $sinParametros,
             ];
+
+            // Consultar usuarios y proponer acciones de administración (ver AiAdminTools)
+            array_push($definiciones, ...$this->admin->definitions());
         }
 
         // La IA solo ofrece (y ejecuta) lo que el rol del usuario puede ver
@@ -197,6 +203,9 @@ class AiTools
                 'pending_account_requests' => $this->esAdmin($usuario)
                     ? $this->solicitudesPendientes()
                     : ['error' => 'Esta información solo está disponible para administradores.'],
+                'admin_users', 'propose_admin_action' => $this->esAdmin($usuario)
+                    ? $this->admin->execute($nombre, $entrada, $usuario)
+                    : ['error' => 'Esta acción solo está disponible para administradores.'],
                 default => ['error' => "Herramienta desconocida: {$nombre}"],
             };
         } catch (Throwable $e) {

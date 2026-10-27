@@ -4,12 +4,20 @@ namespace App\Observers;
 
 use App\Models\Tool;
 use App\Services\AlertaService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 
 class ToolObserver extends AlertaObserverBase
 {
     protected function tipo(): string { return 'herramienta'; }
     protected function etiqueta(Model $model): string { return "Herramienta {$model->name}"; }
+
+    /** Lista de herramientas de su grupo: 1 = consumibles, 2 = no consumibles. */
+    protected function enlace(Model $model, bool $eliminado = false): ?string
+    {
+        $grupo = DB::table('category')->where('id', $model->category_id)->value('category_group_id');
+        return (int) $grupo === 2 ? '/noconsumables/tools' : '/consumables/tools';
+    }
 
     public function updated(Model $model): void
     {

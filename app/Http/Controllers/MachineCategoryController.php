@@ -22,7 +22,7 @@ class MachineCategoryController extends Controller
     public function store(Request $request)
     {
         $validado = $request->validate([
-            'name' => 'required|string|max:255|unique:machine_categories,name',
+            'name' => 'required|string|max:255|unique:machine_category,name',
             'description' => 'nullable|string',
         ],[
             'name.required' => 'El nombre es obligatorio.',
@@ -52,7 +52,7 @@ class MachineCategoryController extends Controller
         $categoria = MachineCategory::findOrFail($id);
 
         $validado = $request->validate([
-            'name' => 'required|string|max:255|unique:machine_categories,name,' . $categoria->id    ,
+            'name' => 'required|string|max:255|unique:machine_category,name,' . $categoria->id    ,
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
         ],[

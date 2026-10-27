@@ -83,6 +83,10 @@ class AuthController extends Controller
             return response()->json(['message' => 'Tu solicitud de cuenta ha sido rechazada.'], 403);
         }
 
+        if ($user->status === 'inactive') {
+            return response()->json(['message' => 'Tu cuenta está desactivada. Comunícate con el administrador.'], 403);
+        }
+
         Auth::login($user);
         $request->session()->regenerate();
 

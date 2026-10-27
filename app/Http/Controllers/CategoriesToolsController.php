@@ -23,11 +23,12 @@ class CategoriesToolsController extends Controller
     {
         $validado = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'required|string',
             'status' => 'required|string|in:Activo,Inactivo,activo,inactivo,active,inactive',
             'category_group_id' => 'required|exists:category_group,id'
         ],[
             'name.required' => 'El nombre es obligatorio.',
+            'description.required' => 'La descripción es obligatoria.',
             'name.string' => 'El nombre debe ser texto.',
             'name.max' => 'El nombre no puede superar los 255 caracteres.',
             'status.required' => 'El estado es obligatorio.',
@@ -64,11 +65,12 @@ class CategoriesToolsController extends Controller
 
         $validado = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'required|string',
             'status' => 'required|string|in:Activo,Inactivo,activo,inactivo,active,inactive',
             'category_group_id' => 'required|exists:category_group,id'
         ],[
             'name.required' => 'El nombre es obligatorio.',
+            'description.required' => 'La descripción es obligatoria.',
             'name.string' => 'El nombre debe ser texto.',
             'name.max' => 'El nombre no puede superar los 255 caracteres.',
             'status.required' => 'El estado es obligatorio.',

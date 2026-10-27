@@ -12,7 +12,9 @@ class AlertaSistema extends Notification
     public function __construct(
         public string $tipo,
         public string $mensaje,
-        public string $nivel = 'info'
+        public string $nivel = 'info',
+        // Pantalla del frontend a la que lleva la alerta (ej: /machines/cardMachine/5)
+        public ?string $enlace = null
     ) {}
 
     public function via(object $notifiable): array
@@ -22,10 +24,11 @@ class AlertaSistema extends Notification
 
     public function toArray(object $notifiable): array
     {
-        return [
+        return array_filter([
             'tipo' => $this->tipo,
             'mensaje' => $this->mensaje,
             'nivel' => $this->nivel,
-        ];
+            'enlace' => $this->enlace,
+        ], fn ($valor) => $valor !== null);
     }
 }
