@@ -72,6 +72,29 @@ class MachinesSeeder extends Seeder
                 'characteristics' => 'Potencia: 25HP, Frecuencia: 60HERZ, Voltaje: 220/440 V, Velocidad: 3500 RPM',
             ]
         );
+        Machine::firstOrCreate(
+            ['code' => 'G4C-PU02'],
+            [
+                'name' => 'Compresor 1',
+                'model' => 'CSD 75',
+                'serial_number' => 'SST-FT-001',
+                'acquisition_date' => '2022-03-25',
+                'acquisition_cost' => 20000.00,
+                'status' => 'active',
+                'warranty' => 12,
+                'image' => null,
+                'location_id' => 3,
+                'machine_category_id' => 1,
+                'company_id' => 2,
+                'responsible' => 'Jefe de mina',
+                'machine_usage' => 'Para el abastecimiento de aire comprimido',
+                'in_operation' => true,
+                'characteristics' => 'Fuente de alimentación: Eléctrica con cable 
+                                        Marca: Kaeser Compressors
+                                        Tensión: 460Y/266 V
+                                        Potencia máxima: 23.3 m³/min(825 cfm), 125 HP',
+            ]
+        );
     }
 }
 
