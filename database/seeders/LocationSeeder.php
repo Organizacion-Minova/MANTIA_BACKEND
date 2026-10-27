@@ -26,6 +26,12 @@ class LocationSeeder extends Seeder
         );
 
         Location::firstOrCreate(
+            ['name' => 'Salón de Compresores'],
+            ['description' => 'Ubicacion donde estan ubicados los compresosres',
+             'status'=>'active','location_category_id' => 2]
+        );
+
+        Location::firstOrCreate(
             ['name' => 'Tunel 1'],
             ['description' => 'Ubicación de Tunel 1',
             'status' => 'active','location_category_id' => 3]

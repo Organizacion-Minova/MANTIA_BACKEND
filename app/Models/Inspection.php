@@ -3,15 +3,32 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Inspection extends Model
 {
+    use HasFactory;
     protected $table = 'inspection';
     public $timestamps = false;
 
     protected $fillable = [
-        'inspection_date', 'duration', 'area', 'equipment_name',
-        'reviewed_by', 'review_date', 'review_table', 'observations',
-        'signature', 'machine_id',
+        'machine_id',
+        'inspection_date',
+        'duration_minutes',
+        'inspector',
+        'reviewed_by',
+        'review_date',
+        'general_observations',
+        'signature'
+
     ];
+    public function machine()
+    {
+        return $this->belongsTo(Machine::class, 'machine_id');
+    }
+
+    public function answers()
+    {
+        return $this->hasMany(InspectionAnswer::class, 'inspection_id');
+    }
 }

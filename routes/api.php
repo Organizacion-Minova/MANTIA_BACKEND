@@ -22,6 +22,9 @@ use App\Http\Controllers\DailyUseController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\RoleManagementController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\InspectionQuestionController;
+use App\Http\Controllers\InspectionQuestionEquipmentController;
+use App\Http\Controllers\InspectionEquipmentController;
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,10');
 Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
@@ -171,3 +174,27 @@ Route::middleware(['auth:sanctum', 'permission:daily-use.create'])->post('/daily
 Route::middleware(['auth:sanctum', 'permission:daily-use.delete'])->delete('/dailyuse/{id}', [DailyUseController::class, 'destroy']);
 
 Route::middleware(['auth:sanctum', 'permission:daily-use.update'])->put('/dailyuse/{id}', [DailyUseController::class, 'update']);
+
+# Preguntas inspeccion
+
+Route::middleware('auth:sanctum')->get('/inspection-questions', [InspectionQuestionController::class, 'index']);
+
+Route::middleware('auth:sanctum')->post('/inspection-questions', [InspectionQuestionController::class, 'store']);
+# Preguntas inspeccion equipos
+
+Route::middleware('auth:sanctum')->get('/inspection-equipment-questions', [InspectionQuestionEquipmentController::class, 'index']);
+
+Route::middleware('auth:sanctum')->post('/inspection-equipment-questions', [InspectionQuestionEquipmentController::class, 'store']);
+
+Route::middleware('auth:sanctum')->apiResource('equipment-questions', InspectionQuestionEquipmentController::class);
+
+Route::middleware('auth:sanctum')->put('/equipment-questions/reorder', [InspectionQuestionEquipmentController::class, 'reorder']);
+
+# Datos inspeccion equipo
+
+Route::middleware('auth:sanctum')->apiResource('equipment-inspections', InspectionEquipmentController::class)->only(['index', 'store', 'show']);
+
+
+
+
+
