@@ -14,7 +14,7 @@ class EquipmentController extends Controller
      */
     public function index()
     {
-        $equipments = Equipment::with('ubicacion', 'company')
+        $equipments = Equipment::with('ubicacion')
             ->get();
 
         return response()->json($equipments);
@@ -33,7 +33,7 @@ class EquipmentController extends Controller
             'responsible' => 'required|string|max:100',
             'status' => 'required|string|in:active,inactive,maintenance',
             'registration_date' => 'required|date',
-            'company_id' => 'required|exists:company,id',
+            'brand' => 'required|string|max:100',
             'location_id' => [
                 'required',
                 Rule::exists('location', 'id')->where(function ($query) {
@@ -64,8 +64,7 @@ class EquipmentController extends Controller
             'status.in' => 'El estado debe ser uno de los valores permitidos.',
             'registration_date.required' => 'La fecha de registro es obligatoria.',
             'registration_date.date' => 'La fecha de registro debe ser una fecha válida.',
-            'company_id.required' => 'La empresa es obligatoria.',
-            'company_id.exists' => 'La empresa seleccionada no existe.',
+            'brand.required' => 'La marca es obligatoria.',
             'location_id.required' => 'La ubicación es obligatoria.',
             'location_id.exists' => 'La ubicación seleccionada no existe.',
             'model.required' => 'El modelo es obligatorio.',
@@ -78,7 +77,7 @@ class EquipmentController extends Controller
 
         $equipo = Equipment::create($validado);
 
-        return response()->json($equipo->load(['company', 'ubicacion']), 201);
+        return response()->json($equipo->load(['ubicacion']), 201);
     }
 
     /**
@@ -86,7 +85,7 @@ class EquipmentController extends Controller
      */
     public function show(string $id)
     {
-        $equipo = Equipment::with('ubicacion', 'company')->findOrFail($id);
+        $equipo = Equipment::with('ubicacion')->findOrFail($id);
         return response()->json($equipo);
     }
 
@@ -105,7 +104,7 @@ class EquipmentController extends Controller
             'responsible' => 'required|string|max:100',
             'status' => 'required|string|in:active,inactive,maintenance',
             'registration_date' => 'required|date',
-            'company_id' => 'required|exists:company,id',
+            'brand' => 'required|string|max:100',
             'location_id' => [
                 'required',
                 Rule::exists('location', 'id')->where(function ($query) {
@@ -136,8 +135,7 @@ class EquipmentController extends Controller
             'status.in' => 'El estado debe ser uno de los valores permitidos.',
             'registration_date.required' => 'La fecha de registro es obligatoria.',
             'registration_date.date' => 'La fecha de registro debe ser una fecha válida.',
-            'company_id.required' => 'La empresa es obligatoria.',
-            'company_id.exists' => 'La empresa seleccionada no existe.',
+            'brand.required' => 'La marca es obligatoria.',
             'location_id.required' => 'La ubicación es obligatoria.',
             'location_id.exists' => 'La ubicación seleccionada no existe.',
             'model.required' => 'El modelo es obligatorio.',
@@ -158,7 +156,7 @@ class EquipmentController extends Controller
             Storage::disk('public')->delete($imagenAnterior);
         }
 
-        return response()->json($equipo->load(['company', 'ubicacion']));
+        return response()->json($equipo->load(['ubicacion']));
     }
 
     /**

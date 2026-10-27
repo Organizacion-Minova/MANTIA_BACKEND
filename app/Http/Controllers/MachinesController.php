@@ -16,7 +16,7 @@ class MachinesController extends Controller
      */
     public function index()
     {
-        $machines = Machine::with('category_maquina', 'ubicacion', 'company')->get();
+        $machines = Machine::with('category_maquina', 'ubicacion')->get();
 
         return response()->json($machines);
     }
@@ -45,7 +45,7 @@ class MachinesController extends Controller
                 }),
             ],
             'machine_category_id' => 'required|exists:machine_category,id',
-            'company_id' => 'required|exists:company,id',
+            'brand' => 'required|string|max:100',
             'responsible' => 'required|string|max:45',
             'machine_usage' => 'required|string|max:45',
             'in_operation' => 'required|boolean',
@@ -89,7 +89,7 @@ class MachinesController extends Controller
         }
         $machine = Machine::create($validado);
 
-        return response()->json($machine->load(['category_maquina', 'ubicacion', 'company']), 201);
+        return response()->json($machine->load(['category_maquina', 'ubicacion']), 201);
     }
 
     /**
@@ -97,7 +97,7 @@ class MachinesController extends Controller
      */
     public function show(string $id)
     {
-        $machine = Machine::with('category_maquina', 'ubicacion', 'company')->findOrFail($id);
+        $machine = Machine::with('category_maquina', 'ubicacion')->findOrFail($id);
 
         return response()->json($machine);
     }
@@ -127,7 +127,7 @@ class MachinesController extends Controller
                 }),
             ],
             'machine_category_id' => 'required|exists:machine_category,id',
-            'company_id' => 'required|exists:company,id',
+            'brand' => 'required|string|max:100',
             'responsible' => 'required|string|max:45',
             'machine_usage' => 'required|string|max:45',
             'in_operation' => 'required|boolean',
@@ -175,7 +175,7 @@ class MachinesController extends Controller
             Storage::disk('public')->delete($imagenAnterior);
         }
 
-        return response()->json($machine->load(['category_maquina', 'ubicacion', 'company']));
+        return response()->json($machine->load(['category_maquina', 'ubicacion']));
     }
 
     /**

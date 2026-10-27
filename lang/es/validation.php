@@ -144,7 +144,7 @@ return [
         'category_id' => 'categoría',
         'category_group_id' => 'grupo de categoría',
         'location_id' => 'ubicación',
-        'company_id' => 'marca',
+        'brand' => 'marca',
         'responsible' => 'responsable',
         'machine_usage' => 'uso de la máquina',
         'in_operation' => 'máquina en operación',
@@ -153,15 +153,6 @@ return [
         'registration_date' => 'fecha de ingreso',
         'image' => 'imagen',
         'machine_id' => 'máquina',
-
-        // Empresas, ubicaciones y categorías
-        'nit' => 'NIT',
-        'nombre' => 'nombre',
-        'telefono' => 'teléfono',
-        'correo' => 'correo electrónico',
-        'direccion' => 'dirección',
-        'descripcion' => 'descripción',
-        'categoria' => 'categoría',
 
         // Herramientas
         'condiciones' => 'condiciones',

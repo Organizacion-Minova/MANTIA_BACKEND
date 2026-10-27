@@ -29,7 +29,7 @@ class MachinesTest extends TestCase
             'warranty' => 12,
             'location_id' => $references['location'],
             'machine_category_id' => $references['category'],
-            'company_id' => $references['company'],
+            'brand' => 'Minova',
             'responsible' => str_repeat('R', 45),
             'machine_usage' => 'Desague',
             'in_operation' => 'false',
@@ -76,7 +76,7 @@ class MachinesTest extends TestCase
             'warranty' => null,
             'location_id' => $references['location'],
             'machine_category_id' => $references['category'],
-            'company_id' => $references['company'],
+            'brand' => 'Minova',
             'responsible' => 'Encargado',
             'machine_usage' => 'Aire',
             'in_operation' => true,
@@ -102,18 +102,8 @@ class MachinesTest extends TestCase
         Storage::disk('public')->assertMissing($imagePath);
     }
 
-    /**
-     * @return array{company: int, category: int, location: int}
-     */
     private function createMachineReferences(): array
     {
-        $company = DB::table('company')->insertGetId([
-            'name' => 'Minova',
-            'phone' => '123456',
-            'email' => 'test@example.com',
-            'address' => 'Mina',
-            'nit' => uniqid('nit'),
-        ]);
         $category = DB::table('machine_category')->insertGetId([
             'name' => 'Bombas',
             'description' => 'Equipos de bombeo',
@@ -130,6 +120,6 @@ class MachinesTest extends TestCase
             'location_category_id' => $locationCategory,
         ]);
 
-        return compact('company', 'category', 'location');
+        return compact('category', 'location');
     }
 }

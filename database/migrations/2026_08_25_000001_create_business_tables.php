@@ -10,14 +10,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('company', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 55);
-            $table->string('phone', 20);
-            $table->string('email', 100);
-            $table->string('address', 100);
-        });
-
         Schema::create('category_group', function (Blueprint $table) {
             $table->id();
             $table->string('name', 45);
@@ -62,7 +54,7 @@ return new class extends Migration
             $table->string('responsible', 100);
             $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
             $table->date('registration_date');
-            $table->foreignId('company_id')->constrained('company');
+            $table->string('brand', 100);
             $table->foreignId('location_id')->constrained('location');
             $table->string('image')->nullable();
             $table->string('model', 20);
@@ -81,7 +73,7 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->foreignId('location_id')->constrained('location');
             $table->foreignId('machine_category_id')->constrained('machine_category');
-            $table->foreignId('company_id')->constrained('company');
+            $table->string('brand', 100);
             $table->string('responsible', 45);
             $table->string('machine_usage', 45);
             $table->boolean('in_operation')->default(true);
@@ -217,6 +209,5 @@ return new class extends Migration
         Schema::dropIfExists('machine_category');
         Schema::dropIfExists('category');
         Schema::dropIfExists('category_group');
-        Schema::dropIfExists('company');
     }
 };

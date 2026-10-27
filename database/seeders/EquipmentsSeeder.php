@@ -25,7 +25,7 @@ class EquipmentsSeeder extends Seeder
                 'responsible'=>'Técnicos mina',
                 'status'=>'active',
                 'registration_date'=>'22/08/2023',
-                'company_id'=>1,
+                'brand'=>'Minova',
                 'location_id'=>1,
                 'image'=>'codes/Equipments/T1-BT02.jpg',
                 'model'=>'1960'
@@ -41,7 +41,7 @@ class EquipmentsSeeder extends Seeder
                 'responsible' => 'Técnicos mina',
                 'status' => 'active',
                 'registration_date' => '2023-08-22',
-                'company_id' => 1,
+                'brand'=>'Minova',
                 'location_id' => 1,
                 'image' => 'codes/Equipments/T1-SO01.jpg',
                 'model' => 'POR_DEFINIR'

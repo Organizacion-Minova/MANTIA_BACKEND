@@ -13,7 +13,6 @@ class BackupController extends Controller
 
     // Tablas que el administrador puede elegir respaldar, con su nombre en español.
     private const TABLAS_DISPONIBLES = [
-        'company' => 'Empresas',
         'location' => 'Ubicaciones',
         'location_category' => 'Categorías de ubicación',
         'machine' => 'Máquinas',

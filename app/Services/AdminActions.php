@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\LocationController;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +19,7 @@ use Spatie\Permission\Models\Role;
  *  2. El administrador pulsa "Confirmar" en el chat (AiActionController).
  *  3. Se llama a ejecutar(), que vuelve a validar porque los datos pudieron cambiar.
  *
- * Las acciones que ya tienen pantalla (ubicaciones, empresas) se ejecutan con el MISMO
+ * Las acciones que ya tienen pantalla (ubicaciones) se ejecutan con el MISMO
  * controlador de esa pantalla: así las validaciones y las alertas son las mismas
  * y si alguien cambia el controlador, el asistente usa el cambio automáticamente.
  *
@@ -35,7 +34,6 @@ class AdminActions
         'desactivar_usuario' => ['correo'],
         'activar_usuario' => ['correo'],
         'crear_ubicacion' => ['nombre', 'descripcion', 'categoria'],
-        'crear_empresa' => ['nit', 'nombre', 'telefono', 'correo', 'direccion'],
     ];
 
     public static function tipos(): array
@@ -60,7 +58,6 @@ class AdminActions
             'desactivar_usuario' => "Desactivar la cuenta de {$this->nombreDe($datos['correo'])}",
             'activar_usuario' => "Activar la cuenta de {$this->nombreDe($datos['correo'])}",
             'crear_ubicacion' => "Crear la ubicación \"{$datos['nombre']}\" en la categoría \"{$datos['categoria']}\"",
-            'crear_empresa' => "Registrar la empresa \"{$datos['nombre']}\" (NIT {$datos['nit']})",
         };
     }
 
@@ -95,12 +92,6 @@ class AdminActions
                 return $this->mensajeDe(
                     app(LocationController::class)->store($this->peticion($datos)),
                     'Ubicación registrada correctamente.'
-                );
-
-            case 'crear_empresa':
-                return $this->mensajeDe(
-                    app(CompanyController::class)->store($this->peticion($datos)),
-                    'Empresa registrada correctamente.'
                 );
         }
 
@@ -144,13 +135,6 @@ class AdminActions
                 'nombre' => 'required|string|max:100|unique:location,name',
                 'descripcion' => 'required|string',
                 'categoria' => 'required|string|exists:location_category,name',
-            ],
-            'crear_empresa' => [
-                'nit' => 'required|string|unique:company,nit',
-                'nombre' => 'required|string',
-                'telefono' => 'required|string',
-                'correo' => 'required|email',
-                'direccion' => 'required|string',
             ],
             default => throw ValidationException::withMessages(['tipo' => 'Esa acción no está permitida desde el asistente.']),
         };

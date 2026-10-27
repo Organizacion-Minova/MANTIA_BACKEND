@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\Company;
 use App\Models\CategoryGroup;
 use App\Models\Category;
 use App\Models\MachineCategory;
@@ -19,7 +18,6 @@ use App\Models\DailyUse;
 use App\Models\CategoryTools;
 use App\Models\CategoryGroupTools;
 
-use App\Observers\CompanyObserver;
 use App\Observers\CategoryGroupObserver;
 use App\Observers\CategoryObserver;
 use App\Observers\MachineCategoryObserver;
@@ -70,7 +68,6 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Company::observe(CompanyObserver::class);
         CategoryGroup::observe(CategoryGroupObserver::class);
         Category::observe(CategoryObserver::class);
         MachineCategory::observe(MachineCategoryObserver::class);

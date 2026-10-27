@@ -27,7 +27,6 @@ class ContextoPantalla
         '/types/noconsumables' => 'Herramientas no consumibles',
         '/ubications' => 'Ubicaciones',
         '/ubications/categoriesubications' => 'Categorías de ubicación',
-        '/companies' => 'Empresas',
         '/gases' => 'Mediciones de gases',
         '/gases/compare_gases' => 'Comparar mediciones de gases',
         '/alerts' => 'Alertas',

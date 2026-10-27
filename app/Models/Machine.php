@@ -25,7 +25,7 @@ class Machine extends Model
         'image',
         'location_id',
         'machine_category_id',
-        'company_id',
+        'brand',
         'responsible',
         'machine_usage',
         'in_operation',
@@ -39,9 +39,5 @@ class Machine extends Model
     public function ubicacion()
     {
         return $this->belongsTo(Location::class, 'location_id');
-    }
-    public function company()
-    {
-        return $this->belongsTo(Company::class, 'company_id');
     }
 }

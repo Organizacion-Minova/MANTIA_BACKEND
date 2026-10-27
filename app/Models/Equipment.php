@@ -17,16 +17,12 @@ class Equipment extends Model
         'responsible',
         'status', 
         'registration_date', 
-        'company_id', 
+        'brand', 
         'location_id',
         'image', 'model',
     ];
     public function ubicacion()
     {
         return $this->belongsTo(Location::class, 'location_id');
-    }
-    public function company()
-    {
-        return $this->belongsTo(Company::class, 'company_id');
     }
 }

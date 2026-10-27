@@ -44,8 +44,7 @@ class AiAdminTools
                 'name' => 'propose_admin_action',
                 'description' => 'Solo administradores. PREPARA una acción para que el administrador la confirme con un botón en el chat; NO la ejecuta. '
                     . 'Tipos y campos: crear_rol (nombre); asignar_rol (correo, rol); desactivar_usuario (correo); activar_usuario (correo); '
-                    . 'crear_ubicacion (nombre, descripcion, categoria = nombre exacto de la categoría de ubicación, consúltalo con catalogs); '
-                    . 'crear_empresa (nit, nombre, telefono, correo, direccion). Si falta un dato, pídeselo al usuario antes de llamarla.',
+                    . 'crear_ubicacion (nombre, descripcion, categoria = nombre exacto de la categoría de ubicación, consúltalo con catalogs); ',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => [
@@ -55,9 +54,6 @@ class AiAdminTools
                         'rol' => ['type' => 'string'],
                         'descripcion' => ['type' => 'string'],
                         'categoria' => ['type' => 'string'],
-                        'nit' => ['type' => 'string'],
-                        'telefono' => ['type' => 'string'],
-                        'direccion' => ['type' => 'string'],
                     ],
                 ],
             ],

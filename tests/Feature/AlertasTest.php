@@ -49,10 +49,6 @@ class AlertasTest extends TestCase
 
     private function crearReferencias(): array
     {
-        $company = DB::table('company')->insertGetId([
-            'name' => 'Minova', 'phone' => '123456', 'email' => 'minova@test.com',
-            'address' => 'Mina', 'nit' => '900123456-1',
-        ]);
         $machineCategory = DB::table('machine_category')->insertGetId([
             'name' => 'Bombas', 'description' => 'Bombeo', 'status' => 'active',
         ]);
@@ -66,7 +62,7 @@ class AlertasTest extends TestCase
             'name' => 'Llaves', 'description' => 'Llaves fijas', 'status' => 'active', 'category_group_id' => $group,
         ]);
 
-        return compact('company', 'machineCategory', 'location', 'group', 'category');
+        return compact('machineCategory', 'location', 'group', 'category');
     }
 
     /** Notificaciones guardadas para un usuario, como arreglo simple. */
@@ -93,7 +89,7 @@ class AlertasTest extends TestCase
             'serial_number' => 'SER-1', 'acquisition_date' => '2025-01-15',
             'acquisition_cost' => 15000, 'status' => 'active', 'warranty' => 12,
             'location_id' => $this->ref['location'], 'machine_category_id' => $this->ref['machineCategory'],
-            'company_id' => $this->ref['company'], 'responsible' => 'Juan',
+            'brand' => 'Minova', 'responsible' => 'Juan',
             'machine_usage' => 'Desague', 'in_operation' => 'true', 'characteristics' => 'Bomba sumergible',
         ], $extra);
     }
@@ -104,7 +100,7 @@ class AlertasTest extends TestCase
             'code' => 'M-010', 'name' => 'Compresor', 'model' => 'C1', 'serial_number' => 'S-10',
             'acquisition_date' => '2025-01-15', 'acquisition_cost' => 1000, 'status' => 'active',
             'warranty' => 12, 'location_id' => $this->ref['location'],
-            'machine_category_id' => $this->ref['machineCategory'], 'company_id' => $this->ref['company'],
+            'machine_category_id' => $this->ref['machineCategory'], 'brand' => 'Minova',
             'responsible' => 'Ana', 'machine_usage' => 'Aire', 'in_operation' => true,
             'characteristics' => 'N/A',
         ], $extra));
@@ -178,7 +174,7 @@ class AlertasTest extends TestCase
         $e = Equipment::create([
             'code' => 'EQ-1', 'name' => 'Detector', 'description' => 'Multigas',
             'serial_number' => 'SN-1', 'responsible' => 'Ana', 'status' => 'active',
-            'registration_date' => '2025-01-01', 'company_id' => $this->ref['company'],
+            'registration_date' => '2025-01-01', 'brand' => 'Minova',
             'location_id' => $this->ref['location'], 'model' => 'D1', 'image' => 'x.jpg',
         ]);
         $this->assertAlerta($this->admin, 'equipo', 'info', 'Se registró');
@@ -188,17 +184,6 @@ class AlertasTest extends TestCase
     }
 
     // ───────────────────── 4. Catálogos ─────────────────────
-
-    public function test_09_empresa_por_api(): void
-    {
-        $this->actingAs($this->admin);
-        $this->postJson('/api/company', [
-            'nit' => '800111222-3', 'nombre' => 'Proveedor SAS', 'telefono' => '3001112233',
-            'correo' => 'prov@test.com', 'direccion' => 'Calle 1',
-        ])->assertSuccessful();
-
-        $this->assertAlerta($this->admin, 'empresa', 'info');
-    }
 
     public function test_10_categoria_de_ubicacion_por_api(): void
     {
