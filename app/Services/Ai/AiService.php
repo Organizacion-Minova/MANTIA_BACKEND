@@ -80,7 +80,7 @@ class AiService
         return 'Esa consulta es demasiado amplia. Intenta con una pregunta más concreta.';
     }
 
-    private function llamarApi(array $contenidos, ?User $usuario): array
+    private function llamarApi(array $contenidos, ?User $usuario = null): array
     {
         $clave = config('services.gemini.key');
         if (!$clave) {
@@ -115,7 +115,7 @@ class AiService
     }
 
     /** Convierte las herramientas de AiTools al formato "functionDeclarations" de Gemini. */
-    private function declaraciones(?User $usuario): array
+    private function declaraciones(?User $usuario = null): array
     {
         return array_map(function ($def) {
             $declaracion = [

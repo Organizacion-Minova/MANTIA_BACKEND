@@ -22,5 +22,14 @@ class CompaniesSeeder extends Seeder
                 'email' => 'matiadso@gmail.com',
             ]
         );
+        Company::firstOrCreate(
+            ['nit' => 233445556],
+            [
+                'name' => 'Kaeser',
+                'address' => 'Calle 456, Ciudad, País',
+                'phone' => '+1 234 567 891',
+                'email' => 'info@kaeser.com',
+            ]
+        );
     }
 }

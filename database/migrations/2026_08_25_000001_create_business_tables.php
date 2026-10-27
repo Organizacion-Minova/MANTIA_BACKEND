@@ -4,6 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+use function Laravel\Prompts\table;
+
 return new class extends Migration
 {
     public function up(): void
@@ -101,20 +103,6 @@ return new class extends Migration
             $table->unique(['tool_id', 'condition']);
         });
 
-        Schema::create('inspection', function (Blueprint $table) {
-            $table->id();
-            $table->dateTime('inspection_date');
-            $table->time('duration');
-            $table->string('area', 50);
-            $table->string('equipment_name', 50);
-            $table->string('reviewed_by', 50);
-            $table->dateTime('review_date');
-            $table->text('review_table');
-            $table->text('observations');
-            $table->binary('signature')->nullable();
-            $table->foreignId('machine_id')->constrained('machine');
-        });
-
         Schema::create('gas_measurement', function (Blueprint $table) {
             $table->id();
             $table->date('measurement_date');
@@ -146,6 +134,67 @@ return new class extends Migration
             $table->string('observations', 255)->nullable();
             $table->foreignId('machine_id')->constrained('machine');
         });
+        Schema::create('inspection_question', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('machine_id')->constrained('machine');
+            $table->string('text');
+            $table->enum('type', ['yes_no_na'])->default('yes_no_na');
+            $table->unsignedSmallInteger('position')->default(0);
+            $table->boolean('is_active')->default(true);
+        });
+        Schema::create('inspection', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('machine_id')->constrained('machine');
+            $table->date('inspection_date');
+            $table->unsignedSmallInteger('duration_minutes')->nullable();
+            $table->string('inspector');
+            $table->string('reviewed_by')->nullable();
+            $table->date('review_date')->nullable();
+            $table->text('general_observations')->nullable();
+            $table->string('signature')->nullable();
+
+        });
+        Schema::create('inspection_answer', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('inspection_id')->constrained('inspection')->cascadeOnDelete();
+            $table->foreignId('question_id')->constrained('inspection_question');
+            $table->enum('answer', ['yes', 'no', 'na'])->nullable();
+            $table->text('observation')->nullable();
+
+            $table->unique(['inspection_id', 'question_id']);
+        });
+        Schema::create('inspection_question_equipment', function (Blueprint $table){
+            $table->id();
+            $table->foreignId('equipment_id')->constrained('equipment');
+            $table->string('text');
+            $table->enum('type', ['yes_no_na'])->default('yes_no_na');
+            $table->unsignedSmallInteger('position')->default(0);
+            $table->boolean('is_active')->default(true);
+        });
+        Schema::create('inspection_equipment', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('equipment_id')->constrained('equipment');
+            $table->string('inspector_name');
+            $table->date('inspection_date');
+            $table->time('inspection_time')->nullable();
+            $table->string('equipment_brand');
+            $table->string('voltage')->nullable();
+            $table->string('serial_number')->nullable();
+            $table->string('area');
+            $table->text('general_observations')->nullable();
+            $table->string('responsible_signature')->nullable();
+            $table->string('warehouse_manager_signature')->nullable();
+        });
+        Schema::create('inspection_answer_equipment', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('inspection_id')->constrained('inspection_equipment')->cascadeOnDelete();
+            $table->foreignId('question_id')->constrained('inspection_question_equipment');
+            $table->enum('answer', ['yes', 'no', 'na']);
+            $table->text('observation')->nullable();
+            $table->timestamps();
+
+            $table->unique(['inspection_id', 'question_id']);
+        });
     }
 
     public function down(): void
@@ -154,6 +203,11 @@ return new class extends Migration
         Schema::dropIfExists('gas_measurement_location');
         Schema::dropIfExists('gas_measurement');
         Schema::dropIfExists('inspection');
+        Schema::dropIfExists('inspection_question');
+        Schema::dropIfExists('inspection_answer');
+        Schema::dropIfExists('inspection_question_equipment');
+        Schema::dropIfExists('inspection_equipment');
+        Schema::dropIfExists('inspection_answer_equipment');
         Schema::dropIfExists('tool');
         Schema::dropIfExists('tool_stock_condition');
         Schema::dropIfExists('machine');

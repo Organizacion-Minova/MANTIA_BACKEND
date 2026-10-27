@@ -21,14 +21,33 @@ class AiTools
 {
     private const LIMITE_MAXIMO = 20;
 
-    public function __construct(private AiAdminTools $admin)
-    {
-    }
+    /** Qué necesita el usuario para que la IA le consulte cada cosa (mismas reglas que la página). */
+    private const ACCESO = [
+        'gas_measurements'         => ['permiso' => 'gas-measurements.view'],
+        'tools_inventory'          => ['permiso' => 'tool.view'],
+        'machines_status'          => ['permiso' => 'machine.view'],
+        'equipment_status'         => ['permiso' => 'equipment.view'],
+        'recent_inspections'       => ['permiso' => 'inspection.view'],
+        'daily_usage'              => ['permiso' => 'daily-use.view'],
+        'general_summary'          => ['roles' => ['Jefe de mina', 'SST']],
+        'catalogs'                 => ['roles' => ['Jefe de mina', 'SST']],
+        'pending_account_requests' => ['roles' => ['Jefe de mina']],
+        // alerts_summary: son las alertas del propio usuario, no necesita regla
+    ];
 
-    /** Acciones que la IA propuso en esta petición (las envía AiController al frontend). */
-    public function accionesPropuestas(): array
+    private function puede(?User $usuario, string $herramienta): bool
     {
-        return $this->admin->propuestas();
+        $regla = self::ACCESO[$herramienta] ?? null;
+        if (! $regla) {
+            return true;
+        }
+        if (! $usuario) {
+            return false;
+        }
+
+        return isset($regla['permiso'])
+            ? $usuario->can($regla['permiso'])
+            : $usuario->hasAnyRole($regla['roles']);
     }
 
     /** Descripción de cada herramienta, tal como la ve el modelo. */
@@ -156,12 +175,20 @@ class AiTools
             array_push($definiciones, ...$this->admin->definitions());
         }
 
-        return $definiciones;
+        // La IA solo ofrece (y ejecuta) lo que el rol del usuario puede ver
+        return array_values(array_filter(
+            $definiciones,
+            fn ($d) => $this->puede($usuario, $d['name'])
+        ));
     }
 
     /** Ejecuta una herramienta y devuelve un arreglo listo para enviarle al modelo. */
     public function execute(string $nombre, array $entrada, ?User $usuario): array
     {
+        if (! $this->puede($usuario, $nombre)) {
+            return ['error' => 'Tu rol no tiene permiso para consultar esa información.'];
+        }
+
         try {
             return match ($nombre) {
                 'general_summary' => $this->resumenGeneral(),
@@ -570,7 +597,7 @@ class AiTools
 
     private function esAdmin(?User $usuario): bool
     {
-        return (bool) $usuario?->hasRole('Administrador');
+        return (bool) $usuario?->hasRole('Jefe de mina');
     }
 
     private function limite(mixed $valor, int $defecto): int

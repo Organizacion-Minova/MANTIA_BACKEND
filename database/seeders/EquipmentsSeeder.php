@@ -32,5 +32,20 @@ class EquipmentsSeeder extends Seeder
             ]
 
         );
+        Equipment::firstOrCreate(
+            ['code' => 'T1-SO01'],
+            [
+                'name' => 'Equipo de soldadura',
+                'description' => 'Equipo de soldadura utilizado para realizar trabajos de mantenimiento y reparación de maquinaria minera.',
+                'serial_number' => 'POR_DEFINIR',
+                'responsible' => 'Técnicos mina',
+                'status' => 'active',
+                'registration_date' => '2023-08-22',
+                'company_id' => 1,
+                'location_id' => 1,
+                'image' => 'codes/Equipments/T1-SO01.jpg',
+                'model' => 'POR_DEFINIR'
+            ]
+        );
     }
 }
