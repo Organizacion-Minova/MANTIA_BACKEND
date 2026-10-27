@@ -15,6 +15,7 @@ use App\Models\Inspection;
 use App\Models\GasMeasurement;
 use App\Models\GasMeasurementDetail;
 use App\Models\Tools;
+use App\Models\DailyUse;
 use App\Models\CategoryTools;
 use App\Models\CategoryGroupTools;
 
@@ -30,6 +31,7 @@ use App\Observers\ToolObserver;
 use App\Observers\InspectionObserver;
 use App\Observers\GasMeasurementObserver;
 use App\Observers\GasMeasurementDetailObserver;
+use App\Observers\DailyUseObserver;
 
 use App\Listeners\RegistrarInicioSesion;
 use App\Listeners\RegistrarCierreSesion;
@@ -80,6 +82,7 @@ class AppServiceProvider extends ServiceProvider
         Inspection::observe(InspectionObserver::class);
         GasMeasurement::observe(GasMeasurementObserver::class);
         GasMeasurementDetail::observe(GasMeasurementDetailObserver::class);
+        DailyUse::observe(DailyUseObserver::class);
         Tools::observe(ToolObserver::class);
         // Las pantallas de herramientas usan estos modelos (mismas tablas que Category y CategoryGroup)
         CategoryTools::observe(CategoryObserver::class);

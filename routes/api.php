@@ -13,6 +13,7 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\CategoriesToolsController;
 use App\Http\Controllers\ToolsController;
 use App\Http\Controllers\AiController;
+use App\Http\Controllers\AiActionController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\GasMeasurementController;
 use App\Http\Controllers\MachinesController;
@@ -131,6 +132,12 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 // Asistente de IA (MANTIA IA): solo usuarios autenticados, máx. 20 mensajes por minuto
 Route::middleware(['auth:sanctum', 'throttle:20,1'])->post('/ai/chat', [AiController::class, 'chat']);
+
+// Botones "Confirmar" / "Cancelar" de las acciones que propone MANTIA IA: solo administradores
+Route::middleware(['auth:sanctum', 'role:Administrador', 'throttle:10,1'])->group(function () {
+    Route::post('/ai/acciones/{id}/confirmar', [AiActionController::class, 'confirmar']);
+    Route::post('/ai/acciones/{id}/cancelar', [AiActionController::class, 'cancelar']);
+});
 
 Route::middleware('auth:sanctum')->prefix('dashboard')->group(function () {
     Route::get('/', [DashboardController::class, 'index']);

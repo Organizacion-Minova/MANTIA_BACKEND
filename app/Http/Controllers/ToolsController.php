@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use App\Models\Tools;
+use App\Services\AlertaStockHerramienta;
 use Illuminate\Validation\Rule;
 
 class ToolsController extends Controller
@@ -74,6 +75,9 @@ class ToolsController extends Controller
             ['condition' => 'malo', 'stock' => $validado['condiciones']['malo']],
         ]);
 
+        // Alerta de stock bajo / mal estado, ya con las tres condiciones guardadas
+        AlertaStockHerramienta::revisar($tool);
+
         return response()->json($tool->load(['ubicacion', 'condiciones', 'categoria']), 201);
 
     }
@@ -133,6 +137,9 @@ class ToolsController extends Controller
 
     $this->validarStockMinimo($validado['condiciones']);
 
+    // Stock antes de editar, para avisar solo si baja o aumentan las de mal estado
+    $stockAntes = $tool->condiciones()->pluck('stock', 'condition')->map(fn ($n) => (int) $n)->all();
+
     $tool->update([
         'name' => $validado['name'],
         'location_id' => $validado['location_id'],
@@ -145,6 +152,8 @@ class ToolsController extends Controller
             ['stock' => $cantidad]
         );
     }
+
+    AlertaStockHerramienta::revisar($tool, $stockAntes);
 
     return response()->json($tool->load(['ubicacion', 'condiciones','categoria']));
     }

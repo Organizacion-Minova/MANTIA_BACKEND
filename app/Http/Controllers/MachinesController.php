@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Machine;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -183,7 +185,20 @@ class MachinesController extends Controller
     {
         $machine = Machine::findOrFail($id);
         $image = $machine->image;
-        $machine->delete();
+
+        try {
+            // Transacción propia: en PostgreSQL un error deja inservible la transacción que lo contiene
+            DB::transaction(fn () => $machine->delete());
+        } catch (QueryException $e) {
+            // 23503 (PostgreSQL) / 23000 (MySQL): la máquina tiene uso diario o inspecciones registradas
+            if (in_array($e->getCode(), ['23503', '23000'], true)) {
+                return response()->json([
+                    'message' => 'No se puede eliminar la máquina porque tiene registros de uso diario o inspecciones.',
+                ], 422);
+            }
+            throw $e;
+        }
+
         if ($image) {
             Storage::disk('public')->delete($image);
         }

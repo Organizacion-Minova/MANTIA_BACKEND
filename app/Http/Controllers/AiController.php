@@ -37,6 +37,10 @@ class AiController extends Controller
             ], 503);
         }
 
-        return response()->json(['respuesta' => $respuesta]);
+        return response()->json([
+            'respuesta' => $respuesta,
+            // Acciones de administrador que esperan el botón "Confirmar" (vacío para los demás)
+            'acciones' => $ai->accionesPropuestas(),
+        ]);
     }
 }

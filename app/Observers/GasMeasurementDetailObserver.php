@@ -55,7 +55,8 @@ class GasMeasurementDetailObserver
             'Administrador',
             'gas',
             "Riesgo detectado en {$ubicacion}: " . implode('; ', $riesgos) . '. Avisar a SST.',
-            'danger'
+            'danger',
+            "/gases/gas_format/{$detalle->gas_measurement_id}"
         );
     }
 
