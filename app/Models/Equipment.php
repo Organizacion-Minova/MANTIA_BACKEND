@@ -3,23 +3,32 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Equipment extends Model
 {
+    use HasFactory;
+
     protected $table = 'equipment';
+
     public $timestamps = false;
 
     protected $fillable = [
         'code', 
         'name', 
-        'description', 
+        'model',
         'serial_number', 
         'responsible',
         'status', 
-        'registration_date', 
+        'start_up_date', 
         'brand', 
+        'plate',
+        'fuel',
+        'power',
+        'voltage',
         'location_id',
-        'image', 'model',
+        'image', 
+        'description', 
     ];
     public function ubicacion()
     {

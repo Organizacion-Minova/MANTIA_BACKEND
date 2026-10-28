@@ -49,15 +49,20 @@ return new class extends Migration
             $table->id();
             $table->string('code', 20)->unique();
             $table->string('name', 100);
-            $table->text('description');
+            $table->string('model', 20);
             $table->string('serial_number', 20)->unique();
             $table->string('responsible', 100);
             $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
-            $table->date('registration_date');
+            $table->date('start_up_date');
             $table->string('brand', 100);
+            $table->string('plate', 30);
+            $table->string('fuel', 50);
+            $table->string('power', 100);
+            $table->string('voltage', 50);
             $table->foreignId('location_id')->constrained('location');
             $table->string('image')->nullable();
-            $table->string('model', 20);
+            $table->text('description');
+           
         });
 
         Schema::create('machine', function (Blueprint $table) {
