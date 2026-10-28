@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Notifications\AlertaSistema;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -52,6 +53,10 @@ class AlertaService
     private static function enviar($usuarios, string $tipo, string $mensaje, string $nivel, ?string $enlace = null): void
     {
         foreach ($usuarios as $usuario) {
+            if (self::repetida($usuario, $tipo, $mensaje, $nivel, $enlace)) {
+                continue;
+            }
+
             try {
                 $usuario->notify(new AlertaSistema($tipo, $mensaje, $nivel, $enlace));
             } catch (Throwable $e) {
@@ -61,6 +66,22 @@ class AlertaService
                     'error' => $e->getMessage(),
                 ]);
             }
+        }
+    }
+
+    /**
+     * Si el usuario ya recibió esta misma alerta hace menos de 10 segundos, no se repite.
+     * Pasa cuando se pulsa "Guardar" varias veces seguidas y llegan varias peticiones iguales.
+     */
+    private static function repetida($usuario, string $tipo, string $mensaje, string $nivel, ?string $enlace): bool
+    {
+        $clave = "alerta:{$usuario->id}:" . md5("{$tipo}|{$mensaje}|{$nivel}|{$enlace}");
+
+        try {
+            // add() solo guarda si la clave no existe: la primera alerta pasa, las copias no
+            return ! Cache::add($clave, true, now()->addSeconds(10));
+        } catch (Throwable $e) {
+            return false; // si la caché falla, mejor enviar la alerta que perderla
         }
     }
 }
