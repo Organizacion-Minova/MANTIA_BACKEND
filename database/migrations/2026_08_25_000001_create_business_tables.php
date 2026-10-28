@@ -55,10 +55,10 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
             $table->date('start_up_date');
             $table->string('brand', 100);
-            $table->string('plate', 30);
-            $table->string('fuel', 50);
-            $table->string('power', 100);
-            $table->string('voltage', 50);
+            $table->string('plate', 30)->nullable();
+            $table->string('fuel', 50)->nullable();
+            $table->string('power', 100)->nullable();
+            $table->string('voltage', 50)->nullable();
             $table->foreignId('location_id')->constrained('location');
             $table->string('image')->nullable();
             $table->text('description');
@@ -160,37 +160,33 @@ return new class extends Migration
 
             $table->unique(['inspection_id', 'question_id']);
         });
-        Schema::create('inspection_question_equipment', function (Blueprint $table){
+        Schema::create('inspection_format', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('equipment_id')->constrained('equipment');
-            $table->string('text');
-            $table->enum('type', ['yes_no_na'])->default('yes_no_na');
-            $table->unsignedSmallInteger('position')->default(0);
+            $table->foreignId('equipment_id')->constrained('equipment');                // "martillo neumático"
+            $table->string('code')->nullable();                // ej. HSE-F-035
+            $table->string('version')->nullable();
+            $table->date('valid_from')->nullable();            // "vigente desde" / "fecha de emisión"
+            $table->boolean('numbered')->default(false);
+            $table->boolean('has_general_observations')->default(false);
             $table->boolean('is_active')->default(true);
         });
-        Schema::create('inspection_equipment', function (Blueprint $table) {
+        Schema::create('inspection_section', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('equipment_id')->constrained('equipment');
-            $table->string('inspector_name');
-            $table->date('inspection_date');
-            $table->time('inspection_time')->nullable();
-            $table->string('equipment_brand');
-            $table->string('voltage')->nullable();
-            $table->string('serial_number')->nullable();
-            $table->string('area');
-            $table->text('general_observations')->nullable();
-            $table->string('responsible_signature')->nullable();
-            $table->string('warehouse_manager_signature')->nullable();
+            $table->foreignId('format_id')->constrained('inspection_format')->cascadeOnDelete();
+            $table->string('title');
+            $table->unsignedSmallInteger('position')->default(1);
+            $table->string('mode')->default('daily');          // daily | weekly
+            $table->json('options');                           // ["B","M"], ["C","NC","N/A"], ["SI","NO"]
+            $table->string('instructions')->nullable();
+            $table->boolean('has_observation')->default(false);
         });
-        Schema::create('inspection_answer_equipment', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('inspection_id')->constrained('inspection_equipment')->cascadeOnDelete();
-            $table->foreignId('question_id')->constrained('inspection_question_equipment');
-            $table->enum('answer', ['yes', 'no', 'na']);
-            $table->text('observation')->nullable();
-            $table->timestamps();
 
-            $table->unique(['inspection_id', 'question_id']);
+        Schema::create('inspection_question', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('section_id')->constrained('inspection_section')->cascadeOnDelete();
+            $table->string('text');
+            $table->unsignedSmallInteger('position')->default(1);   // se reinicia en cada sección
+            $table->boolean('is_active')->default(true);
         });
     }
 
@@ -202,9 +198,9 @@ return new class extends Migration
         Schema::dropIfExists('inspection');
         Schema::dropIfExists('inspection_question');
         Schema::dropIfExists('inspection_answer');
-        Schema::dropIfExists('inspection_question_equipment');
-        Schema::dropIfExists('inspection_equipment');
-        Schema::dropIfExists('inspection_answer_equipment');
+        Schema::dropIfExists('inspection_question');
+        Schema::dropIfExists('inspection_section');
+        Schema::dropIfExists('inspection_format');
         Schema::dropIfExists('tool');
         Schema::dropIfExists('tool_stock_condition');
         Schema::dropIfExists('machine');
