@@ -162,8 +162,8 @@ return new class extends Migration
         });
         Schema::create('inspection_format_equipment', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('equipment_id')->constrained('equipment');                // "martillo neumático"
-            $table->string('code')->nullable();                // ej. HSE-F-035
+            $table->foreignId('equipment_id')->constrained('equipment');// "martillo neumático"
+            $table->string('code')->nullable();// ej. HSE-F-035
             $table->string('version')->nullable();
             $table->date('valid_from')->nullable();            // "vigente desde" / "fecha de emisión"
             $table->boolean('numbered')->default(false);
