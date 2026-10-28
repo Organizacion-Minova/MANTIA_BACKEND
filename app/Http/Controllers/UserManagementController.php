@@ -28,7 +28,18 @@ class UserManagementController extends Controller
         }
 
         $user->is_active = ! $user->is_active;
+        // El login revisa "status": se mantiene igual que is_active
+        if (! $user->is_active) {
+            $user->status = 'inactive';
+        } elseif ($user->status === 'inactive') {
+            $user->status = 'approved';
+        }
         $user->save();
+
+        // Al desactivar, se cierran sus sesiones abiertas
+        if (! $user->is_active) {
+            \Illuminate\Support\Facades\DB::table('sessions')->where('user_id', $user->id)->delete();
+        }
 
         return response()->json([
             'message' => $user->is_active ? 'Usuario activado.' : 'Usuario desactivado.',
@@ -58,6 +69,12 @@ class UserManagementController extends Controller
         ]);
 
         $user = User::findOrFail($id);
+
+        // Así el sistema nunca se queda sin Jefe de mina
+        if ($user->id === $request->user()->id) {
+            return response()->json(['message' => 'No puedes cambiar tu propio rol.'], 422);
+        }
+
         $user->syncRoles([$request->role]);
 
         return response()->json([

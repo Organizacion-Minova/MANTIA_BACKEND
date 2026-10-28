@@ -52,7 +52,7 @@ class GasMeasurementDetailObserver
         $ubicacion = $detalle->location?->name ?? "ubicación #{$detalle->location_id}";
 
         AlertaService::porRol(
-            'Administrador',
+            ['Jefe de mina', 'SST'],
             'gas',
             "Riesgo detectado en {$ubicacion}: " . implode('; ', $riesgos) . '. Avisar a SST.',
             'danger',
