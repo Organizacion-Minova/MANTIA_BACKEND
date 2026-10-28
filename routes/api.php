@@ -198,24 +198,24 @@ Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspect
 Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/inspection-questions', [InspectionQuestionController::class, 'store']);
 # Preguntas inspeccion equipos
 
-Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-equipment-questions', [InspectionQuestionEquipmentController::class, 'index']);
+// Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-equipment-questions', [InspectionQuestionEquipmentController::class, 'index']);
 
-Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/inspection-equipment-questions', [InspectionQuestionEquipmentController::class, 'store']);
+// Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/inspection-equipment-questions', [InspectionQuestionEquipmentController::class, 'store']);
 
 
-Route::middleware(['auth:sanctum', 'permission:inspection.update'])->put('/equipment-questions/reorder', [InspectionQuestionEquipmentController::class, 'reorder']);
+// Route::middleware(['auth:sanctum', 'permission:inspection.update'])->put('/equipment-questions/reorder', [InspectionQuestionEquipmentController::class, 'reorder']);
 
-Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-questions', [InspectionQuestionEquipmentController::class, 'index']);
-Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/equipment-questions', [InspectionQuestionEquipmentController::class, 'store']);
-Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-questions/{id}', [InspectionQuestionEquipmentController::class, 'show']);
-Route::middleware(['auth:sanctum', 'permission:inspection.update'])->put('/equipment-questions/{id}', [InspectionQuestionEquipmentController::class, 'update']);
-Route::middleware(['auth:sanctum', 'permission:inspection.delete'])->delete('/equipment-questions/{id}', [InspectionQuestionEquipmentController::class, 'destroy']);
+// Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-questions', [InspectionQuestionEquipmentController::class, 'index']);
+// Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/equipment-questions', [InspectionQuestionEquipmentController::class, 'store']);
+// Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-questions/{id}', [InspectionQuestionEquipmentController::class, 'show']);
+// Route::middleware(['auth:sanctum', 'permission:inspection.update'])->put('/equipment-questions/{id}', [InspectionQuestionEquipmentController::class, 'update']);
+// Route::middleware(['auth:sanctum', 'permission:inspection.delete'])->delete('/equipment-questions/{id}', [InspectionQuestionEquipmentController::class, 'destroy']);
 
-# Datos inspeccion equipo
+// # Datos inspeccion equipo
 
-Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-inspections', [InspectionEquipmentController::class, 'index']);
-Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/equipment-inspections', [InspectionEquipmentController::class, 'store']);
-Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-inspections/{id}', [InspectionEquipmentController::class, 'show']);
+// Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-inspections', [InspectionEquipmentController::class, 'index']);
+// Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/equipment-inspections', [InspectionEquipmentController::class, 'store']);
+// Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-inspections/{id}', [InspectionEquipmentController::class, 'show']);
 
 # Exportaciones unitarias Medición de gases
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/{id}/export/excel', [GasMeasurementExportController::class, 'exportarUnitarioExcel']);

@@ -160,7 +160,7 @@ return new class extends Migration
 
             $table->unique(['inspection_id', 'question_id']);
         });
-        Schema::create('inspection_format', function (Blueprint $table) {
+        Schema::create('inspection_format_equipment', function (Blueprint $table) {
             $table->id();
             $table->foreignId('equipment_id')->constrained('equipment');                // "martillo neumático"
             $table->string('code')->nullable();                // ej. HSE-F-035
@@ -169,8 +169,9 @@ return new class extends Migration
             $table->boolean('numbered')->default(false);
             $table->boolean('has_general_observations')->default(false);
             $table->boolean('is_active')->default(true);
+            $table->json('header_fields')->nullable();
         });
-        Schema::create('inspection_section', function (Blueprint $table) {
+        Schema::create('inspection_section_equipment', function (Blueprint $table) {
             $table->id();
             $table->foreignId('format_id')->constrained('inspection_format')->cascadeOnDelete();
             $table->string('title');
@@ -181,7 +182,7 @@ return new class extends Migration
             $table->boolean('has_observation')->default(false);
         });
 
-        Schema::create('inspection_question', function (Blueprint $table) {
+        Schema::create('inspection_question_equipment', function (Blueprint $table) {
             $table->id();
             $table->foreignId('section_id')->constrained('inspection_section')->cascadeOnDelete();
             $table->string('text');
@@ -198,9 +199,9 @@ return new class extends Migration
         Schema::dropIfExists('inspection');
         Schema::dropIfExists('inspection_question');
         Schema::dropIfExists('inspection_answer');
-        Schema::dropIfExists('inspection_question');
-        Schema::dropIfExists('inspection_section');
-        Schema::dropIfExists('inspection_format');
+        Schema::dropIfExists('inspection_question_equipment');
+        Schema::dropIfExists('inspection_section_equipment');
+        Schema::dropIfExists('inspection_format_equipment');
         Schema::dropIfExists('tool');
         Schema::dropIfExists('tool_stock_condition');
         Schema::dropIfExists('machine');
