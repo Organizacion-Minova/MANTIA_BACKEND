@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        body { font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #000; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; font-size: 10px; color: #000; margin: 0; padding: 0; }
         .page-break { page-break-after: always; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
         th, td { border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle; }

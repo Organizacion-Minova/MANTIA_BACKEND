@@ -129,7 +129,7 @@ class GasMeasurementExcelExport implements FromArray, WithTitle, WithEvents
         $sheet->getStyle('B5:C5')->getFont()->setUnderline(Font::UNDERLINE_SINGLE);
 
         $sheet->getRowDimension(3)->setRowHeight(16.5);
-        $sheet->getRowDimension(4)->setRowHeight(16.5);
+        $sheet->getRowDimension(4)->setRowHeight(26);
         $sheet->getRowDimension(5)->setRowHeight(16.5);
         $sheet->getRowDimension(6)->setRowHeight(28);
 
