@@ -8,5 +8,8 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Limpieza diaria de cuentas falsas o sin verificar
-Schedule::command('users:cleanup-unverified')->daily();
+// Alertas preventivas de la medición de gases (hora de Colombia).
+// Solo se envían si la medición del día todavía no se ha hecho.
+Schedule::command('gases:recordar 1')->dailyAt('08:00')->timezone('America/Bogota');
+Schedule::command('gases:recordar 2')->dailyAt('11:00')->timezone('America/Bogota');
+Schedule::command('gases:recordar 3')->dailyAt('14:00')->timezone('America/Bogota');
