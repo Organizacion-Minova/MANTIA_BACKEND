@@ -173,7 +173,7 @@ return new class extends Migration
         });
         Schema::create('inspection_section_equipment', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('format_id')->constrained('inspection_format')->cascadeOnDelete();
+            $table->foreignId('format_id')->constrained('inspection_format_equipment')->cascadeOnDelete();
             $table->string('title');
             $table->unsignedSmallInteger('position')->default(1);
             $table->string('mode')->default('daily');          // daily | weekly
@@ -184,7 +184,7 @@ return new class extends Migration
 
         Schema::create('inspection_question_equipment', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('section_id')->constrained('inspection_section')->cascadeOnDelete();
+            $table->foreignId('section_id')->constrained('inspection_section_equipment')->cascadeOnDelete();
             $table->string('text');
             $table->unsignedSmallInteger('position')->default(1);   // se reinicia en cada sección
             $table->boolean('is_active')->default(true);
