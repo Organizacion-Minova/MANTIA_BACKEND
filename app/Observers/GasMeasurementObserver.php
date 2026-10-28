@@ -35,13 +35,15 @@ class GasMeasurementObserver extends AlertaObserverBase
     {
         // Encabezado: solo se avisa que se abrió el formato del día
         if ($model instanceof GasMeasurement) {
-            AlertaService::porRol(
-                ['Jefe de mina', 'SST'],
-                $this->tipo(),
-                "Se abrió la {$this->etiqueta($model)}",
-                'info',
-                "/gases/gas_format/{$model->id}"
-            );
+            foreach (['Jefe de mina', 'SST'] as $rol) {
+                AlertaService::porRol(
+                    $rol,
+                    $this->tipo(),
+                    "Se abrió la {$this->etiqueta($model)}",
+                    'info',
+                    "/gases/gas_format/{$model->id}"
+                );
+            }
             return;
         }
 

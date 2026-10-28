@@ -40,6 +40,7 @@ use App\Http\Controllers\InspectionQuestionEquipmentController;
 use App\Http\Controllers\InspectionEquipmentController;
 use App\Http\Controllers\GasMeasurementExportController;
 use App\Http\Middleware\VerifyTurnstile;
+use App\Http\Controllers\TechnicalSheetExportController;
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register'])->middleware(['throttle:10,10', VerifyTurnstile::class]);
 Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
@@ -224,3 +225,7 @@ Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/g
 # Exportaciones por rango de fechas Medición de gases
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/export/range/excel', [GasMeasurementExportController::class, 'exportarRangoExcel']);
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/export/range/pdf', [GasMeasurementExportController::class, 'exportarRangoPdf']);
+
+# Exportaciones unitarias para Ficha técnica Equipos
+Route::middleware('auth:sanctum', 'permission:equipment.view')->get('/equipment/{id}/export/excel', [TechnicalSheetExportController::class, 'equipmentExcel']);
+Route::middleware('auth:sanctum', 'permission:equipment.view')->get('/equipment/{id}/export/pdf', [TechnicalSheetExportController::class, 'equipmentPdf']);
