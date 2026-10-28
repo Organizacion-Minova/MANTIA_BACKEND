@@ -1,5 +1,18 @@
 <?php
 
+/*
+|--------------------------------------------------------------------------
+| Rutas API MANTIA — versión integrada
+|--------------------------------------------------------------------------
+| Integra las rutas del repositorio y de la versión local:
+| - Conserva CompanyController y VerifyTurnstile de la versión local.
+| - Conserva autenticación, administración, equipos, herramientas, IA,
+|   mediciones, exportaciones y demás rutas compartidas.
+| - Mantiene permisos específicos en inspecciones y límites de solicitudes.
+| - Permite confirmar/cancelar acciones de IA a Administrador y Jefe de mina.
+|--------------------------------------------------------------------------
+*/
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -26,12 +39,13 @@ use App\Http\Controllers\InspectionQuestionController;
 use App\Http\Controllers\InspectionQuestionEquipmentController;
 use App\Http\Controllers\InspectionEquipmentController;
 use App\Http\Controllers\GasMeasurementExportController;
+use App\Http\Middleware\VerifyTurnstile;
 // Auth públicas
-Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,10');
+Route::post('/register', [AuthController::class, 'register'])->middleware(['throttle:10,10', VerifyTurnstile::class]);
 Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::post('/login', [AuthController::class, 'login'])->middleware(['throttle:10,1', VerifyTurnstile::class]);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware(['throttle:5,10', VerifyTurnstile::class]);
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,10');
 
 Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
     Auth::guard('web')->logout();
@@ -80,6 +94,7 @@ Route::middleware(['auth:sanctum', 'permission:machine-category.view'])->get('/m
 Route::middleware(['auth:sanctum', 'permission:machine-category.create'])->post('/machine-categories', [MachineCategoryController::class, 'store']);
 Route::middleware(['auth:sanctum', 'permission:machine-category.update'])->put('/machine-categories/{id}', [MachineCategoryController::class, 'update']);
 Route::middleware(['auth:sanctum', 'permission:machine-category.delete'])->delete('/machine-categories/{id}', [MachineCategoryController::class, 'destroy']);
+
 
 # Categorías de ubicaciones
 Route::middleware(['auth:sanctum', 'permission:location-category.view'])->get('/location-category', [LocationCategoryController::class, 'index']);
@@ -154,8 +169,8 @@ Route::middleware('auth:sanctum')->group(function () {
 // Asistente de IA (MANTIA IA): solo usuarios autenticados, máx. 20 mensajes por minuto
 Route::middleware(['auth:sanctum', 'throttle:20,1'])->post('/ai/chat', [AiController::class, 'chat']);
 
-// Botones "Confirmar" / "Cancelar" de las acciones que propone MANTIA IA: solo administradores
-Route::middleware(['auth:sanctum', 'role:Administrador', 'throttle:10,1'])->group(function () {
+// Botones "Confirmar" / "Cancelar" de las acciones que propone MANTIA IA: solo el Jefe de mina
+Route::middleware(['auth:sanctum', 'role:Administrador|Jefe de mina', 'throttle:10,1'])->group(function () {
     Route::post('/ai/acciones/{id}/confirmar', [AiActionController::class, 'confirmar']);
     Route::post('/ai/acciones/{id}/cancelar', [AiActionController::class, 'cancelar']);
 });
@@ -178,31 +193,34 @@ Route::middleware(['auth:sanctum', 'permission:daily-use.update'])->put('/dailyu
 
 # Preguntas inspeccion
 
-Route::middleware('auth:sanctum')->get('/inspection-questions', [InspectionQuestionController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-questions', [InspectionQuestionController::class, 'index']);
 
-Route::middleware('auth:sanctum')->post('/inspection-questions', [InspectionQuestionController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/inspection-questions', [InspectionQuestionController::class, 'store']);
 # Preguntas inspeccion equipos
 
-Route::middleware('auth:sanctum')->get('/inspection-equipment-questions', [InspectionQuestionEquipmentController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-equipment-questions', [InspectionQuestionEquipmentController::class, 'index']);
 
-Route::middleware('auth:sanctum')->post('/inspection-equipment-questions', [InspectionQuestionEquipmentController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/inspection-equipment-questions', [InspectionQuestionEquipmentController::class, 'store']);
 
-Route::middleware('auth:sanctum')->apiResource('equipment-questions', InspectionQuestionEquipmentController::class);
 
-Route::middleware('auth:sanctum')->put('/equipment-questions/reorder', [InspectionQuestionEquipmentController::class, 'reorder']);
+Route::middleware(['auth:sanctum', 'permission:inspection.update'])->put('/equipment-questions/reorder', [InspectionQuestionEquipmentController::class, 'reorder']);
+
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-questions', [InspectionQuestionEquipmentController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/equipment-questions', [InspectionQuestionEquipmentController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-questions/{id}', [InspectionQuestionEquipmentController::class, 'show']);
+Route::middleware(['auth:sanctum', 'permission:inspection.update'])->put('/equipment-questions/{id}', [InspectionQuestionEquipmentController::class, 'update']);
+Route::middleware(['auth:sanctum', 'permission:inspection.delete'])->delete('/equipment-questions/{id}', [InspectionQuestionEquipmentController::class, 'destroy']);
 
 # Datos inspeccion equipo
 
-Route::middleware('auth:sanctum')->apiResource('equipment-inspections', InspectionEquipmentController::class)->only(['index', 'store', 'show']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-inspections', [InspectionEquipmentController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/equipment-inspections', [InspectionEquipmentController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-inspections/{id}', [InspectionEquipmentController::class, 'show']);
 
 # Exportaciones unitarias Medición de gases
-Route::middleware('auth:sanctum')->get('/gas-measurements/{id}/export/excel', [GasMeasurementExportController::class, 'exportarUnitarioExcel']);
-Route::middleware('auth:sanctum')->get('/gas-measurements/{id}/export/pdf', [GasMeasurementExportController::class, 'exportarUnitarioPdf']);
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/{id}/export/excel', [GasMeasurementExportController::class, 'exportarUnitarioExcel']);
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/{id}/export/pdf', [GasMeasurementExportController::class, 'exportarUnitarioPdf']);
 
 # Exportaciones por rango de fechas Medición de gases
-Route::middleware('auth:sanctum')->get('/gas-measurements/export/range/excel', [GasMeasurementExportController::class, 'exportarRangoExcel']);
-Route::middleware('auth:sanctum')->get('/gas-measurements/export/range/pdf', [GasMeasurementExportController::class, 'exportarRangoPdf']);
-
-
-
-
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/export/range/excel', [GasMeasurementExportController::class, 'exportarRangoExcel']);
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/export/range/pdf', [GasMeasurementExportController::class, 'exportarRangoPdf']);

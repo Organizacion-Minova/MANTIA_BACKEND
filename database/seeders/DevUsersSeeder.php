@@ -12,6 +12,12 @@ class DevUsersSeeder extends Seeder
 {
     public function run(): void
     {
+        // Estos usuarios entran solo con una letra: nunca deben existir fuera de desarrollo
+        if (! app()->environment('local')) {
+            $this->command?->warn('DevUsersSeeder solo corre en entorno local.');
+            return;
+        }
+
         $equipo = [
             ['dev_letter' => 'D', 'name' => 'Daniela',  'email' => 'daniela@mantia.dev'],
             ['dev_letter' => 'S', 'name' => 'Santiago', 'email' => 'santiago@mantia.dev'],
@@ -21,7 +27,7 @@ class DevUsersSeeder extends Seeder
         ];
 
         // Este seeder corre antes que RoleAndAdminSeeder: el rol se asegura aquí
-        $admin = Role::firstOrCreate(['name' => 'Administrador']);
+        $admin = Role::firstOrCreate(['name' => 'Jefe de mina']);
 
         foreach ($equipo as $miembro) {
             $usuario = User::firstOrCreate(

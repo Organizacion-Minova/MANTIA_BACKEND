@@ -29,14 +29,14 @@ class GasMeasurementObserver extends AlertaObserverBase
         return "Medición de gases del {$model->measurement_date}";
     }
 
-    protected function rolDestino(): ?string { return 'Administrador'; }
+    protected function rolDestino(): array|string|null { return ['Jefe de mina', 'SST']; }
 
     public function created(Model $model): void
     {
         // Encabezado: solo se avisa que se abrió el formato del día
         if ($model instanceof GasMeasurement) {
             AlertaService::porRol(
-                'Administrador',
+                ['Jefe de mina', 'SST'],
                 $this->tipo(),
                 "Se abrió la {$this->etiqueta($model)}",
                 'info',
@@ -93,7 +93,7 @@ class GasMeasurementObserver extends AlertaObserverBase
         $ubicacion = $model->location?->name ?? "ubicación #{$model->location_id}";
 
         AlertaService::porRol(
-            'Administrador',
+            ['Jefe de mina', 'SST'],
             $this->tipo(),
             "Riesgo detectado en {$ubicacion}: " . implode('; ', $riesgos) . '. Avisar a SST.',
             'danger'

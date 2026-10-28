@@ -10,7 +10,7 @@ abstract class AlertaObserverBase
     abstract protected function tipo(): string;
     abstract protected function etiqueta(Model $model): string;
 
-    protected function rolDestino(): ?string
+    protected function rolDestino(): array|string|null
     {
         return null;
     }
