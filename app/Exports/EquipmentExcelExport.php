@@ -171,7 +171,7 @@ class EquipmentExcelExport implements FromArray, WithTitle, WithEvents
                     $this->placeImage(
                         $sheet,
                         $imagePath,
-                        self::columns * self::column_width_px,
+                        0.9 * self::columns * self::column_width_px,
                         (int) round(self::image_row_height_pt / 0.75),
                         1,
                         5,

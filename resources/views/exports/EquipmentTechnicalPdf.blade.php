@@ -6,7 +6,7 @@
         body { font-family: Arial, sans-serif; font-size: 10px; color: #000; margin: 0; padding: 0; }
         .table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
         .table th, .table td { border: 1px solid #000; padding: 8px; vertical-align: middle; text-align: center;}
-        .table img { height: 55px; }
+        .logo-sena { height: 55px; }
         .image-container { text-align: center; padding: 10px; }
         .image-container img { max-height: 180px; max-width: 100%; object-fit: contain; }
     </style>
@@ -15,7 +15,7 @@
     <table class="table">
         <tr>
             <td rowspan="3" colspan="2">
-                <img src="{{ public_path('images/sena-logo-naranja.png') }}" alt="Logo SENA">
+                <img class="logo-sena" src="{{ public_path('images/sena-logo-naranja.png') }}" alt="Logo SENA">
             </td>
             <td colspan="2">
                 SISTEMA DE GESTIÓN DE SEGURIDAD Y SALUD EN EL TRABAJO
@@ -56,7 +56,9 @@
         </tr>
         <tr>
             <td colspan="6" class="image-container">
-                <img src="{{ $equipment->image }}" style="max-height: 300px; max-width: 350px;" alt="Imagen Equipo">
+                @if($equipment->image && file_exists(public_path('storage/' . $equipment->image)))
+                    <img src="{{ public_path('storage/' . $equipment->image) }}" alt="Imagen Equipo">
+                @endif
             </td>
         </tr>
         <tr>

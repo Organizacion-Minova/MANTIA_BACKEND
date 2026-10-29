@@ -51,13 +51,17 @@ class GasMeasurementDetailObserver
 
         $ubicacion = $detalle->location?->name ?? "ubicación #{$detalle->location_id}";
 
-        AlertaService::porRol(
-            ['Jefe de mina', 'SST'],
-            'gas',
-            "Riesgo detectado en {$ubicacion}: " . implode('; ', $riesgos) . '. Avisar a SST.',
-            'danger',
-            "/gases/gas_format/{$detalle->gas_measurement_id}"
-        );
+        $mensajeAlerta = "Riesgo detectado en {$ubicacion}: " . implode('; ', $riesgos) . '.';
+
+        foreach (['Jefe de mina', 'SST'] as $rol) {
+            AlertaService::porRol(
+                $rol,
+                'gas',
+                $mensajeAlerta,
+                'danger',
+                "/gases/gas_format/{$detalle->gas_measurement_id}"
+            );
+        }
     }
 
     private function fueraDeRango(string $campo, $valor): ?string
