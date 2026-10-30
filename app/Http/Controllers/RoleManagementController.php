@@ -40,16 +40,42 @@ class RoleManagementController extends Controller
 }
     private const ROLES_PROTEGIDOS = ['Jefe de mina'];
 
+    /** @return array<int,int> id del rol => cantidad de usuarios */
+    private static function usuariosPorRol(): array
+    {
+        return \Illuminate\Support\Facades\DB::table('model_has_roles')
+            ->where('model_type', \App\Models\User::class)
+            ->selectRaw('role_id, count(*) as total')
+            ->groupBy('role_id')
+            ->pluck('total', 'role_id')
+            ->all();
+    }
+
  public function index()
 {
+    // Se cuenta directo en la tabla de asignaciones. Ni User::role() ni Role::users()
+    // sirven aquí: fallan si un rol quedó guardado con un guard distinto de "web".
+    $conteo = self::usuariosPorRol();
+
     $roles = Role::with('permissions:id,name')
         ->orderBy('name')
         ->get()
-        ->map(function ($role) {
-            $role->users_count = \App\Models\User::role($role->name)->count();
+        ->map(function ($role) use ($conteo) {
+            $role->users_count = (int) ($conteo[$role->id] ?? 0);
 
             return $role;
         });
+
+    return response()->json(['roles' => $roles]);
+}
+
+// Lista de roles para el campo "Responsable" de uso diario y máquinas
+public function responsables()
+{
+    $roles = Role::where('is_active', true)
+        ->where('name', '!=', 'Visitante')
+        ->orderBy('name')
+        ->pluck('name');
 
     return response()->json(['roles' => $roles]);
 }
@@ -114,7 +140,8 @@ public function update(Request $request, $id)
 
     public function destroy($id)
     {
-        $role = Role::withCount('users')->findOrFail($id);
+        $role = Role::findOrFail($id);
+        $role->users_count = (int) (self::usuariosPorRol()[$role->id] ?? 0);
 
         if (in_array($role->name, self::ROLES_PROTEGIDOS)) {
             return response()->json(['message' => 'Este rol no se puede eliminar.'], 422);

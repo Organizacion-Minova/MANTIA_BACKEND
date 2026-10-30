@@ -21,6 +21,16 @@ class AiTools
 {
     private const LIMITE_MAXIMO = 20;
 
+    public function __construct(private AiAdminTools $admin)
+    {
+    }
+
+    /** Acciones de administrador que la IA propuso en esta petición (las pide AiService). */
+    public function accionesPropuestas(): array
+    {
+        return $this->admin->propuestas();
+    }
+
     /** Qué necesita el usuario para que la IA le consulte cada cosa (mismas reglas que la página). */
     private const ACCESO = [
         'gas_measurements'         => ['permiso' => 'gas-measurements.view'],
@@ -59,7 +69,7 @@ class AiTools
         $definiciones = [
             [
                 'name' => 'general_summary',
-                'description' => 'Conteos generales de MANTIA: ubicaciones, herramientas, máquinas y equipos por estado, inspecciones y mediciones de gas. Úsala para preguntas generales como "¿cómo está todo?".',
+                'description' => 'Conteos generales de MANTIA: empresas, ubicaciones, herramientas, máquinas y equipos por estado, inspecciones y mediciones de gas. Úsala para preguntas generales como "¿cómo está todo?".',
                 'input_schema' => $sinParametros,
             ],
             [
@@ -101,7 +111,7 @@ class AiTools
             ],
             [
                 'name' => 'machines_status',
-                'description' => 'Máquinas registradas con su estado (active, inactive, maintenance), si están en operación, responsable, categoría y ubicación. Incluye el conteo por estado.',
+                'description' => 'Máquinas registradas con su estado (active, inactive, maintenance), si están en operación, responsable, empresa, categoría y ubicación. Incluye el conteo por estado.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => [
@@ -113,7 +123,7 @@ class AiTools
             ],
             [
                 'name' => 'equipment_status',
-                'description' => 'Equipos registrados con su estado (active, inactive, maintenance), responsable y ubicación. Incluye el conteo por estado.',
+                'description' => 'Equipos registrados con su estado (active, inactive, maintenance), responsable, empresa y ubicación. Incluye el conteo por estado.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => [
@@ -148,13 +158,13 @@ class AiTools
             ],
             [
                 'name' => 'catalogs',
-                'description' => 'Catálogos de MANTIA: ubicaciones (con su categoría y cuántas máquinas, equipos y herramientas tiene cada una), categorías de ubicación, categorías de máquinas y categorías de herramientas (consumibles y no consumibles).',
+                'description' => 'Catálogos de MANTIA: ubicaciones (con su categoría y cuántas máquinas, equipos y herramientas tiene cada una), empresas, categorías de ubicación, categorías de máquinas y categorías de herramientas (consumibles y no consumibles).',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => [
                         'tipo' => [
                             'type' => 'string',
-                            'enum' => ['ubicaciones', 'categorias_ubicacion', 'categorias_maquina', 'categorias_herramienta'],
+                            'enum' => ['ubicaciones', 'empresas', 'categorias_ubicacion', 'categorias_maquina', 'categorias_herramienta'],
                             'description' => 'Qué catálogo consultar.',
                         ],
                         'buscar' => ['type' => 'string', 'description' => 'Texto para filtrar por nombre.'],
@@ -221,6 +231,7 @@ class AiTools
     private function resumenGeneral(): array
     {
         return [
+            'empresas' => $this->contar('company'),
             'ubicaciones' => $this->contar('location'),
             'herramientas' => $this->contar('tool'),
             'maquinas_por_estado' => $this->contarPorEstado('machine'),
@@ -375,7 +386,8 @@ class AiTools
         $consulta = DB::table('machine as m')
             ->leftJoin('location as l', 'l.id', '=', 'm.location_id')
             ->leftJoin('machine_category as c', 'c.id', '=', 'm.machine_category_id')
-            ->select('m.id', 'm.code', 'm.name', 'm.model', 'm.status', 'm.in_operation', 'm.responsible', 'l.name as ubicacion', 'c.name as categoria')
+            ->leftJoin('company as co', 'co.id', '=', 'm.company_id')
+            ->select('m.id', 'm.code', 'm.name', 'm.model', 'm.status', 'm.in_operation', 'm.responsible', 'l.name as ubicacion', 'c.name as categoria', 'co.name as empresa')
             ->orderBy('m.name');
 
         if (!empty($in['estado'])) {
@@ -394,6 +406,7 @@ class AiTools
             'en_operacion' => (bool) $m->in_operation,
             'responsable' => $m->responsible,
             'categoria' => $m->categoria,
+            'empresa' => $m->empresa,
             'ubicacion' => $m->ubicacion,
             'enlace' => "/machines/cardMachine/{$m->id}",
         ])->all();
@@ -410,7 +423,8 @@ class AiTools
 
         $consulta = DB::table('equipment as e')
             ->leftJoin('location as l', 'l.id', '=', 'e.location_id')
-            ->select('e.id', 'e.code', 'e.name', 'e.model', 'e.status', 'e.responsible', 'l.name as ubicacion')
+            ->leftJoin('company as co', 'co.id', '=', 'e.company_id')
+            ->select('e.id', 'e.code', 'e.name', 'e.model', 'e.status', 'e.responsible', 'l.name as ubicacion', 'co.name as empresa')
             ->orderBy('e.name');
 
         if (!empty($in['estado'])) {
@@ -427,6 +441,7 @@ class AiTools
             'modelo' => $e->model,
             'estado' => $e->status,
             'responsable' => $e->responsible,
+            'empresa' => $e->empresa,
             'ubicacion' => $e->ubicacion,
             'enlace' => "/equipment/cardequipment/{$e->id}",
         ])->all();
@@ -500,6 +515,10 @@ class AiTools
         $filtrar = fn ($q, string $columna) => $buscar ? $q->whereRaw("LOWER({$columna}) LIKE ?", [$buscar]) : $q;
 
         return match ($tipo) {
+            'empresas' => ['empresas' => $filtrar(DB::table('company'), 'name')
+                ->orderBy('name')->limit(self::LIMITE_MAXIMO)
+                ->get(['nit', 'name as nombre', 'phone as telefono', 'address as direccion'])->all()],
+
             'categorias_ubicacion' => ['categorias_ubicacion' => $filtrar(DB::table('location_category'), 'name')
                 ->orderBy('name')->limit(self::LIMITE_MAXIMO)
                 ->get(['name as nombre', 'description as descripcion'])->all()],
