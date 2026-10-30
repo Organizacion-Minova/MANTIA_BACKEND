@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DailyUse;
+use App\Rules\RolResponsable;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -34,7 +35,7 @@ class DailyUseController extends Controller
             'operating_status' => 'required|string|max:100',
             'operation_start' => 'required|date_format:H:i:s',
             'operation_end' => 'required|date_format:H:i:s',
-            'responsible' => 'required|string|max:100',
+            'responsible' => ['required', 'string', 'max:100', new RolResponsable()],
             'observations' => 'nullable|string|max:255',
             'machine_id' => 'required|exists:machine,id',
         ], [
@@ -62,6 +63,7 @@ class DailyUseController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $actual = DailyUse::whereKey($id)->value('responsible');
         $request->merge(['date' => now()->toDateString()]);
         $validado = $request->validate([
             'date' => [
@@ -74,7 +76,7 @@ class DailyUseController extends Controller
             'operating_status' => 'required|string|max:100',
             'operation_start' => 'required|date_format:H:i:s',
             'operation_end' => 'required|date_format:H:i:s',
-            'responsible' => 'required|string|max:100',
+            'responsible' => ['required', 'string', 'max:100', new RolResponsable($actual)],
             'observations' => 'nullable|string|max:255',
             'machine_id' => 'required|exists:machine,id',
         ], [

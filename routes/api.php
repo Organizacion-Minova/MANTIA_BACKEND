@@ -63,6 +63,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $user;
 });
 
+Route::middleware(['auth:sanctum', 'permission:daily-use.create|daily-use.update|machine.create|machine.update'])
+    ->get('/roles-responsables', [RoleManagementController::class, 'responsables']);
+
 Route::middleware(['auth:sanctum', 'role:Jefe de mina'])->group(function () {
     Route::get('/admin/requests', [AdminApprovalController::class, 'pendingRequests']);
     Route::post('/admin/approve/{id}', [AdminApprovalController::class, 'approve']);
