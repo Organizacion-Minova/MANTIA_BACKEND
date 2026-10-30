@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Machine;
+use App\Rules\RolResponsable;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +47,7 @@ class MachinesController extends Controller
             ],
             'machine_category_id' => 'required|exists:machine_category,id',
             'brand' => 'required|string|max:100',
-            'responsible' => 'required|string|max:45',
+            'responsible' => ['required', 'string', 'max:45', new RolResponsable()],
             'machine_usage' => 'required|string|max:45',
             'in_operation' => 'required|boolean',
             'characteristics' => 'required|string',
@@ -128,7 +129,7 @@ class MachinesController extends Controller
             ],
             'machine_category_id' => 'required|exists:machine_category,id',
             'brand' => 'required|string|max:100',
-            'responsible' => 'required|string|max:45',
+            'responsible' => ['required', 'string', 'max:45', new RolResponsable($machine->responsible)],
             'machine_usage' => 'required|string|max:45',
             'in_operation' => 'required|boolean',
             'characteristics' => 'required|string',

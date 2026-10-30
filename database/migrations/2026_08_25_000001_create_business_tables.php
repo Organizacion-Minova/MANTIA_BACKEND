@@ -53,7 +53,7 @@ return new class extends Migration
             $table->string('serial_number', 20)->unique();
             $table->string('responsible', 100);
             $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
-            $table->date('start_up_date');
+            $table->date('start_up_date')->nullable();
             $table->string('brand', 100);
             $table->string('plate', 30)->nullable();
             $table->string('fuel', 50)->nullable();
