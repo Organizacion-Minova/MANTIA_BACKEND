@@ -2,6 +2,7 @@
 
 namespace App\Services\Ai;
 
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -13,27 +14,56 @@ use Throwable;
  * Así, cuando el usuario pregunta "¿cuándo se usó esta máquina?",
  * la IA sabe de qué máquina habla sin que tenga que escribir el nombre.
  *
- * También define las rutas del frontend a las que la IA puede enlazar.
+ * También define las rutas del frontend a las que la IA puede enlazar y
+ * QUIÉN puede entrar a cada una (mismas reglas que main.jsx y el menú lateral).
  */
 class ContextoPantalla
 {
-    /** Rutas del frontend (main.jsx) a las que la IA puede poner enlaces. */
+    /**
+     * Pantallas del frontend (main.jsx) a las que la IA puede poner enlaces.
+     * Cada una lleva la misma regla de acceso que RutaConPermiso en main.jsx:
+     *   'permiso' => se valida con $usuario->can(...)
+     *   'roles'   => lista de roles que pueden entrar
+     *   (sin regla) => cualquier usuario con sesión
+     *
+     * Si cambias una ruta o un permiso en main.jsx, cámbialo aquí y en
+     * frontend/src/utils/sugerenciasIA.js (RUTAS_PERMITIDAS).
+     */
     public const RUTAS = [
-        '/dashboard' => 'Panel de Control',
-        '/machines' => 'Máquinas',
-        '/machines/categoriesmachines' => 'Categorías de máquinas',
-        '/equipment' => 'Equipos',
-        '/types/consumables' => 'Herramientas consumibles',
-        '/types/noconsumables' => 'Herramientas no consumibles',
-        '/ubications' => 'Ubicaciones',
-        '/ubications/categoriesubications' => 'Categorías de ubicación',
-        '/gases' => 'Mediciones de gases',
-        '/gases/compare_gases' => 'Comparar mediciones de gases',
-        '/alerts' => 'Alertas',
-        '/profile' => 'Mi perfil (y solicitudes de cuenta para administradores)',
-        '/help' => 'Ayuda',
-        '/about' => 'Acerca de',
+        '/dashboard' => ['nombre' => 'Panel de Control'],
+        '/machines' => ['nombre' => 'Máquinas', 'permiso' => 'machine.view'],
+        '/machines/categoriesmachines' => ['nombre' => 'Categorías de máquinas', 'permiso' => 'machine-category.update'],
+        '/equipment' => ['nombre' => 'Equipos', 'permiso' => 'equipment.view'],
+        '/consumables/tools' => ['nombre' => 'Herramientas consumibles', 'permiso' => 'tool.view'],
+        '/noconsumables/tools' => ['nombre' => 'Herramientas no consumibles', 'permiso' => 'tool.view'],
+        '/consumables/tools/types' => ['nombre' => 'Categorías de herramientas consumibles', 'permiso' => 'category-tools.view'],
+        '/noconsumables/tools/types' => ['nombre' => 'Categorías de herramientas no consumibles', 'permiso' => 'category-tools.view'],
+        '/ubications' => ['nombre' => 'Ubicaciones', 'permiso' => 'location.update'],
+        '/ubications/categoriesubications' => ['nombre' => 'Categorías de ubicación', 'permiso' => 'location-category.update'],
+        '/dailyuse' => ['nombre' => 'Uso diario', 'permiso' => 'daily-use.view'],
+        '/gases' => ['nombre' => 'Mediciones de gases', 'permiso' => 'gas-measurements.view'],
+        '/gases/compare_gases' => ['nombre' => 'Comparar mediciones de gases', 'permiso' => 'gas-measurements.view'],
+        '/inspection' => ['nombre' => 'Inspecciones', 'permiso' => 'inspection.view'],
+        '/admin' => ['nombre' => 'Panel de administración', 'roles' => ['Jefe de mina']],
+        '/help' => ['nombre' => 'Ayuda'],
+        '/about' => ['nombre' => 'Acerca de'],
     ];
+
+    /** ¿Este usuario puede entrar a la pantalla? (misma lógica que RutaConPermiso). */
+    private static function puedeEntrar(?User $usuario, array $regla): bool
+    {
+        if (! $usuario) {
+            return false;
+        }
+        if (isset($regla['permiso'])) {
+            return $usuario->can($regla['permiso']);
+        }
+        if (isset($regla['roles'])) {
+            return $usuario->hasAnyRole($regla['roles']);
+        }
+
+        return true;
+    }
 
     public static function describir(?string $pantalla): string
     {
@@ -63,41 +93,55 @@ class ContextoPantalla
                     ? "El usuario está viendo el formato de la medición de gases número {$m[1]} del {$medicion}. Si dice \"esta medición\", consulta las mediciones de esa fecha."
                     : 'El usuario está viendo una medición de gases que ya no existe.';
             }
-
-            if (preg_match('#^/types/(consumables|noconsumables)/tools/(\d+)$#i', $ruta, $m)) {
-                $categoria = DB::table('category')->where('id', (int) $m[2])->value('name');
-                return $categoria
-                    ? "El usuario está viendo las herramientas de la categoría \"{$categoria}\". Si dice \"estas herramientas\", se refiere a esa categoría."
-                    : 'El usuario está viendo una categoría de herramientas.';
-            }
         } catch (Throwable) {
             return 'No se pudo identificar la pantalla del usuario.';
         }
 
-        foreach (self::RUTAS as $base => $nombre) {
+        foreach (self::RUTAS as $base => $info) {
             if (strcasecmp($ruta, $base) === 0) {
-                return "El usuario está en la pantalla \"{$nombre}\".";
+                return "El usuario está en la pantalla \"{$info['nombre']}\".";
             }
         }
 
         return 'El usuario está en otra pantalla de MANTIA.';
     }
 
-    /** Texto para las instrucciones: cómo y a dónde puede enlazar la IA. */
-    public static function guiaDeEnlaces(): string
+    /**
+     * Texto para las instrucciones: cómo y a dónde puede enlazar la IA.
+     * Se arma POR USUARIO: solo lista las pantallas a las que su rol puede entrar
+     * y aparte las que no, para que la IA explique la falta de acceso en vez de
+     * mandarlo a una pantalla que le dice "No tienes permiso".
+     */
+    public static function guiaDeEnlaces(?User $usuario): string
     {
-        $lista = collect(self::RUTAS)
-            ->map(fn ($nombre, $ruta) => "- {$ruta} → {$nombre}")
-            ->implode("\n");
+        $conAcceso = [];
+        $sinAcceso = [];
+        foreach (self::RUTAS as $ruta => $info) {
+            if (self::puedeEntrar($usuario, $info)) {
+                $conAcceso[] = "- {$ruta} → {$info['nombre']}";
+            } else {
+                $sinAcceso[] = "- {$info['nombre']}";
+            }
+        }
+
+        $roles = $usuario ? $usuario->getRoleNames()->implode(', ') : '';
+        $roles = $roles !== '' ? $roles : 'sin rol';
+        $lista = implode("\n", $conAcceso);
+        $bloqueadas = $sinAcceso ? implode("\n", $sinAcceso) : '- (ninguna)';
 
         return <<<TXT
-ENLACES — para que el usuario llegue con un clic:
-- Cuando menciones una máquina, equipo, medición de gases o categoría de herramientas concreta y el dato traiga el campo "enlace", agrega un enlace así: [Ver Electrobomba 2](/machines/cardMachine/5).
-- Cuando expliques cómo hacer algo o recomiendes ir a un módulo, enlaza la pantalla: [Ir a Mediciones de gases](/gases).
-- Usa SOLO el campo "enlace" de las herramientas o estas rutas, escritas exactamente igual. Nunca inventes rutas ni números.
-- Máximo 3 enlaces por respuesta, al final de la línea correspondiente. El texto del enlace debe ser corto (2 a 4 palabras).
-Pantallas a las que puedes enlazar:
+ENLACES Y REDIRECCIÓN — para que el usuario llegue a una pantalla con un clic.
+Rol del usuario: {$roles}.
+- Si el usuario pide ir, abrir, que lo lleves o encontrar un módulo (máquinas, equipos, herramientas, ubicaciones, gases, uso diario, inspecciones...), responde en una frase corta y agrega el enlace: [Ir a Máquinas](/machines).
+- Si pide "herramientas" sin decir cuáles, ofrece los dos enlaces: consumibles y no consumibles.
+- Si menciona una máquina, equipo o medición de gases concreta y el dato de la herramienta trae el campo "enlace", agrégalo: [Ver Electrobomba 2](/machines/cardMachine/5).
+- Usa SOLO las rutas de la lista "con acceso", escritas exactamente igual. Nunca inventes rutas ni números.
+- Si el usuario pide una pantalla de la lista "SIN acceso", NO pongas enlace: dile en una frase que su rol no tiene acceso a ese módulo y que puede pedirlo al Jefe de mina.
+- Máximo 3 enlaces por respuesta. El texto del enlace debe ser corto (2 a 4 palabras).
+Pantallas CON acceso para este usuario:
 {$lista}
+Pantallas SIN acceso para este usuario (no enlazar):
+{$bloqueadas}
 TXT;
     }
 

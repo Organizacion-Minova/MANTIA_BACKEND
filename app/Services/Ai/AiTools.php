@@ -602,7 +602,11 @@ class AiTools
             return null;
         }
         $grupo = (int) $categoria->category_group_id === 2 ? 'noconsumables' : 'consumables';
+        // ANTES
         return "/types/{$grupo}/tools/{$categoria->id}";
+
+        // DESPUÉS
+        return "/{$grupo}/tools";
     }
 
     private function esAdmin(?User $usuario): bool
