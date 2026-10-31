@@ -42,6 +42,7 @@ use App\Http\Controllers\InspectionEquipmentController;
 use App\Http\Controllers\GasMeasurementExportController;
 use App\Http\Middleware\VerifyTurnstile;
 use App\Http\Controllers\TechnicalSheetExportController;
+use App\Http\Controllers\DailyUseExportController;
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register'])->middleware(['throttle:10,10', VerifyTurnstile::class]);
 Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
@@ -238,13 +239,17 @@ Route::middleware(['auth:sanctum'])->get('/inspections/{id}', [InspectionEquipme
 Route::middleware(['auth:sanctum'])->post('/inspections', [InspectionEquipmentController::class, 'store']);
 
 # Exportaciones unitarias Medición de gases
-Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/{id}/export/excel', [GasMeasurementExportController::class, 'exportarUnitarioExcel']);
-Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/{id}/export/pdf', [GasMeasurementExportController::class, 'exportarUnitarioPdf']);
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/{id}/export/excel', [GasMeasurementExportController::class, 'unitaryGasExcel']);
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/{id}/export/pdf', [GasMeasurementExportController::class, 'unitaryGasPdf']);
 
 # Exportaciones por rango de fechas Medición de gases
-Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/export/range/excel', [GasMeasurementExportController::class, 'exportarRangoExcel']);
-Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/export/range/pdf', [GasMeasurementExportController::class, 'exportarRangoPdf']);
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/export/range/excel', [GasMeasurementExportController::class, 'rangeGasExcel']);
+Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/export/range/pdf', [GasMeasurementExportController::class, 'rangeGasPdf']);
 
 # Exportaciones unitarias para Ficha técnica Equipos
 Route::middleware('auth:sanctum', 'permission:equipment.view')->get('/equipment/{id}/export/excel', [TechnicalSheetExportController::class, 'equipmentExcel']);
 Route::middleware('auth:sanctum', 'permission:equipment.view')->get('/equipment/{id}/export/pdf', [TechnicalSheetExportController::class, 'equipmentPdf']);
+
+# Exportaciones unitarias para Uso diario
+Route::middleware(['auth:sanctum', 'permission:daily-use.view'])->get('/dailyuse/{id}/export/excel', [DailyUseExportController::class, 'dailyUseExcel']);
+Route::middleware(['auth:sanctum', 'permission:daily-use.view'])->get('/dailyuse/{id}/export/pdf', [DailyUseExportController::class, 'dailyUsePdf']);
