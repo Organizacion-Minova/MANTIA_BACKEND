@@ -352,8 +352,8 @@ class GasMeasurementExcelExport implements FromArray, WithTitle, WithEvents
         $logo->setName('Logo SENA');
         $logo->setPath($ruta);
         $logo->setHeight($alto);
-        $logo->setCoordinates('A1');
-        $logo->setOffsetX(2);
+        $logo->setCoordinates('G1');
+        $logo->setOffsetX(10);
         $logo->setOffsetY(2);
         $logo->setWorksheet($sheet);
     }

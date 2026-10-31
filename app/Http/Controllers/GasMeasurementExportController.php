@@ -19,7 +19,7 @@ class GasMeasurementExportController extends Controller
         $this->service = $service;
     }
 
-    public function exportarUnitarioExcel($id)
+    public function unitaryGasExcel($id)
     {
         try {
             $medicion = $this->service->obtenerDatosUnitarios($id);
@@ -33,7 +33,7 @@ class GasMeasurementExportController extends Controller
         }
     }
 
-    public function exportarRangoExcel(Request $request)
+    public function rangeGasExcel(Request $request)
     {
         $request->validate([
             'fecha_inicio' => 'required|date',
@@ -53,7 +53,7 @@ class GasMeasurementExportController extends Controller
         }
     }
 
-    public function exportarUnitarioPdf($id)
+    public function unitaryGasPdf($id)
     {
         try {
             $medicion = $this->service->obtenerDatosUnitarios($id);
@@ -66,7 +66,7 @@ class GasMeasurementExportController extends Controller
         }
     }
 
-    public function exportarRangoPdf(Request $request)
+    public function rangeGasPdf(Request $request)
     {
         $request->validate([
             'fecha_inicio' => 'required|date',
