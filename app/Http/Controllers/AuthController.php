@@ -126,6 +126,11 @@ class AuthController extends Controller
             return response()->json(['message' => 'Tu cuenta está desactivada. Comunícate con el administrador.'], 403);
         }
 
+        // Tiene roles, pero todos están desactivados
+        if ($user->roles()->exists() && ! $user->roles()->where('roles.is_active', true)->exists()) {
+            return response()->json(['message' => 'Tu rol está desactivado. Comunícate con el administrador.'], 403);
+        }
+
         Auth::login($user);
         $request->session()->regenerate();
 

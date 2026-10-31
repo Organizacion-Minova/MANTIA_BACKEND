@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
@@ -77,13 +78,13 @@ class AdminActions
 
             case 'desactivar_usuario':
                 $usuario = $this->usuario($datos['correo']);
-                $usuario->update(['status' => 'inactive']);
+                $usuario->update(['status' => 'inactive', 'is_active' => false]);
                 // Cierra sus sesiones abiertas para que salga de inmediato (SESSION_DRIVER=database)
                 DB::table('sessions')->where('user_id', $usuario->id)->delete();
                 return "Cuenta de {$this->nombreDe($datos['correo'])} desactivada.";
 
             case 'activar_usuario':
-                $this->usuario($datos['correo'])->update(['status' => 'approved']);
+                $this->usuario($datos['correo'])->update(['status' => 'approved', 'is_active' => true]);
                 return "Cuenta de {$this->nombreDe($datos['correo'])} activada.";
 
             case 'crear_ubicacion':
@@ -100,7 +101,7 @@ class AdminActions
 
     private function validar(string $tipo, array $datos, User $admin): void
     {
-        Validator::make($datos, $this->reglas($tipo))->validate();
+        Validator::make($datos, $this->reglas($tipo), ['rol.exists' => 'Ese rol no existe o está desactivado.'])->validate();
 
         if (!in_array($tipo, ['asignar_rol', 'desactivar_usuario', 'activar_usuario'], true)) {
             return;
@@ -127,7 +128,7 @@ class AdminActions
     {
         return match ($tipo) {
             'crear_rol' => ['nombre' => ['required', 'string', 'max:50', 'regex:/^[\pL ]+$/u', 'unique:roles,name']],
-            'asignar_rol' => ['correo' => 'required|email|exists:users,email', 'rol' => 'required|string|exists:roles,name'],
+            'asignar_rol' => ['correo' => 'required|email|exists:users,email', 'rol' => ['required', 'string', Rule::exists('roles', 'name')->where('is_active', true)]],
             'desactivar_usuario', 'activar_usuario' => ['correo' => 'required|email|exists:users,email'],
             // Revisión previa para armar la propuesta; la validación completa la hace
             // el controlador de cada pantalla al confirmar

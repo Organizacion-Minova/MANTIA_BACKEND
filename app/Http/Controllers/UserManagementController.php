@@ -65,7 +65,9 @@ class UserManagementController extends Controller
     public function changeRole(Request $request, $id)
     {
         $request->validate([
-            'role' => 'required|string|exists:roles,name',
+            'role' => ['required', 'string', \Illuminate\Validation\Rule::exists('roles', 'name')->where('is_active', true)],
+        ], [
+            'role.exists' => 'Ese rol no existe o está desactivado.',
         ]);
 
         $user = User::findOrFail($id);
