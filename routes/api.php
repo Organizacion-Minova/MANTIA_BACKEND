@@ -35,6 +35,7 @@ use App\Http\Controllers\DailyUseController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\RoleManagementController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InspectionQuestionController;
 use App\Http\Controllers\InspectionQuestionEquipmentController;
 use App\Http\Controllers\InspectionEquipmentController;
@@ -57,10 +58,25 @@ Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    $user = $request->user()->load('roles');
-    // Lista de permisos para que el frontend sepa qué botones mostrar
-    $user->setAttribute('permission_names', $user->getAllPermissions()->pluck('name')->values());
+    // Solo cuentan los roles ACTIVOS: un rol desactivado no da permisos
+    $user = $request->user()->load(['roles' => fn ($q) => $q->where('is_active', true)->with('permissions')]);
+
+    $permisos = $user->roles
+        ->flatMap(fn ($rol) => $rol->permissions->pluck('name'))
+        ->merge($user->getDirectPermissions()->pluck('name'))
+        ->unique()
+        ->values();
+
+    $user->roles->each(fn ($rol) => $rol->unsetRelation('permissions'));
+    $user->setAttribute('permission_names', $permisos);
+
     return $user;
+});
+
+// Perfil propio: datos, foto y contraseña
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/profile', [ProfileController::class, 'update']);
+    Route::put('/profile/password', [ProfileController::class, 'password'])->middleware('throttle:5,1');
 });
 
 Route::middleware(['auth:sanctum', 'permission:daily-use.create|daily-use.update|machine.create|machine.update'])
@@ -85,9 +101,11 @@ Route::middleware(['auth:sanctum', 'role:Jefe de mina'])->group(function () {
     Route::get('/admin/backups/options', [BackupController::class, 'options']);
     Route::get('/admin/backups', [BackupController::class, 'index']);
     Route::post('/admin/backups', [BackupController::class, 'store']);
-    Route::get('/admin/backups/{archivo}/download', [BackupController::class, 'download']);
+    // Descargar, restaurar y eliminar piden la contraseña del usuario (por eso son POST/DELETE con body)
+    Route::post('/admin/backups/{archivo}/download', [BackupController::class, 'download'])->middleware('throttle:6,1');
+    Route::post('/admin/backups/{archivo}/restore', [BackupController::class, 'restore'])->middleware('throttle:6,1');
     Route::get('/admin/permissions', [RoleManagementController::class, 'permissionsDisponibles']);
-    Route::delete('/admin/backups/{archivo}', [BackupController::class, 'destroy']);
+    Route::delete('/admin/backups/{archivo}', [BackupController::class, 'destroy'])->middleware('throttle:6,1');
 });
 
 if (app()->environment('local')) {

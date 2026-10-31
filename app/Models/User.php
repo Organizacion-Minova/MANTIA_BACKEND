@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -17,6 +18,18 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, HasRoles;
+
+    // La URL de la foto viaja en el JSON del usuario
+    protected $appends = ['photo_url'];
+
+    protected function photoUrl(): Attribute
+    {
+        return Attribute::get(
+            fn () => ($this->attributes['photo_path'] ?? null)
+                ? url('storage/' . $this->attributes['photo_path'])
+                : null
+        );
+    }
 
     protected function casts(): array
     {
