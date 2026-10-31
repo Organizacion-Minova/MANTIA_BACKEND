@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             GasMeasurementSeeder::class,
             GasMeasurementDetailSeeder::class,
             DailyUseSeeder::class,
+            InspectionFormatEquipmentSeeder::class,
         ]);
     }
 }

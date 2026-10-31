@@ -44,7 +44,7 @@ class EquipmentsSeeder extends Seeder
             [
                 'name' => 'Equipo de soldadura',
                 'model' => 'POR_DEFINIR',
-                'serial_number' => 'POR_DEFINIR',
+                'serial_number' => '22222222',
                 'responsible' => 'Técnicos mina',
                 'status' => 'active',
                 'start_up_date' => '22/08/2023',
@@ -58,5 +58,63 @@ class EquipmentsSeeder extends Seeder
                 'description' => 'Equipo de soldadura utilizado para realizar trabajos de mantenimiento y reparación de maquinaria minera.',
             ]
         );
+        Equipment::firstOrCreate(
+            ['code' => 'T1-TA01'],
+            [
+                'name' => 'Taladro de mano',
+                'model' => 'POR_DEFINIR',
+                'serial_number' => '222222',
+                'responsible' => 'Técnicos mina',
+                'status' => 'active',
+                'start_up_date' => '22/08/2023',
+                'brand' => 'POR_DEFINIR',
+                'plate' => 'POR_DEFINIR',
+                'fuel' => null,
+                'power' => null,
+                'voltage' => null,
+                'location_id' => 1,
+                'image' => 'codes/Equipments/T1-TA01.jpg',
+                'description' => 'Taladro utilizado para perforación y trabajos de mantenimiento mecánico en las instalaciones de la mina.',
+            ]
+        );
+        Equipment::firstOrCreate(
+            ['code' => 'T1-PU01'],
+            [
+                'name' => 'Pulidora de mano',
+                'model' => 'POR_DEFINIR',
+                'serial_number' => '111111',
+                'responsible' => 'Técnicos mina',
+                'status' => 'active',
+                'start_up_date' => '22/08/2023',
+                'brand' => 'POR_DEFINIR',
+                'plate' => 'POR_DEFINIR',
+                'fuel' => null,
+                'power' => null,
+                'voltage' => null,
+                'location_id' => 1,
+                'image' => 'codes/Equipments/T1-PU01.jpg',
+                'description' => 'Pulidora angular utilizada para corte y desbaste de metales en labores de mantenimiento.',
+            ]
+        );
+        Equipment::firstOrCreate(
+            ['code' => 'T1-MN01'],
+            [
+                'name' => 'Martillo neumático',
+                'model' => 'POR_DEFINIR',
+                'serial_number' => '333333333',
+                'responsible' => 'Técnicos mina',
+                'status' => 'active',
+                'start_up_date' => '22/08/2023',
+                'brand' => 'POR_DEFINIR',
+                'plate' => 'POR_DEFINIR',
+                'fuel' => null,
+                'power' => null,
+                'voltage' => null,
+                'location_id' => 1,
+                'image' => 'codes/Equipments/T1-MN01.jpg',
+                'description' => 'Martillo neumático utilizado para demolición, rompimiento de roca y labores de excavación en la mina.',
+            ]
+        );
+
     }
 }
