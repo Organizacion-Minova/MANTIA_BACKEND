@@ -22,8 +22,8 @@ class AlertaService
         self::enviar(self::aprobados()->get(), $tipo, $mensaje, $nivel, $enlace);
     }
 
-    /** Solo a los usuarios aprobados con un rol. Si nadie tiene ese rol, a todos. */
-    public static function porRol(string $rol, string $tipo, string $mensaje, string $nivel = 'info', ?string $enlace = null): void
+    /** Solo a los usuarios aprobados con un rol (o con alguno de varios roles). Si nadie lo tiene, a todos. */
+    public static function porRol(string|array $rol, string $tipo, string $mensaje, string $nivel = 'info', ?string $enlace = null): void
     {
         try {
             $usuarios = self::aprobados()->role($rol)->get();
