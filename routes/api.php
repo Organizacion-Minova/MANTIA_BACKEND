@@ -36,7 +36,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\RoleManagementController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\InspectionQuestionController;
-use App\Http\Controllers\InspectionQuestionEquipmentController;
+use App\Http\Controllers\InspectionFormatEquipmentController;
 use App\Http\Controllers\InspectionEquipmentController;
 use App\Http\Controllers\GasMeasurementExportController;
 use App\Http\Middleware\VerifyTurnstile;
@@ -200,26 +200,24 @@ Route::middleware(['auth:sanctum', 'permission:daily-use.update'])->put('/dailyu
 Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-questions', [InspectionQuestionController::class, 'index']);
 
 Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/inspection-questions', [InspectionQuestionController::class, 'store']);
-# Preguntas inspeccion equipos
 
-// Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-equipment-questions', [InspectionQuestionEquipmentController::class, 'index']);
+# Formato inspeccion equipos
 
-// Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/inspection-equipment-questions', [InspectionQuestionEquipmentController::class, 'store']);
+Route::middleware(['auth:sanctum'])->get('/inspection-formats-equipment', [InspectionFormatEquipmentController::class, 'index']);
 
+Route::middleware(['auth:sanctum'])->get('/inspection-formats-equipment/{id}', [InspectionFormatEquipmentController::class, 'show']);
 
-// Route::middleware(['auth:sanctum', 'permission:inspection.update'])->put('/equipment-questions/reorder', [InspectionQuestionEquipmentController::class, 'reorder']);
+Route::middleware(['auth:sanctum'])->post('/inspection-formats-equipment', [InspectionFormatEquipmentController::class, 'store']);
 
-// Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-questions', [InspectionQuestionEquipmentController::class, 'index']);
-// Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/equipment-questions', [InspectionQuestionEquipmentController::class, 'store']);
-// Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-questions/{id}', [InspectionQuestionEquipmentController::class, 'show']);
-// Route::middleware(['auth:sanctum', 'permission:inspection.update'])->put('/equipment-questions/{id}', [InspectionQuestionEquipmentController::class, 'update']);
-// Route::middleware(['auth:sanctum', 'permission:inspection.delete'])->delete('/equipment-questions/{id}', [InspectionQuestionEquipmentController::class, 'destroy']);
+Route::middleware(['auth:sanctum'])->get('/equipment/{id}/inspection-format', [InspectionFormatEquipmentController::class, 'byEquipment']);
 
-// # Datos inspeccion equipo
+Route::middleware(['auth:sanctum'])->get('/equipment/{id}/inspections', [InspectionEquipmentController::class, 'indexByEquipment']);
 
-// Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-inspections', [InspectionEquipmentController::class, 'index']);
-// Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/equipment-inspections', [InspectionEquipmentController::class, 'store']);
-// Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment-inspections/{id}', [InspectionEquipmentController::class, 'show']);
+Route::middleware(['auth:sanctum'])->get('/inspection-formats/{id}/week', [InspectionEquipmentController::class, 'week']);
+
+Route::middleware(['auth:sanctum'])->get('/inspections/{id}', [InspectionEquipmentController::class, 'show']);
+
+Route::middleware(['auth:sanctum'])->post('/inspections', [InspectionEquipmentController::class, 'store']);
 
 # Exportaciones unitarias Medición de gases
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/{id}/export/excel', [GasMeasurementExportController::class, 'exportarUnitarioExcel']);

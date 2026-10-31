@@ -170,6 +170,7 @@ return new class extends Migration
             $table->boolean('has_general_observations')->default(false);
             $table->boolean('is_active')->default(true);
             $table->json('header_fields')->nullable();
+            $table->json('signers')->nullable();
         });
         Schema::create('inspection_section_equipment', function (Blueprint $table) {
             $table->id();
@@ -189,6 +190,35 @@ return new class extends Migration
             $table->unsignedSmallInteger('position')->default(1);   // se reinicia en cada sección
             $table->boolean('is_active')->default(true);
         });
+        Schema::create('inspection_equipment', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('format_id')->constrained('inspection_format_equipment');
+            $table->date('week_start');
+            $table->date('week_end');
+            $table->json('header_data')->nullable();
+            $table->text('general_observations')->nullable();
+
+            $table->unique(['format_id', 'week_start']);
+            });
+        Schema::create('inspection_answer_equipment', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('inspection_id')->constrained('inspection_equipment')->cascadeOnDelete();
+            $table->foreignId('question_id')->constrained('inspection_question_equipment');
+            $table->unsignedTinyInteger('day')->default(0);   // 0 = toda la semana, 1-7 = lun-dom
+            $table->string('value', 10)->nullable();
+            $table->text('observation')->nullable();
+
+            $table->unique(['inspection_id', 'question_id', 'day']);
+        });
+        Schema::create('inspection_signature_equipment', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('inspection_id')->constrained('inspection_equipment')->cascadeOnDelete();
+            $table->string('role', 30);                       // inspector | collaborator | reviewer
+            $table->string('name')->nullable();
+            $table->string('id_number', 30)->nullable();
+            $table->unique(['inspection_id', 'role']);
+        });
+
     }
 
     public function down(): void
@@ -202,6 +232,9 @@ return new class extends Migration
         Schema::dropIfExists('inspection_question_equipment');
         Schema::dropIfExists('inspection_section_equipment');
         Schema::dropIfExists('inspection_format_equipment');
+        Schema::dropIfExists('inspection_equipment');
+        Schema::dropIfExists('inspection_answer_equipment');
+        Schema::dropIfExists('inspection_signature_equipment');
         Schema::dropIfExists('tool');
         Schema::dropIfExists('tool_stock_condition');
         Schema::dropIfExists('machine');
