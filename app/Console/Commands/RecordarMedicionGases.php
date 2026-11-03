@@ -10,76 +10,86 @@ use Illuminate\Console\Command;
 /**
  * Alerta preventiva de la medición diaria de gases.
  *
- * Se programa 3 veces al día (ver routes/console.php: 8 am, 11 am y 2 pm).
- * Solo envía la alerta si la medición de HOY todavía no se hizo; si ya se hizo,
- * no hace nada.
+ * Se programa 3 veces al día (ver routes/console.php: 8 am, 11 am y 2 pm) y revisa:
+ *  - No hay medición de hoy        → avisa y lleva a la pantalla de Gases.
+ *  - El formato tiene campos vacíos → avisa qué falta y lleva directo al formato.
+ *  - El formato está completo       → no hace nada.
  *
- * Se considera "hecha" cuando existe el formato del día y al menos una ubicación
- * tiene algún valor de gas registrado (abrir el formato vacío no cuenta como medir).
+ * "Completo" significa que TODOS los campos están llenos: hora de ingreso, las dos
+ * firmas y los 6 gases, el responsable y las observaciones de cada ubicación.
  */
 class RecordarMedicionGases extends Command
 {
     protected $signature = 'gases:recordar {aviso : 1 (8 am), 2 (11 am) o 3 (2 pm)}';
 
-    protected $description = 'Avisa que falta la medición de gases del día (solo si aún no se ha hecho)';
+    protected $description = 'Avisa si falta la medición de gases del día o si el formato tiene campos sin llenar';
 
-    private const ZONA_HORARIA = 'America/Bogota';
+    /** Quienes pueden llenar el formato de gases. */
+    private const ROLES = ['Jefe de mina', 'SST', 'Operario gases'];
 
-    private const AVISOS = [
-        1 => [
-            'nivel' => 'info',
-            'mensaje' => 'Recordatorio: todavía no se ha registrado la medición de gases de hoy.',
-        ],
-        2 => [
-            'nivel' => 'warning',
-            'mensaje' => 'Segundo aviso: la medición de gases de hoy sigue sin registrarse.',
-        ],
-        3 => [
-            'nivel' => 'danger',
-            'mensaje' => 'Último aviso: no se ha registrado la medición de gases de hoy. Realizarla es urgente.',
-        ],
-    ];
+    private const NIVELES = [1 => 'info', 2 => 'warning', 3 => 'danger'];
+
+    private const PREFIJOS = [1 => 'Recordatorio', 2 => 'Segundo aviso', 3 => 'Último aviso'];
 
     public function handle(): int
     {
         $aviso = (int) $this->argument('aviso');
 
-        if (!isset(self::AVISOS[$aviso])) {
+        if (!isset(self::NIVELES[$aviso])) {
             $this->error('El aviso debe ser 1, 2 o 3.');
             return self::INVALID;
         }
 
-        $hoy = Carbon::now(self::ZONA_HORARIA)->toDateString();
+        // Mismo "hoy" que usa GasMeasurementController al crear la medición
+        $hoy = Carbon::today()->toDateString();
+        $medicion = GasMeasurement::whereDate('measurement_date', $hoy)->first();
 
-        if ($this->medicionHecha($hoy)) {
-            $this->info("La medición de gases de {$hoy} ya se hizo. No se envía el aviso {$aviso}.");
+        if (!$medicion) {
+            $this->enviar($aviso, 'todavía no se ha registrado la medición de gases de hoy.', '/gases');
+            $this->info("Aviso {$aviso} enviado: no hay medición de gases de {$hoy}.");
             return self::SUCCESS;
         }
 
-        AlertaService::porRol(
-            'Administrador',
-            'gas',
-            self::AVISOS[$aviso]['mensaje'],
-            self::AVISOS[$aviso]['nivel'],
-            '/gases'
-        );
+        $pendientes = $medicion->pendientes();
 
-        $this->info("Aviso {$aviso} enviado: falta la medición de gases de {$hoy}.");
+        if (empty($pendientes['cabecera']) && empty($pendientes['ubicaciones'])) {
+            $this->info("La medición de gases de {$hoy} está completa. No se envía el aviso {$aviso}.");
+            return self::SUCCESS;
+        }
+
+        // El enlace lleva directo al formato para que el usuario complete lo que falta
+        $this->enviar($aviso, $this->textoPendientes($pendientes), "/gases/gas_format/{$medicion->id}");
+        $this->info("Aviso {$aviso} enviado: el formato de gases de {$hoy} tiene campos sin llenar.");
         return self::SUCCESS;
     }
 
-    private function medicionHecha(string $fecha): bool
+    private function enviar(int $aviso, string $texto, string $enlace): void
     {
-        $gases = array_keys(config('alertas.gas'));
+        AlertaService::porRol(
+            self::ROLES,
+            'gas',
+            self::PREFIJOS[$aviso] . ': ' . $texto,
+            self::NIVELES[$aviso],
+            $enlace
+        );
+    }
 
-        return GasMeasurement::whereDate('measurement_date', $fecha)
-            ->whereHas('detail', function ($detalle) use ($gases) {
-                $detalle->where(function ($q) use ($gases) {
-                    foreach ($gases as $gas) {
-                        $q->orWhereNotNull($gas);
-                    }
-                });
-            })
-            ->exists();
+    private function textoPendientes(array $pendientes): string
+    {
+        $faltan = [];
+
+        if (!empty($pendientes['ubicaciones'])) {
+            $nombres = array_slice($pendientes['ubicaciones'], 0, 3);
+            $resto = count($pendientes['ubicaciones']) - count($nombres);
+            $lista = implode(', ', $nombres) . ($resto > 0 ? " y {$resto} más" : '');
+
+            $faltan[] = count($pendientes['ubicaciones']) . " de {$pendientes['total_ubicaciones']} ubicaciones sin diligenciar ({$lista})";
+        }
+
+        foreach ($pendientes['cabecera'] as $campo) {
+            $faltan[] = $campo;
+        }
+
+        return 'la medición de gases de hoy está incompleta. Falta: ' . implode('; ', $faltan) . '. Entra al formato y complétalo.';
     }
 }

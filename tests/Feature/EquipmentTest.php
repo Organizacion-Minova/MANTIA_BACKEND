@@ -12,11 +12,11 @@ class EquipmentTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_equipment_image_can_be_added_replaced_and_removed_while_editing(): void
+    public function test_equipment_image_is_saved_when_created_replaced_and_removed(): void
     {
         $this->withoutMiddleware();
         Storage::fake('public');
-        $references = $this->createEquipmentReferences();
+        $locationId = $this->createEquipmentLocation();
 
         $equipmentData = [
             'code' => 'EQ-001',
@@ -25,60 +25,55 @@ class EquipmentTest extends TestCase
             'serial_number' => 'SN-001',
             'responsible' => 'Ana',
             'status' => 'active',
-            'registration_date' => '2025-01-15',
-            'company_id' => $references['company'],
-            'location_id' => $references['location'],
             'model' => 'D-1',
+            'start_up_date' => '2025-01-15',
+            'brand' => 'Minova',
+            'plate' => 'PL-001',
+            'fuel' => 'Eléctrico',
+            'power' => '100 W',
+            'voltage' => '220 V',
+            'location_id' => $locationId,
         ];
 
-        $equipmentId = $this->postJson('/api/equipment', $equipmentData)
-            ->assertCreated()
-            ->assertJsonPath('image', null)
-            ->json('id');
-
-        $firstImage = UploadedFile::fake()->image('equipment.png');
-        $created = $this->patch("/api/equipment/{$equipmentId}", [
-            'name' => 'Detector portátil',
-            'image' => $firstImage,
+        $created = $this->post('/api/equipment', [
+            ...$equipmentData,
+            'image' => UploadedFile::fake()->image('equipment.png'),
         ], ['Accept' => 'application/json'])
-            ->assertOk()
-            ->assertJsonPath('name', 'Detector portátil');
+            ->assertCreated()
+            ->assertJsonPath('name', 'Detector de gases');
 
+        $equipmentId = $created->json('id');
         $firstImagePath = $created->json('image');
         $this->assertNotEmpty($firstImagePath);
         Storage::disk('public')->assertExists($firstImagePath);
 
-        $this->patchJson("/api/equipment/{$equipmentId}", ['description' => 'Detector actualizado'])
-            ->assertOk()
-            ->assertJsonPath('description', 'Detector actualizado')
-            ->assertJsonPath('image', $firstImagePath);
-        Storage::disk('public')->assertExists($firstImagePath);
-
         $replacement = UploadedFile::fake()->image('replacement.png');
-        $updated = $this->patch("/api/equipment/{$equipmentId}", [
+        $updated = $this->put("/api/equipment/{$equipmentId}", [
+            ...$equipmentData,
+            'name' => 'Detector portátil',
             'image' => $replacement,
         ], ['Accept' => 'application/json'])->assertOk();
+        $updated->assertJsonPath('name', 'Detector portátil');
+
         $replacementPath = $updated->json('image');
         $this->assertNotEmpty($replacementPath);
         Storage::disk('public')->assertExists($replacementPath);
         Storage::disk('public')->assertMissing($firstImagePath);
 
+        $this->put("/api/equipment/{$equipmentId}", [
+            ...$equipmentData,
+            'name' => 'Detector portátil',
+        ], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('image', $replacementPath);
+        Storage::disk('public')->assertExists($replacementPath);
+
         $this->deleteJson("/api/equipment/{$equipmentId}")->assertOk();
         Storage::disk('public')->assertMissing($replacementPath);
     }
 
-    /**
-     * @return array{company: int, location: int}
-     */
-    private function createEquipmentReferences(): array
+    private function createEquipmentLocation(): int
     {
-        $company = DB::table('company')->insertGetId([
-            'name' => 'Minova',
-            'phone' => '123456',
-            'email' => 'test@example.com',
-            'address' => 'Mina',
-            'nit' => uniqid('nit'),
-        ]);
         $locationCategory = DB::table('location_category')->insertGetId([
             'name' => 'Interior',
             'description' => 'Ubicaciones interiores',
@@ -90,6 +85,6 @@ class EquipmentTest extends TestCase
             'location_category_id' => $locationCategory,
         ]);
 
-        return compact('company', 'location');
+        return $location;
     }
 }

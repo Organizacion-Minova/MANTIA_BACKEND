@@ -95,7 +95,19 @@ php artisan migrate:fresh --seed
 
 Esto creará todas las tablas necesarias (usuarios, permisos, roles, tablas de negocio como `machine`, `equipment`, `tool`, `location`, `inspection`, `gas_measurement`, etc.) y sembrará datos iniciales.
 
-### 6. Ejecutar el servidor de desarrollo
+Si ya tienes una base de datos con información, no uses `migrate:fresh`; ejecuta `php artisan migrate` para aplicar los cambios de esquema sin borrar los registros existentes.
+
+### 6. Habilitar acceso público a archivos
+
+Habilita el acceso público a los archivos subidos:
+
+```bash
+php artisan storage:link
+```
+
+Esto crea `public/storage`, necesario para mostrar las imágenes guardadas en `storage/app/public`.
+
+### 7. Ejecutar el servidor de desarrollo
 
 ```bash
 composer dev

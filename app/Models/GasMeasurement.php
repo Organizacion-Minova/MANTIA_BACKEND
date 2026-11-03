@@ -25,6 +25,42 @@ class GasMeasurement extends Model
         return $this->hasMany(GasMeasurementDetail::class, 'gas_measurement_id');
     }
 
+    /**
+     * Qué le falta al formato para estar completo (todos sus campos son obligatorios):
+     * hora de ingreso, las dos firmas y todos los campos de cada ubicación.
+     */
+    public function pendientes(): array
+    {
+        $detalles = $this->detail()->with('location:id,name')->orderBy('id')->get();
+
+        $cabecera = [];
+        if (blank($this->measurement_time)) {
+            $cabecera[] = 'la hora de ingreso';
+        }
+        if (blank($this->chief_signature)) {
+            $cabecera[] = 'la firma del jefe de mina';
+        }
+        if (blank($this->sst_signature)) {
+            $cabecera[] = 'la firma del líder SST';
+        }
+
+        return [
+            'cabecera' => $cabecera,
+            'ubicaciones' => $detalles->filter(fn ($d) => $d->incompleto())
+                ->map(fn ($d) => $d->location?->name ?? "ubicación #{$d->location_id}")
+                ->values()
+                ->all(),
+            'total_ubicaciones' => $detalles->count(),
+        ];
+    }
+
+    public function estaCompleta(): bool
+    {
+        $pendientes = $this->pendientes();
+
+        return empty($pendientes['cabecera']) && empty($pendientes['ubicaciones']);
+    }
+
     protected function chiefSignature(): Attribute
     {
         return Attribute::make(get: fn ($valor) => $this->leerBinario($valor));
