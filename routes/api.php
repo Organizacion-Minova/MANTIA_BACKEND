@@ -228,6 +228,8 @@ Route::middleware(['auth:sanctum'])->get('/inspection-formats-equipment/{id}', [
 
 Route::middleware(['auth:sanctum'])->post('/inspection-formats-equipment', [InspectionFormatEquipmentController::class, 'store']);
 
+Route::middleware(['auth:sanctum'])->put('/inspection-formats-equipment/{id}', [InspectionFormatEquipmentController::class, 'update']);
+
 Route::middleware(['auth:sanctum'])->get('/equipment/{id}/inspection-format', [InspectionFormatEquipmentController::class, 'byEquipment']);
 
 Route::middleware(['auth:sanctum'])->get('/equipment/{id}/inspections', [InspectionEquipmentController::class, 'indexByEquipment']);
@@ -237,6 +239,7 @@ Route::middleware(['auth:sanctum'])->get('/inspection-formats/{id}/week', [Inspe
 Route::middleware(['auth:sanctum'])->get('/inspections/{id}', [InspectionEquipmentController::class, 'show']);
 
 Route::middleware(['auth:sanctum'])->post('/inspections', [InspectionEquipmentController::class, 'store']);
+
 
 # Exportaciones unitarias Medición de gases
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/{id}/export/excel', [GasMeasurementExportController::class, 'unitaryGasExcel']);

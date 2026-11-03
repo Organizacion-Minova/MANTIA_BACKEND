@@ -216,6 +216,7 @@ return new class extends Migration
             $table->string('role', 30);                       // inspector | collaborator | reviewer
             $table->string('name')->nullable();
             $table->string('id_number', 30)->nullable();
+            $table->string('signature')->nullable();
             $table->unique(['inspection_id', 'role']);
         });
 
