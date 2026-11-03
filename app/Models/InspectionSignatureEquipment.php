@@ -13,6 +13,7 @@ class InspectionSignatureEquipment extends Model
         'inspection_id', 
         'role', 
         'name', 
-        'id_number'
+        'id_number',
+        'signature',
     ];
 }

@@ -8,6 +8,7 @@ use App\Models\InspectionEquipment;
 use App\Models\InspectionFormatEquipment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class InspectionEquipmentController extends Controller
@@ -57,6 +58,18 @@ class InspectionEquipmentController extends Controller
      */
     public function store(Request $request)
     {
+        if ($request->has('data')) {
+            $contenido = $request->input('data');
+            $datos = is_string($contenido) ? json_decode($contenido, true) : $contenido;
+            if (!is_array($datos)) {
+                throw ValidationException::withMessages([
+                    'data' => ['Los datos de la inspección no tienen un formato válido.'],
+                ]);
+            }
+
+            $request->merge($datos);
+        }
+
         $v = $request->validate([
             'format_id' => 'required|exists:inspection_format_equipment,id',
             'week_start' => 'required|date',
@@ -72,11 +85,12 @@ class InspectionEquipmentController extends Controller
             'signatures.*.role' => 'required|in:inspector,collaborator,reviewer',
             'signatures.*.name' => 'nullable|string|max:255',
             'signatures.*.id_number' => 'nullable|string|max:30',
+            'signature_images' => 'nullable|array',
+            'signature_images.*' => 'image|mimes:png,jpg,jpeg|max:2048',
         ]);
 
         $formato = InspectionFormatEquipment::with('sections.questions')->findOrFail($v['format_id']);
 
-        // pregunta => su sección (para validar opciones y modo)
         $secciones = [];
         foreach ($formato->sections as $seccion) {
             foreach ($seccion->questions as $pregunta) {
@@ -124,7 +138,7 @@ class InspectionEquipmentController extends Controller
             ];
         }
 
-        $firmas = collect($v['signatures'])->unique('role')->values();
+        $firmas = collect($v['signatures'])->unique('role');
         $inspector = $firmas->firstWhere('role', 'inspector');
         if (!$inspector || empty($inspector['name'])) {
             $falla('signatures', 'Escribe el nombre de quien realiza la inspección.');
@@ -132,24 +146,77 @@ class InspectionEquipmentController extends Controller
 
         $lunes = Carbon::parse($v['week_start'])->startOfWeek(Carbon::MONDAY);
 
-        $inspeccion = DB::transaction(function () use ($v, $lunes, $filas, $firmas) {
-            $inspeccion = InspectionEquipment::updateOrCreate(
-                ['format_id' => $v['format_id'], 'week_start' => $lunes->toDateString()],
-                [
-                    'week_end' => $lunes->copy()->addDays(6)->toDateString(),
-                    'header_data' => $v['header_data'] ?? null,
-                    'general_observations' => $v['general_observations'] ?? null,
-                ]
-            );
+        $imagenes = $request->file('signature_images', []);
+        $imagenesPorRol = [];
+        $imagenesNuevas = [];
+        try {
+            foreach ($firmas as $indice => $firma) {
+                $imagen = $imagenes[$firma['role']] ?? $imagenes[$indice] ?? null;
+                if (!$imagen) {
+                    continue;
+                }
 
-            // El frontend siempre envía la cuadrícula completa: se reemplaza todo
-            $inspeccion->answers()->delete();
-            $inspeccion->answers()->createMany(array_values($filas));
-            $inspeccion->signatures()->delete();
-            $inspeccion->signatures()->createMany($firmas->all());
+                $ruta = $imagen->store('inspection-signatures', 'public');
+                if (!$ruta) {
+                    foreach ($imagenesNuevas as $rutaNueva) {
+                        Storage::disk('public')->delete($rutaNueva);
+                    }
 
-            return $inspeccion;
-        });
+                    return response()->json([
+                        'message' => 'No fue posible guardar la imagen de la firma.',
+                    ], 500);
+                }
+
+                $imagenesNuevas[] = $ruta;
+                $imagenesPorRol[$firma['role']] = $ruta;
+            }
+
+            [$inspeccion, $firmasAnteriores] = DB::transaction(function () use ($v, $lunes, $filas, $firmas, $imagenesPorRol) {
+                $inspeccion = InspectionEquipment::updateOrCreate(
+                    ['format_id' => $v['format_id'], 'week_start' => $lunes->toDateString()],
+                    [
+                        'week_end' => $lunes->copy()->addDays(6)->toDateString(),
+                        'header_data' => $v['header_data'] ?? null,
+                        'general_observations' => $v['general_observations'] ?? null,
+                    ]
+                );
+
+                $firmasAnteriores = $inspeccion->signatures()->get()->keyBy('role');
+
+                // El frontend siempre envía la cuadrícula completa: se reemplaza todo
+                $inspeccion->answers()->delete();
+                $inspeccion->answers()->createMany(array_values($filas));
+                $inspeccion->signatures()->delete();
+
+                $datosFirmas = $firmas->map(function ($firma) use ($imagenesPorRol, $firmasAnteriores) {
+                    $firma['signature'] = $imagenesPorRol[$firma['role']]
+                        ?? $firmasAnteriores->get($firma['role'])?->signature;
+
+                    return $firma;
+                });
+                $inspeccion->signatures()->createMany($datosFirmas->all());
+
+                return [$inspeccion, $firmasAnteriores];
+            });
+        } catch (\Throwable $e) {
+            foreach ($imagenesNuevas as $rutaNueva) {
+                Storage::disk('public')->delete($rutaNueva);
+            }
+
+            throw $e;
+        }
+
+        foreach ($firmasAnteriores as $firmaAnterior) {
+            $rutaAnterior = $firmaAnterior->signature;
+            if (
+                $rutaAnterior &&
+                str_starts_with($rutaAnterior, 'inspection-signatures/') &&
+                isset($imagenesPorRol[$firmaAnterior->role]) &&
+                $rutaAnterior !== $imagenesPorRol[$firmaAnterior->role]
+            ) {
+                Storage::disk('public')->delete($rutaAnterior);
+            }
+        }
 
         return response()->json(
             $inspeccion->load(['answers', 'signatures']),
@@ -177,7 +244,6 @@ class InspectionEquipmentController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
     }
 
     /**

@@ -130,6 +130,89 @@ class InspectionFormatEquipmentSeeder extends Seeder
                 ],
             ],
         ]);
+        $this->crearFormato('T1-SO01', [
+            'code' => 'HSE-F-035',
+            'version' => '01',
+            'valid_from' => '2026-05-26',
+            'header_fields' => [
+                ['key' => 'area', 'label' => 'Área'],
+                ['key' => 'work_group', 'label' => 'Grupo de trabajo'],
+            ],
+            'signers' => [
+                ['key' => 'inspector', 'label' => 'Realiza la inspección'],
+                ['key' => 'collaborator', 'label' => 'Colaborador'],
+                ['key' => 'reviewer', 'label' => 'Revisó (Vo.Bo.)'],
+            ],
+
+            'sections' => [
+                [
+                    'title' => '1. Motosoldador',
+                    'mode' => 'daily',
+                    'options' => ['C', 'NC', 'N/A'],
+                    'has_observation' => true,
+                    'questions' => [
+                        '1.1 Estado general',
+                        '1.2 Sistema eléctrico (cables, terminales, pinzas de masa y portaelectrodos)',
+                        '1.3 Condiciones del sistema de refrigeración del motor (sin fugas)',
+                        '1.4 Estado del depósito de combustible (sin fugas)',
+                        '1.5 Funcionamiento del panel de control',
+                        '1.6 Nivel de aceite',
+                        '1.7 Estado del encendido (arranque)',
+                        '1.8 Funcionamiento del motor (sin fugas)',
+                        '1.9 Correa del ventilador',
+                        '1.10 Fuente de energía',
+                        '1.11 Conexión a tierra (cable a tierra)',
+                        '1.12 Estado de las ruedas de transporte del equipo',
+                        '1.13 Estado de la estructura del equipo',
+                        '1.14 Extintor de 10 libras',
+                    ],
+                ],
+
+                [
+                    'title' => '2. Cables',
+                    'mode' => 'daily',
+                    'options' => ['C', 'NC', 'N/A'],
+                    'has_observation' => true,
+                    'questions' => [
+                        '2.1 Condición de los cables',
+                        '2.2 Sistema de aislamiento (revestimiento de cables)',
+                        '2.3 Sistema de conexión (enchufes, etc.)',
+                        '2.4 Conexión a tierra (cable a tierra)',
+                        '2.5 Estado de la pinza (conexión al cable)',
+                    ],
+                ],
+
+                [
+                    'title' => '3. Amoladora',
+                    'mode' => 'daily',
+                    'options' => ['C', 'NC', 'N/A'],
+                    'has_observation' => true,
+                    'questions' => [
+                        '3.1 Sistema de funcionamiento',
+                        '3.2 Sistema de conexión (clavija - doble aislamiento)',
+                        '3.3 Protector de disco',
+                        '3.4 Manivela de soporte',
+                    ],
+                ],
+
+                [
+                    'title' => '4. Oxicorte',
+                    'mode' => 'daily',
+                    'options' => ['C', 'NC', 'N/A'],
+                    'has_observation' => true,
+                    'questions' => [
+                        '4.1 Tubo de oxígeno (tapas, carrito, etc.)',
+                        '4.2 Arresta llamas',
+                        '4.3 Válvulas Check',
+                        '4.4 Manómetros',
+                        '4.5 Estado de las mangueras',
+                        '4.6 Estado de los mangos de soldar (torcha)',
+                        '4.7 Condiciones de las boquillas',
+                    ],
+                ],
+
+            ],
+        ]);
     }
     private function crearFormato(string $patronEquipo, array $datos): void
     {

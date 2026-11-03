@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\InspectionFormatEquipment;
+use App\Models\InspectionAnswerEquipment;
 use App\Models\Equipment;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class InspectionFormatEquipmentController extends Controller
 {
@@ -151,7 +153,149 @@ class InspectionFormatEquipmentController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $formato = InspectionFormatEquipment::with('sections.questions')->findOrFail($id);
+
+        $validado = $request->validate([
+            'code' => 'nullable|string|max:50',
+            'version' => 'nullable|string|max:20',
+            'valid_from' => 'nullable|date',
+            'header_fields' => 'nullable|array',
+            'header_fields.*.key' => 'required|string|max:50',
+            'header_fields.*.label' => 'required|string|max:100',
+            'signers' => 'nullable|array',
+            'signers.*.key' => 'required|in:inspector,collaborator,reviewer',
+            'signers.*.label' => 'required|string|max:100',
+            'sections' => 'required|array|min:1',
+            'sections.*.id' => 'nullable|integer',
+            'sections.*.title' => 'required|string|max:255',
+            'sections.*.mode' => 'required|in:daily,weekly',
+            'sections.*.options' => 'required|array|min:2',
+            'sections.*.options.*' => 'required|string|max:10',
+            'sections.*.instructions' => 'nullable|string|max:255',
+            'sections.*.has_observation' => 'required|boolean',
+            'sections.*.questions' => 'required|array|min:1',
+            'sections.*.questions.*.id' => 'nullable|integer',
+            'sections.*.questions.*.text' => 'required|string|max:255',
+        ]);
+
+        $idsPreguntas = $formato->sections->flatMap(fn ($seccion) => $seccion->questions->pluck('id'));
+        $respondidas = InspectionAnswerEquipment::whereIn('question_id', $idsPreguntas)
+            ->distinct()
+            ->pluck('question_id')
+            ->all();
+
+        $falla = fn (string $mensaje) =>
+            throw ValidationException::withMessages(['sections' => [$mensaje]]);
+
+        DB::transaction(function () use ($formato, $validado, $respondidas, $falla) {
+            $formato->update([
+                'code' => $validado['code'] ?? null,
+                'version' => $validado['version'] ?? null,
+                'valid_from' => $validado['valid_from'] ?? null,
+                'header_fields' => $validado['header_fields'] ?? null,
+                'signers' => $validado['signers'] ?? null,
+            ]);
+
+            $seccionesActuales = $formato->sections->keyBy('id');
+            $seccionesConservadas = [];
+
+            foreach ($validado['sections'] as $i => $datosSeccion) {
+                $seccion = isset($datosSeccion['id'])
+                    ? $seccionesActuales->get($datosSeccion['id'])
+                    : null;
+
+                if (isset($datosSeccion['id']) && !$seccion) {
+                    $falla('Hay una sección que no pertenece a este formato.');
+                }
+
+                $datos = [
+                    'title' => $datosSeccion['title'],
+                    'position' => $i + 1,
+                    'mode' => $datosSeccion['mode'],
+                    'options' => $datosSeccion['options'],
+                    'instructions' => $datosSeccion['instructions'] ?? null,
+                    'has_observation' => $datosSeccion['has_observation'],
+                ];
+
+                if ($seccion) {
+                    $tieneRespuestas = $seccion->questions
+                        ->contains(fn ($pregunta) => in_array($pregunta->id, $respondidas));
+
+                    if (
+                        $tieneRespuestas &&
+                        ($seccion->mode !== $datosSeccion['mode'] ||
+                            $seccion->options !== $datosSeccion['options'])
+                    ) {
+                        $falla("La sección \"{$seccion->title}\" ya tiene respuestas: no se pueden cambiar sus opciones ni si se marca a diario o por semana.");
+                    }
+
+                    $seccion->update($datos);
+                } else {
+                    $seccion = $formato->sections()->create($datos);
+                }
+
+                $seccionesConservadas[] = $seccion->id;
+                $preguntasActuales = $seccion->questions()->get()->keyBy('id');
+                $preguntasConservadas = [];
+
+                foreach ($datosSeccion['questions'] as $j => $datosPregunta) {
+                    $pregunta = isset($datosPregunta['id'])
+                        ? $preguntasActuales->get($datosPregunta['id'])
+                        : null;
+
+                    if (isset($datosPregunta['id']) && !$pregunta) {
+                        $falla('Hay una pregunta que no pertenece a esta sección.');
+                    }
+
+                    $datos = [
+                        'text' => $datosPregunta['text'],
+                        'position' => $j + 1,
+                        'is_active' => true,
+                    ];
+
+                    if ($pregunta) {
+                        $pregunta->update($datos);
+                    } else {
+                        $pregunta = $seccion->questions()->create($datos);
+                    }
+
+                    $preguntasConservadas[] = $pregunta->id;
+                }
+
+                $siguientePosicion = count($datosSeccion['questions']) + 1;
+                foreach ($preguntasActuales as $pregunta) {
+                    if (in_array($pregunta->id, $preguntasConservadas)) {
+                        continue;
+                    }
+
+                    if (in_array($pregunta->id, $respondidas)) {
+                        $pregunta->update([
+                            'is_active' => false,
+                            'position' => $siguientePosicion++,
+                        ]);
+                    } else {
+                        $pregunta->delete();
+                    }
+                }
+            }
+
+            foreach ($seccionesActuales as $seccion) {
+                if (in_array($seccion->id, $seccionesConservadas)) {
+                    continue;
+                }
+
+                $tieneRespuestas = $seccion->questions
+                    ->contains(fn ($pregunta) => in_array($pregunta->id, $respondidas));
+
+                if ($tieneRespuestas) {
+                    $falla("No se puede eliminar la sección \"{$seccion->title}\" porque tiene respuestas guardadas.");
+                }
+
+                $seccion->delete();
+            }
+        });
+
+        return response()->json($formato->fresh(['equipment', 'sections.questions']));
     }
 
     /**
