@@ -6,6 +6,7 @@
         body { font-family: Arial, sans-serif; font-size: 10px; color: #000; margin: 0; padding: 0; }
         .table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
         .table th, .table td { border: 1px solid #000; padding: 8px; vertical-align: middle; text-align: center;}
+        .table th { font-weight: bold; }
         .logo-sena { height: 55px; }
         .image-container { text-align: center; padding: 10px; }
         .image-container img { max-height: 180px; max-width: 100%; object-fit: contain; }
@@ -17,34 +18,34 @@
             <td rowspan="3" colspan="2">
                 <img class="logo-sena" src="{{ public_path('images/sena-logo-naranja.png') }}" alt="Logo SENA">
             </td>
-            <td colspan="2">
+            <th colspan="2">
                 SISTEMA DE GESTIÓN DE SEGURIDAD Y SALUD EN EL TRABAJO
-            </td>
-            <td colspan="1">
+            </th>
+            <th colspan="1">
                 CÓDIGO:
-            </td>
+            </th>
             <td colspan="1">
                 {{ $equipment->code }}
             </td>
         </tr>
         <tr>
-            <td colspan="2">
+            <th colspan="2">
                 PROGRAMA DE MANTENIMIENTO
-            </td>
-            <td colspan="1">
+            </th>
+            <th colspan="1">
                 VERSIÓN:
-            </td>
+            </th>
             <td colspan="1">
                 1.0
             </td>
         </tr>
         <tr>
-            <td colspan="2">
-                FICHA TÉCNICA {{ $equipment->name }}
-            </td>
-            <td colspan="1">
+            <th colspan="2">
+                FICHA TÉCNICA {{ strtoupper($equipment->name) }}
+            </th>
+            <th colspan="1">
                 FECHA:
-            </td>
+            </th>
             <td colspan="1">
                 {{ $equipment->start_up_date }}
             </td>
@@ -62,41 +63,41 @@
             </td>
         </tr>
         <tr>
-            <td>CÓDIGO:</td>
+            <th>CÓDIGO:</th>
             <td>{{ $equipment->code ?? 'N/A' }}</td>
-            <td>NOMBRE:</td>
+            <th>NOMBRE:</th>
             <td>{{ $equipment->name }}</td>
-            <td>PLACA:</td>
+            <th>PLACA:</th>
             <td>{{ $equipment->plate }}</td>
         </tr>
         <tr>
-            <td>MODELO:</td>
+            <th>MODELO:</th>
             <td>{{ $equipment->model }}</td>
-            <td>NÚMERO DE SERIE:</td>
+            <th>NÚMERO DE SERIE:</th>
             <td>{{ $equipment->serial_number }}</td>
-            <td>FECHA DE INICIO:</td>
+            <th>FECHA DE INICIO:</th>
             <td>{{ $equipment->start_up_date }}</td>
         </tr>
         <tr>
-            <td>UBICACIÓN:</td>
+            <th>UBICACIÓN:</th>
             <td>{{ $equipment->ubicacion->name }}</td>
-            <td>RESPONSABLE:</td>
+            <th>RESPONSABLE:</th>
             <td>{{ $equipment->responsible }}</td>
-            <td>ESTADO:</td>
+            <th>ESTADO:</th>
             <td>{{ $equipment->status === 'active' ? 'Activo' : 'Inactivo' }}</td>
         </tr>
         <tr>
-            <td>CONSUMIBLE:</td>
+            <th>CONSUMIBLE:</th>
             <td>{{ $equipment->fuel}}</td>
-            <td>POTENCIA:</td>
+            <th>POTENCIA:</th>
             <td>{{ $equipment->power }}</td>
-            <td>VOLTAJE:</td>
+            <th>VOLTAJE:</th>
             <td>{{ $equipment->voltage }}</td>
         </tr>
         <tr>
-            <td colspan="6">
+            <th colspan="6">
                 DESCRIPCIÓN:
-            </td>
+            </th>
         </tr>
         <tr>
             <td colspan="6">
