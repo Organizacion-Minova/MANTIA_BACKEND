@@ -6,6 +6,7 @@
         body { font-family: Arial, sans-serif; font-size: 10px; color: #000; margin: 0; padding: 0; }
         .table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
         .table th, .table td { border: 1px solid #000; padding: 8px; vertical-align: middle; text-align: center;}
+        .table th { font-weight: bold; }
         .header-container { width: 100%; text-align: center; margin-bottom: 2px; }
         .logo-sena { max-height: 45px; display: block; margin-bottom: 2px; }
     </style>
@@ -16,21 +17,21 @@
     </div>
     <table class="table">
         <tr>
-            <td colspan="6">
+            <th colspan="6">
                 REGISTRO DIARIO DE USO DE MAQUINARIA Y EQUIPOS MINA DIDÁCTICA
-            </td>
+            </th>
         </tr>
         <tr>
-            <td colspan="2">NOMBRE MÁQUINA:</td>
+            <th colspan="2">NOMBRE MÁQUINA:</th>
             <td colspan="4">{{ $machine->name }}</td>
         </tr>
         <tr>
-            <td>Fecha</td>
-            <td>Verificación de estado de<br>funcionamiento de la máquina</td>
-            <td>Inicio de operación</td>
-            <td>Fin de operación</td>
-            <td>Responsable a cargo</td>
-            <td>Observaciones</td>
+            <th>Fecha</th>
+            <th>Verificación de estado de<br>funcionamiento de la máquina</th>
+            <th>Inicio de operación</th>
+            <th>Fin de operación</th>
+            <th>Responsable a cargo</th>
+            <th>Observaciones</th>
         </tr>
 
         @forelse($records as $r)
