@@ -14,113 +14,112 @@ class CategoryToolsSeeder extends Seeder
     public function run(): void
     {
         CategoryTools::firstOrCreate(
-    ['name' => 'Manuales'],
+            ['name' => 'Manuales'],
+            ['description' => 'Herramientas manuales',
+            'status' => "Activo",
+            'category_group_id' => 1]
+        );
+
+                    CategoryTools::firstOrCreate(
+    ['name' => 'Abrasivos'],
     [
-        'description' => 'Herramientas manuales',
+        'description' => 'Materiales abrasivos utilizados para desgastar, pulir y acondicionar superficies.',
         'status' => 'Activo',
         'category_group_id' => 1
     ]
-    );
-    
-    CategoryTools::firstOrCreate(
-        ['name' => 'De golpe'],
-        [
-            'description' => 'Herramientas manuales utilizadas para golpear y ajustar materiales',
-            'status' => 'Activo',
-            'category_group_id' => 1
-        ]
-    );
-    
-    CategoryTools::firstOrCreate(
-        ['name' => 'De ajuste'],
-        [
-            'description' => 'Herramientas destinadas al ajuste y apriete de elementos mecánicos',
-            'status' => 'Activo',
-            'category_group_id' => 1
-        ]
-    );
-    
-    CategoryTools::firstOrCreate(
-        ['name' => 'De sujeción'],
-        [
-            'description' => 'Herramientas utilizadas para sujetar y mantener piezas firmes',
-            'status' => 'Activo',
-            'category_group_id' => 1
-        ]
-    );
-    
-    CategoryTools::firstOrCreate(
-        ['name' => 'De corte manual'],
-        [
-            'description' => 'Herramientas para realizar cortes manuales en diferentes materiales',
-            'status' => 'Activo',
-            'category_group_id' => 1
-        ]
-    );
-    
-    CategoryTools::firstOrCreate(
-        ['name' => 'De medición manual'],
-        [
-            'description' => 'Instrumentos manuales para medir longitudes y dimensiones',
-            'status' => 'Activo',
-            'category_group_id' => 1
-        ]
-    );
-    
-    CategoryTools::firstOrCreate(
-        ['name' => 'De excavación manual'],
-        [
-            'description' => 'Herramientas utilizadas para remover y extraer material',
-            'status' => 'Activo',
-            'category_group_id' => 1
-        ]
-    );
-    
-    CategoryTools::firstOrCreate(
-        ['name' => 'De perforación manual'],
-        [
-            'description' => 'Herramientas manuales destinadas a realizar perforaciones',
-            'status' => 'Activo',
-            'category_group_id' => 1
-        ]
-    );
-    
-    CategoryTools::firstOrCreate(
-        ['name' => 'De limpieza manual'],
-        [
-            'description' => 'Herramientas para limpieza de superficies y áreas de trabajo',
-            'status' => 'Activo',
-            'category_group_id' => 1
-        ]
-    );
-    
-    CategoryTools::firstOrCreate(
-        ['name' => 'De albañilería'],
-        [
-            'description' => 'Herramientas manuales utilizadas en trabajos de construcción y adecuación',
-            'status' => 'Activo',
-            'category_group_id' => 1
-        ]
-    );
+);
+
+CategoryTools::firstOrCreate(
+    ['name' => 'Lubricantes'],
+    [
+        'description' => 'Productos destinados a reducir la fricción y el desgaste de componentes mecánicos.',
+        'status' => 'Activo',
+        'category_group_id' => 1
+    ]
+);
+
+CategoryTools::firstOrCreate(
+    ['name' => 'Adhesivos'],
+    [
+        'description' => 'Productos utilizados para unir, fijar y ensamblar diferentes materiales.',
+        'status' => 'Activo',
+        'category_group_id' => 1
+    ]
+);
+
+CategoryTools::firstOrCreate(
+    ['name' => 'Sellantes'],
+    [
+        'description' => 'Materiales empleados para sellar uniones, juntas y conexiones.',
+        'status' => 'Activo',
+        'category_group_id' => 1
+    ]
+);
+
+CategoryTools::firstOrCreate(
+    ['name' => 'Soldadura'],
+    [
+        'description' => 'Electrodos y materiales consumibles utilizados en procesos de soldadura.',
+        'status' => 'Activo',
+        'category_group_id' => 1
+    ]
+);
+
+CategoryTools::firstOrCreate(
+    ['name' => 'Fijaciones'],
+    [
+        'description' => 'Elementos de unión como tornillos, tuercas, arandelas y pernos.',
+        'status' => 'Activo',
+        'category_group_id' => 1
+    ]
+);
+
+CategoryTools::firstOrCreate(
+    ['name' => 'Filtros'],
+    [
+        'description' => 'Elementos filtrantes para sistemas de aire, aceite y combustible.',
+        'status' => 'Activo',
+        'category_group_id' => 1
+    ]
+);
+
+CategoryTools::firstOrCreate(
+    ['name' => 'Material eléctrico'],
+    [
+        'description' => 'Insumos eléctricos como cables, conectores, terminales y cinta aislante.',
+        'status' => 'Activo',
+        'category_group_id' => 1
+    ]
+);
+
+CategoryTools::firstOrCreate(
+    ['name' => 'Refrigerantes'],
+    [
+        'description' => 'Fluidos utilizados para controlar la temperatura de motores y sistemas industriales.',
+        'status' => 'Activo',
+        'category_group_id' => 1
+    ]
+);
+
+CategoryTools::firstOrCreate(
+    ['name' => 'Productos químicos'],
+    [
+        'description' => 'Sustancias utilizadas en procesos de mantenimiento, tratamiento y conservación de equipos.',
+        'status' => 'Activo',
+        'category_group_id' => 1
+    ]
+);
 //categoria dos
         CategoryTools::firstOrCreate(
     ['name' => 'Eléctricas'],
-    [
+    [   
         'description' => 'Herramientas eléctricas',
         'status' => 'Activo',
         'category_group_id' => 2
     ]
 );
 
-        CategoryTools::firstOrCreate(
-            ['name' => 'Manuales'],
-            [
-                'description' => 'Herramientas de accionamiento manual',
-                'status' => 'Activo',
-                'category_group_id' => 2
-            ]
-        );
-
+        
         CategoryTools::firstOrCreate(
             ['name' => 'Neumáticas'],
             [
@@ -129,7 +128,7 @@ class CategoryToolsSeeder extends Seeder
                 'category_group_id' => 2
             ]
         );
-
+        
         CategoryTools::firstOrCreate(
             ['name' => 'De medición'],
             [
@@ -138,7 +137,7 @@ class CategoryToolsSeeder extends Seeder
                 'category_group_id' => 2
             ]
         );
-
+        
         CategoryTools::firstOrCreate(
             ['name' => 'De corte'],
             [
@@ -147,7 +146,7 @@ class CategoryToolsSeeder extends Seeder
                 'category_group_id' => 2
             ]
         );
-
+        
         CategoryTools::firstOrCreate(
             ['name' => 'De perforación'],
             [
@@ -156,7 +155,7 @@ class CategoryToolsSeeder extends Seeder
                 'category_group_id' => 2
             ]
         );
-
+        
         CategoryTools::firstOrCreate(
             ['name' => 'De sujeción'],
             [
@@ -165,7 +164,7 @@ class CategoryToolsSeeder extends Seeder
                 'category_group_id' => 2
             ]
         );
-
+        
         CategoryTools::firstOrCreate(
             ['name' => 'De mantenimiento'],
             [
@@ -174,7 +173,7 @@ class CategoryToolsSeeder extends Seeder
                 'category_group_id' => 2
             ]
         );
-
+        
         CategoryTools::firstOrCreate(
             ['name' => 'De excavación'],
             [
@@ -183,7 +182,7 @@ class CategoryToolsSeeder extends Seeder
                 'category_group_id' => 2
             ]
         );
-
+        
         CategoryTools::firstOrCreate(
             ['name' => 'De limpieza'],
             [
