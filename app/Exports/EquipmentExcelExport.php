@@ -77,7 +77,7 @@ class EquipmentExcelExport implements FromArray, WithTitle, WithEvents
                 $sheet->setCellValue('E2', 'VERSIÓN:');
                 $sheet->setCellValue('F2', '1.0');
 
-                $sheet->setCellValue('C3', 'FICHA TÉCNICA ' . ($equipment->name ?? ''));
+                $sheet->setCellValue('C3', 'FICHA TÉCNICA ' . mb_strtoupper($equipment->name ?? '', 'UTF-8'));
                 $sheet->setCellValue('E3', 'FECHA:');
                 $sheet->setCellValueExplicit('F3', (string) ($equipment->start_up_date ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
 

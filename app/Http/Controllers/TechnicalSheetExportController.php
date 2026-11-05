@@ -27,14 +27,14 @@ class TechnicalSheetExportController extends Controller
 
     public function machinePdf($id)
     {
-        $machine=Machine::with(['ubicacion','categorymaquina'])->findOrFail($id);
+        $machine=Machine::with(['ubicacion'])->findOrFail($id);
         $pdf = Pdf::loadView('exports.MachineTechnicalPdf', compact('machine'));
         return $pdf->download("Ficha_técnica_{$machine->name}.pdf");
     }
 
     public function machineExcel($id)
     {
-        $machine=Machine::with(['ubicacion','categorymaquina'])->findOrFail($id);
+        $machine=Machine::with(['ubicacion'])->findOrFail($id);
         return Excel::download(new MachineExcelExport($machine), "Ficha_técnica_{$machine->name}.xlsx");
     }
 }

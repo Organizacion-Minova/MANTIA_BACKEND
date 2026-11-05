@@ -41,7 +41,7 @@
         </tr>
         <tr>
             <th colspan="2">
-                FICHA TÉCNICA {{ strtoupper($equipment->name) }}
+                FICHA TÉCNICA {{ mb_strtoupper($equipment->name) }}
             </th>
             <th colspan="1">
                 FECHA:
