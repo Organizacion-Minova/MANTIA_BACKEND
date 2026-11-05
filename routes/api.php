@@ -43,6 +43,7 @@ use App\Http\Controllers\GasMeasurementExportController;
 use App\Http\Middleware\VerifyTurnstile;
 use App\Http\Controllers\TechnicalSheetExportController;
 use App\Http\Controllers\DailyUseExportController;
+use App\Http\Controllers\InspectionEquipmentExportController;
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register'])->middleware(['throttle:10,10', VerifyTurnstile::class]);
 Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
@@ -130,6 +131,8 @@ Route::middleware(['auth:sanctum', 'permission:location.view'])->get('/location'
 Route::middleware(['auth:sanctum', 'permission:location.create'])->post('/location', [LocationController::class, 'store']);
 Route::middleware(['auth:sanctum', 'permission:location.update'])->put('/location/{id}', [LocationController::class, 'update']);
 Route::middleware(['auth:sanctum', 'permission:location.delete'])->delete('/location/{id}', [LocationController::class, 'destroy']);
+Route::middleware(['auth:sanctum', 'permission:location.view'])->get('/location-options', [LocationController::class, 'options']);
+
 
 # Categorías de herramientas
 
@@ -166,6 +169,9 @@ Route::middleware(['auth:sanctum', 'permission:equipment.delete'])->delete('/equ
 
 Route::middleware(['auth:sanctum', 'permission:equipment.view'])->get('/equipment/{id}', [EquipmentController::class, 'show']);
 
+Route::middleware(['auth:sanctum', 'permission:equipment.view'])->get('/equipment-options', [EquipmentController::class, 'options']);
+
+
 # Maquinas
 
 Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('/machines',[MachinesController::class, 'index']);
@@ -177,6 +183,8 @@ Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('/machines/{
 Route::middleware(['auth:sanctum', 'permission:machine.update'])->put('/machines/{id}', [MachinesController::class, 'update']);
 
 Route::middleware(['auth:sanctum', 'permission:machine.delete'])->delete('/machines/{id}', [MachinesController::class, 'destroy']);
+
+Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('/machine-options', [MachinesController::class, 'options']);
 # Medición de gases
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements', [GasMeasurementController::class, 'index']);
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.create'])->post('/gas-measurements', [GasMeasurementController::class, 'store']);
@@ -232,6 +240,8 @@ Route::middleware(['auth:sanctum'])->put('/inspection-formats-equipment/{id}', [
 
 Route::middleware(['auth:sanctum'])->get('/equipment/{id}/inspection-format', [InspectionFormatEquipmentController::class, 'byEquipment']);
 
+Route::middleware(['auth:sanctum'])->get('/equipment/{id}/has-inspection-format', [InspectionFormatEquipmentController::class, 'hasFormat']);
+
 Route::middleware(['auth:sanctum'])->get('/equipment/{id}/inspections', [InspectionEquipmentController::class, 'indexByEquipment']);
 
 Route::middleware(['auth:sanctum'])->get('/inspection-formats/{id}/week', [InspectionEquipmentController::class, 'week']);
@@ -256,3 +266,7 @@ Route::middleware('auth:sanctum', 'permission:equipment.view')->get('/equipment/
 # Exportaciones unitarias para Uso diario
 Route::middleware(['auth:sanctum', 'permission:daily-use.view'])->get('/dailyuse/{id}/export/excel', [DailyUseExportController::class, 'dailyUseExcel']);
 Route::middleware(['auth:sanctum', 'permission:daily-use.view'])->get('/dailyuse/{id}/export/pdf', [DailyUseExportController::class, 'dailyUsePdf']);
+
+# Exportaciones unitarias para Inspección de equipos
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-equipment/{id}/export/excel', [InspectionEquipmentExportController::class, 'inspectionEquipmentExcel']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-equipment/{id}/export/pdf', [InspectionEquipmentExportController::class, 'inspectionEquipmentPdf']);

@@ -123,4 +123,11 @@ class LocationController extends Controller
             ], 500);
         }
     }
+
+    public function options()
+    {
+        return response()->json(
+            Location::select('id', 'name','status')->orderBy('name')->get()
+        );
+    }
 }

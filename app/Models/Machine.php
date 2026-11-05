@@ -18,18 +18,18 @@ class Machine extends Model
         'name',
         'model',
         'serial_number',
-        'acquisition_date',
-        'acquisition_cost',
+        'responsible',
         'status',
-        'warranty',
-        'image',
+        'start_up_date',
+        'brand',
+        'plate',
+        'fuel',
+        'power',
+        'voltage',
         'location_id',
         'machine_category_id',
-        'brand',
-        'responsible',
-        'machine_usage',
-        'in_operation',
-        'characteristics'
+        'image',
+        'characteristics',
     ];
 
     public function category_maquina()

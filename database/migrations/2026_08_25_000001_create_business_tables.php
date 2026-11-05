@@ -55,14 +55,13 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
             $table->date('start_up_date')->nullable();
             $table->string('brand', 100);
-            $table->string('plate', 30)->nullable();
+            $table->string('plate', 30);
             $table->string('fuel', 50)->nullable();
             $table->string('power', 100)->nullable();
             $table->string('voltage', 50)->nullable();
             $table->foreignId('location_id')->constrained('location');
             $table->string('image')->nullable();
             $table->text('description');
-           
         });
 
         Schema::create('machine', function (Blueprint $table) {
@@ -71,18 +70,18 @@ return new class extends Migration
             $table->string('name', 100);
             $table->string('model', 80)->nullable();
             $table->string('serial_number', 100)->nullable();
-            $table->date('acquisition_date')->nullable();
-            $table->decimal('acquisition_cost', 15, 2)->nullable();
-            $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
-            $table->integer('warranty')->nullable();
-            $table->string('image')->nullable();
+            $table->string('responsible', 45);
+            $table->enum('status', ['Activo', 'Inactivo', 'Mantenimiento'])->default('Activo');
+            $table->date('start_up_date')->nullable();
+            $table->string('brand', 100);
+            $table->string('plate', 80);
+            $table->string('fuel', 50)->nullable();
+            $table->string('power', 100)->nullable();
+            $table->string('voltage', 50)->nullable();
             $table->foreignId('location_id')->constrained('location');
             $table->foreignId('machine_category_id')->constrained('machine_category');
-            $table->string('brand', 100);
-            $table->string('responsible', 45);
-            $table->string('machine_usage', 45);
-            $table->boolean('in_operation')->default(true);
-            $table->text('characteristics');
+            $table->string('image')->nullable();
+            $table->text('characteristics')->nullable();
         });
 
         Schema::create('tool', function (Blueprint $table) {

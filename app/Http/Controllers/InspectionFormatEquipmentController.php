@@ -322,4 +322,13 @@ class InspectionFormatEquipmentController extends Controller
             'format' => $formato,
         ]);
     }
+
+    public function hasFormat(string $equipmentId)
+    {
+        return response()->json([
+            'exists' => InspectionFormatEquipment::where('equipment_id', $equipmentId)
+                ->where('is_active', true)
+                ->exists(),
+        ]);
+    }
 }
