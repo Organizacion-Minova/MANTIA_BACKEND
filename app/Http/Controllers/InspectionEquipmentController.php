@@ -83,10 +83,10 @@ class InspectionEquipmentController extends Controller
             'answers.*.observation' => 'nullable|string',
             'signatures' => 'required|array|min:1',
             'signatures.*.role' => 'required|in:inspector,collaborator,reviewer',
-            'signatures.*.name' => 'nullable|string|max:255',
-            'signatures.*.id_number' => 'nullable|string|max:30',
-            'signature_images' => 'nullable|array',
-            'signature_images.*' => 'image|mimes:png,jpg,jpeg|max:2048',
+            'signatures.*.name' => 'required|nullable|string|max:255',
+            'signatures.*.id_number' => 'required|nullable|string|max:30',
+            'signature_images' => 'required|nullable|array',
+            'signature_images.*' => 'required|image|mimes:png,jpg,jpeg|max:2048',
         ]);
 
         $formato = InspectionFormatEquipment::with('sections.questions')->findOrFail($v['format_id']);

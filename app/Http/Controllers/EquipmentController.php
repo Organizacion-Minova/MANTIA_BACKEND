@@ -33,12 +33,12 @@ class EquipmentController extends Controller
             'status' => 'required|string|in:active,inactive,maintenance',
             'start_up_date' => 'nullable|date',
             'brand' => 'required|string|max:100',
-            'plate' => 'nullable|string|max:100',
+            'plate' => 'required|nullable|string|max:100',
             'fuel' => 'nullable|string|max:255',
             'power' => 'nullable|string|max:100',
             'voltage' => 'nullable|string|max:100',
             'location_id' => ['required',Rule::exists('location', 'id')->where(fn ($query) => $query->where('status', 'active')),],
-            'description' => 'required|string',
+            'description' => 'string',
             'image' => 'required|image|max:10240',
         ], [
             'code.required' => 'El código del equipo es obligatorio.',
@@ -113,12 +113,12 @@ class EquipmentController extends Controller
             'status' => 'required|string|in:active,inactive,maintenance',
             'start_up_date' => 'nullable|date',
             'brand' => 'required|string|max:100',
-            'plate' => 'nullable|string|max:100',
+            'plate' => 'required|nullable|string|max:100',
             'fuel' => 'nullable|string|max:255',
             'power' => 'nullable|string|max:100',
             'voltage' => 'nullable|string|max:100',
             'location_id' => ['required',Rule::exists('location', 'id')->where(fn ($query) => $query->where('status', 'active')),],
-            'description' => 'required|string',
+            'description' => 'string',
             'image' => 'sometimes|nullable|image|max:10240',
         ], [
             'code.required' => 'El código del equipo es obligatorio.',
@@ -205,5 +205,12 @@ class EquipmentController extends Controller
         return response()->json([
             'message' => 'Equipo eliminado correctamente.',
         ]);
+    }
+
+    public function options()
+    {
+        return response()->json(
+            Equipment::select('id', 'code', 'name')->orderBy('name')->get()
+        );
     }
 }

@@ -126,5 +126,10 @@ class LocationSeeder extends Seeder
             ['description' => 'Ubicación de Galeria 4',
             'status' => 'active','location_category_id' => 3]
         );
+        Location::firstOrCreate(
+            ['name' => 'Patio mina'],
+            ['description' => 'Zona abierta mina',
+            'status' => 'active','location_category_id' => 1]
+        );
     }
 }
