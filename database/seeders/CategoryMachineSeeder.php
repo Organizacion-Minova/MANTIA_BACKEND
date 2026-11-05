@@ -14,17 +14,9 @@ class CategoryMachineSeeder extends Seeder
     public function run(): void
     {
         MachineCategory::firstOrCreate(
-            ['name' => 'Motores'],
+            ['name' => 'Electrobombas'],
             [
-                'description' => 'Motores eléctricos e industriales',
-                'status' => 'active'
-            ]
-        );
-
-        MachineCategory::firstOrCreate(
-            ['name' => 'Bombas'],
-            [
-                'description' => 'Bombas hidráulicas, eléctricas y equipos de bombeo',
+                'description' => 'Impulsado por un motor eléctrico que transforma la energía',
                 'status' => 'active'
             ]
         );
@@ -32,63 +24,15 @@ class CategoryMachineSeeder extends Seeder
         MachineCategory::firstOrCreate(
             ['name' => 'Compresores'],
             [
-                'description' => 'Equipos destinados a generar y suministrar aire comprimido',
+                'description' => 'Toman el aire del ambiente, reduce su volumen y aumenta su presión',
                 'status' => 'active'
             ]
         );
 
         MachineCategory::firstOrCreate(
-            ['name' => 'Generadores'],
+            ['name' => 'Ventiladores'],
             [
-                'description' => 'Equipos utilizados para la generación de energía eléctrica',
-                'status' => 'active'
-            ]
-        );
-
-        MachineCategory::firstOrCreate(
-            ['name' => 'Equipos de ventilación'],
-            [
-                'description' => 'Maquinaria destinada a la circulación y renovación del aire en espacios mineros',
-                'status' => 'active'
-            ]
-        );
-
-        MachineCategory::firstOrCreate(
-            ['name' => 'Equipos de perforación'],
-            [
-                'description' => 'Maquinaria utilizada para perforar roca, suelo y otros materiales',
-                'status' => 'active'
-            ]
-        );
-
-        MachineCategory::firstOrCreate(
-            ['name' => 'Equipos de trituración'],
-            [
-                'description' => 'Maquinaria destinada a reducir el tamaño de minerales y materiales sólidos',
-                'status' => 'active'
-            ]
-        );
-
-        MachineCategory::firstOrCreate(
-            ['name' => 'Equipos de transporte'],
-            [
-                'description' => 'Maquinaria utilizada para transportar materiales y minerales',
-                'status' => 'active'
-            ]
-        );
-
-        MachineCategory::firstOrCreate(
-            ['name' => 'Equipos de elevación'],
-            [
-                'description' => 'Maquinaria destinada a levantar y movilizar cargas pesadas',
-                'status' => 'active'
-            ]
-        );
-
-        MachineCategory::firstOrCreate(
-            ['name' => 'Equipos de construcción'],
-            [
-                'description' => 'Maquinaria utilizada en trabajos de construcción, adecuación y mantenimiento de infraestructura',
+                'description' => 'Impulsa grandes volúmenes de aire a baja presión',
                 'status' => 'active'
             ]
         );

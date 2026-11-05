@@ -27,17 +27,19 @@ class MachinesController extends Controller
      */
     public function store(Request $request)
     {
-        $this->normalizeBooleanInput($request, 'in_operation');
-
         $validado = $request->validate([
-            'code' => 'required|string|max:20|unique:machine,code',
-            'name' => 'required|string|max:100|unique:machine,name',
-            'model' => 'required|string|max:80',
-            'serial_number' => 'required|string|max:100|unique:machine,serial_number',
-            'acquisition_date' => 'required|date',
-            'acquisition_cost' => 'required|numeric|min:0',
-            'status' => 'required|string|in:active,inactive,maintenance',
-            'warranty' => 'required|nullable|integer|min:0',
+            'code' => ['required', 'string', 'max:20', 'unique:machine,code'],
+            'name' => 'required|string|max:100',
+            'model' => 'nullable|string|max:80',
+            'serial_number' => 'nullable|string|max:100',
+            'responsible' => ['required', 'string', 'max:45', new RolResponsable],
+            'status' => 'required|string|in:Activo,Inactivo,Mantenimiento',
+            'start_up_date' => 'nullable|date',
+            'brand' => 'required|string|max:100',
+            'plate' => 'required|nullable|string|max:30',
+            'fuel' => 'nullable|string|max:50',
+            'power' => 'nullable|string|max:100',
+            'voltage' => 'nullable|string|max:50',
             'image' => 'nullable|image|max:10240',
             'location_id' => [
                 'required',
@@ -46,12 +48,8 @@ class MachinesController extends Controller
                 }),
             ],
             'machine_category_id' => 'required|exists:machine_category,id',
-            'brand' => 'required|string|max:100',
-            'responsible' => ['required', 'string', 'max:45', new RolResponsable()],
-            'machine_usage' => 'required|string|max:45',
-            'in_operation' => 'required|boolean',
-            'characteristics' => 'required|string',
-        ],[
+            'characteristics' => 'string',
+        ], [
             'code.required' => 'El código es obligatorio.',
             'code.string' => 'El código debe ser texto.',
             'code.max' => 'El código no puede superar los 20 caracteres.',
@@ -59,36 +57,49 @@ class MachinesController extends Controller
             'name.required' => 'El nombre es obligatorio.',
             'name.string' => 'El nombre debe ser texto.',
             'name.max' => 'El nombre no puede superar los 100 caracteres.',
-            'model.required' => 'El modelo es obligatorio.',
             'model.string' => 'El modelo debe ser texto.',
             'model.max' => 'El modelo no puede superar los 80 caracteres.',
-            'serial_number.required' => 'El número de serie es obligatorio.',
             'serial_number.string' => 'El número de serie debe ser texto.',
             'serial_number.max' => 'El número de serie no puede superar los 100 caracteres.',
-            'serial_number.unique' => 'Este número de serie ya está asignado a otra máquina.',
-            'acquisition_date.required' => 'La fecha de adquisición es obligatoria.',
-            'acquisition_date.date' => 'La fecha de adquisición debe ser una fecha válida.',
-            'acquisition_cost.required' => 'El costo de adquisición es obligatorio.',
-            'acquisition_cost.numeric' => 'El costo de adquisición debe ser un número.',
-            'acquisition_cost.min' => 'El costo de adquisición no puede ser negativo.',
             'status.required' => 'El estado es obligatorio.',
             'status.string' => 'El estado debe ser texto.',
-            'status.in' => "El estado debe ser uno de los siguientes: active, inactive, maintenance.",
-            'warranty.required' => 'La garantía es obligatoria.',
-            'warranty.integer' => 'La garantía debe ser un número entero.',
-            'warranty.min' => 'La garantía no puede ser negativa.',
-            'image.image' => 'El archivo debe ser una imagen.',
-            'image.max' => 'La imagen no puede superar los 10 MB.',
+            'status.in' => 'El estado debe ser uno de los siguientes: Activo, Inactivo, Mantenimiento.',
+            'start_up_date.date' => 'La fecha de puesta en servicio debe ser una fecha válida.',
+            'responsible.required' => 'El responsable es obligatorio.',
+            'responsible.max' => 'El responsable no puede superar los 45 caracteres.',
+            'brand.required' => 'La marca es obligatoria.',
+            'brand.max' => 'La marca no puede superar los 100 caracteres.',
+            'plate.max' => 'La placa no puede superar los 30 caracteres.',
+            'fuel.max' => 'El combustible no puede superar los 50 caracteres.',
+            'power.max' => 'La potencia no puede superar los 100 caracteres.',
+            'voltage.max' => 'El voltaje no puede superar los 50 caracteres.',
             'location_id.required' => 'La ubicación es obligatoria.',
             'location_id.exists' => 'La ubicación seleccionada no existe.',
             'machine_category_id.required' => 'La categoría de la máquina es obligatoria.',
             'machine_category_id.exists' => 'La categoría de la máquina seleccionada no existe.',
 
         ]);
+
+        $rutaImagen = null;
         if ($request->hasFile('image')) {
-            $validado['image'] = $request->file('image')->store('machines', 'public');
+            $rutaImagen = $request->file('image')->store('machines', 'public');
+
+            if (! $rutaImagen) {
+                return response()->json(['message' => 'No fue posible guardar la imagen de la máquina.'], 500);
+            }
+
+            $validado['image'] = $rutaImagen;
         }
-        $machine = Machine::create($validado);
+
+        try {
+            $machine = Machine::create($validado);
+        } catch (\Throwable $e) {
+            if ($rutaImagen) {
+                Storage::disk('public')->delete($rutaImagen);
+            }
+
+            throw $e;
+        }
 
         return response()->json($machine->load(['category_maquina', 'ubicacion']), 201);
     }
@@ -109,17 +120,20 @@ class MachinesController extends Controller
     public function update(Request $request, string $id)
     {
         $machine = Machine::findOrFail($id);
-        $this->normalizeBooleanInput($request, 'in_operation');
 
         $validado = $request->validate([
-            'code' => 'required|string|max:20|unique:machine,code,'.$machine->id,
+            'code' => ['required', 'string', 'max:20', Rule::unique('machine', 'code')->ignore($machine->id)],
             'name' => 'required|string|max:100',
-            'model' => 'required|string|max:80',
-            'serial_number' => 'required|string|max:100|unique:machine,serial_number,'.$machine->id,
-            'acquisition_date' => 'required|date',
-            'acquisition_cost' => 'required|numeric|min:0',
-            'status' => 'required|string|in:active,inactive,maintenance',
-            'warranty' => 'required|nullable|integer|min:0',
+            'model' => 'nullable|string|max:80',
+            'serial_number' => 'nullable|string|max:100',
+            'responsible' => ['required', 'string', 'max:45', new RolResponsable($machine->responsible)],
+            'status' => 'required|string|in:Activo,Inactivo,Mantenimiento',
+            'start_up_date' => 'nullable|date',
+            'brand' => 'required|string|max:100',
+            'plate' => 'required|nullable|string|max:30',
+            'fuel' => 'nullable|string|max:50',
+            'power' => 'nullable|string|max:100',
+            'voltage' => 'nullable|string|max:50',
             'image' => 'nullable|image|max:10240',
             'location_id' => [
                 'required',
@@ -128,11 +142,7 @@ class MachinesController extends Controller
                 }),
             ],
             'machine_category_id' => 'required|exists:machine_category,id',
-            'brand' => 'required|string|max:100',
-            'responsible' => ['required', 'string', 'max:45', new RolResponsable($machine->responsible)],
-            'machine_usage' => 'required|string|max:45',
-            'in_operation' => 'required|boolean',
-            'characteristics' => 'required|string',
+            'characteristics' => 'string',
         ], [
             'code.required' => 'El código es obligatorio.',
             'code.string' => 'El código debe ser texto.',
@@ -141,38 +151,54 @@ class MachinesController extends Controller
             'name.required' => 'El nombre es obligatorio.',
             'name.string' => 'El nombre debe ser texto.',
             'name.max' => 'El nombre no puede superar los 100 caracteres.',
-            'model.required' => 'El modelo es obligatorio.',
             'model.string' => 'El modelo debe ser texto.',
             'model.max' => 'El modelo no puede superar los 80 caracteres.',
-            'serial_number.required' => 'El número de serie es obligatorio.',
             'serial_number.string' => 'El número de serie debe ser texto.',
             'serial_number.max' => 'El número de serie no puede superar los 100 caracteres.',
-            'serial_number.unique' => 'Este número de serie ya está asignado a otra máquina.',
-            'acquisition_date.required' => 'La fecha de adquisición es obligatoria.',
-            'acquisition_date.date' => 'La fecha de adquisición debe ser una fecha válida.',
-            'acquisition_cost.required' => 'El costo de adquisición es obligatorio.',
-            'acquisition_cost.numeric' => 'El costo de adquisición debe ser un número.',
-            'acquisition_cost.min' => 'El costo de adquisición no puede ser negativo.',
             'status.required' => 'El estado es obligatorio.',
             'status.string' => 'El estado debe ser texto.',
-            'status.in' => "El estado debe ser uno de los siguientes: active, inactive, maintenance.",
-            'warranty.required' => 'La garantía es obligatoria.',
-            'warranty.integer' => 'La garantía debe ser un número entero.',
-            'warranty.min' => 'La garantía no puede ser negativa.',
-            'image.image' => 'El archivo debe ser una imagen.',
-            'image.max' => 'La imagen no puede superar los 10 MB.',
+            'status.in' => 'El estado debe ser uno de los siguientes: Activo, Inactivo, Mantenimiento.',
+            'start_up_date.date' => 'La fecha de puesta en servicio debe ser una fecha válida.',
+            'responsible.required' => 'El responsable es obligatorio.',
+            'responsible.max' => 'El responsable no puede superar los 45 caracteres.',
+            'brand.required' => 'La marca es obligatoria.',
+            'brand.max' => 'La marca no puede superar los 100 caracteres.',
+            'plate.max' => 'La placa no puede superar los 30 caracteres.',
+            'fuel.max' => 'El combustible no puede superar los 50 caracteres.',
+            'power.max' => 'La potencia no puede superar los 100 caracteres.',
+            'voltage.max' => 'El voltaje no puede superar los 50 caracteres.',
             'location_id.required' => 'La ubicación es obligatoria.',
             'location_id.exists' => 'La ubicación seleccionada no existe.',
             'machine_category_id.required' => 'La categoría de la máquina es obligatoria.',
-            'machine_category_id.exists' => 'La categoría de la máquina seleccionada no existe.',]);
+            'machine_category_id.exists' => 'La categoría de la máquina seleccionada no existe.',
+        ]);
+
+        $imagenAnterior = $machine->image;
+        $rutaImagen = null;
 
         if ($request->hasFile('image')) {
-            $imagenAnterior = $machine->image;
-            $validado['image'] = $request->file('image')->store('machines', 'public');
-        }
-        $machine->update($validado);
+            $rutaImagen = $request->file('image')->store('machines', 'public');
 
-        if (isset($imagenAnterior)) {
+            if (! $rutaImagen) {
+                return response()->json(['message' => 'No fue posible guardar la imagen de la máquina.'], 500);
+            }
+
+            $validado['image'] = $rutaImagen;
+        } else {
+            unset($validado['image']);
+        }
+
+        try {
+            $machine->update($validado);
+        } catch (\Throwable $e) {
+            if ($rutaImagen) {
+                Storage::disk('public')->delete($rutaImagen);
+            }
+
+            throw $e;
+        }
+
+        if ($rutaImagen && $imagenAnterior && $imagenAnterior !== $rutaImagen) {
             Storage::disk('public')->delete($imagenAnterior);
         }
 
@@ -185,7 +211,7 @@ class MachinesController extends Controller
     public function destroy(string $id)
     {
         $machine = Machine::findOrFail($id);
-        $image = $machine->image;
+        $imagen = $machine->image;
 
         try {
             // Transacción propia: en PostgreSQL un error deja inservible la transacción que lo contiene
@@ -200,19 +226,17 @@ class MachinesController extends Controller
             throw $e;
         }
 
-        if ($image) {
-            Storage::disk('public')->delete($image);
+        if ($imagen) {
+            Storage::disk('public')->delete($imagen);
         }
 
         return response()->json(['message' => 'Equipo eliminado correctamente']);
     }
 
-    private function normalizeBooleanInput(Request $request, string $field): void
+    public function options()
     {
-        $value = $request->input($field);
-
-        if (is_string($value) && in_array(strtolower($value), ['true', 'false'], true)) {
-            $request->merge([$field => strtolower($value) === 'true']);
-        }
+        return response()->json(
+            Machine::select('id', 'name')->orderBy('name')->get()
+        );
     }
 }

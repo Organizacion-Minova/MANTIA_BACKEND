@@ -131,6 +131,8 @@ Route::middleware(['auth:sanctum', 'permission:location.view'])->get('/location'
 Route::middleware(['auth:sanctum', 'permission:location.create'])->post('/location', [LocationController::class, 'store']);
 Route::middleware(['auth:sanctum', 'permission:location.update'])->put('/location/{id}', [LocationController::class, 'update']);
 Route::middleware(['auth:sanctum', 'permission:location.delete'])->delete('/location/{id}', [LocationController::class, 'destroy']);
+Route::middleware(['auth:sanctum', 'permission:location.view'])->get('/location-options', [LocationController::class, 'options']);
+
 
 # Categorías de herramientas
 
@@ -167,6 +169,9 @@ Route::middleware(['auth:sanctum', 'permission:equipment.delete'])->delete('/equ
 
 Route::middleware(['auth:sanctum', 'permission:equipment.view'])->get('/equipment/{id}', [EquipmentController::class, 'show']);
 
+Route::middleware(['auth:sanctum', 'permission:equipment.view'])->get('/equipment-options', [EquipmentController::class, 'options']);
+
+
 # Maquinas
 
 Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('/machines',[MachinesController::class, 'index']);
@@ -178,6 +183,8 @@ Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('/machines/{
 Route::middleware(['auth:sanctum', 'permission:machine.update'])->put('/machines/{id}', [MachinesController::class, 'update']);
 
 Route::middleware(['auth:sanctum', 'permission:machine.delete'])->delete('/machines/{id}', [MachinesController::class, 'destroy']);
+
+Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('/machine-options', [MachinesController::class, 'options']);
 # Medición de gases
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements', [GasMeasurementController::class, 'index']);
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.create'])->post('/gas-measurements', [GasMeasurementController::class, 'store']);
@@ -232,6 +239,8 @@ Route::middleware(['auth:sanctum'])->post('/inspection-formats-equipment', [Insp
 Route::middleware(['auth:sanctum'])->put('/inspection-formats-equipment/{id}', [InspectionFormatEquipmentController::class, 'update']);
 
 Route::middleware(['auth:sanctum'])->get('/equipment/{id}/inspection-format', [InspectionFormatEquipmentController::class, 'byEquipment']);
+
+Route::middleware(['auth:sanctum'])->get('/equipment/{id}/has-inspection-format', [InspectionFormatEquipmentController::class, 'hasFormat']);
 
 Route::middleware(['auth:sanctum'])->get('/equipment/{id}/inspections', [InspectionEquipmentController::class, 'indexByEquipment']);
 
