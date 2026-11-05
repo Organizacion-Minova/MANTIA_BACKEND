@@ -48,8 +48,11 @@ class EnsureAccountIsActive
             return 'Tu cuenta está desactivada. Comunícate con el administrador.';
         }
 
+        // Una sola consulta de roles; Spatie reutiliza la relación ya cargada
+        $user->loadMissing('roles');
+
         // Tiene roles, pero ninguno está activo
-        if ($user->roles()->exists() && ! $user->roles()->where('roles.is_active', true)->exists()) {
+        if ($user->roles->isNotEmpty() && $user->roles->where('is_active', true)->isEmpty()) {
             return 'Tu rol está desactivado. Comunícate con el administrador.';
         }
 
