@@ -27,7 +27,7 @@ class GasMeasurementController extends Controller
         $request->validate([
             'measurement_time' => 'nullable|date_format:H:i',
         ], [
-            'measurement_time.date_format' => 'La hora de ingreso debe tener el formato HH:MM.',
+            'measurement_time.date_format' => 'La hora de ingreso no es válida.',
         ]);
 
         $today = Carbon::today()->toDateString();
@@ -105,8 +105,8 @@ class GasMeasurementController extends Controller
             'hydrogen_sulfide' => 'required|numeric|decimal:0,2|min:0|max:999',
             'carbon_monoxide' => 'required|numeric|decimal:0,2|min:0|max:999',
             'nitrogen_dioxide' => 'required|numeric|decimal:0,2|min:0|max:999',
-            'responsible_name' => ['required', 'string', 'max:100', "regex:/^[\p{L}\s.'\-]+$/u"],
-            'observation' => ['required', 'string', 'max:100', 'regex:/^[\p{L}\p{N}\s.,;:()\-\/%°#¿?¡!]+$/u'],
+            'responsible_name' => ['required', 'string', 'max:100'],
+            'observation' => ['required', 'string', 'max:100'],
         ], [
             'oxygen.required' => 'El oxígeno es obligatorio.',
             'methane.required' => 'El metano es obligatorio.',
@@ -115,7 +115,9 @@ class GasMeasurementController extends Controller
             'carbon_monoxide.required' => 'El monóxido de carbono es obligatorio.',
             'nitrogen_dioxide.required' => 'El dióxido de nitrógeno es obligatorio.',
             'responsible_name.required' => 'El responsable de la medición es obligatorio.',
+            'responsible_name.string' => 'El responsable debe ser texto.',
             'observation.required' => 'Las observaciones son obligatorias.',
+            'observation.string' => 'Las observaciones deben ser texto.',
             'oxygen.numeric' => 'El valor de oxígeno debe ser un número.',
             'oxygen.decimal' => 'El valor admite máximo 2 decimales.',
             'methane.decimal' => 'El valor admite máximo 2 decimales.',
@@ -141,9 +143,7 @@ class GasMeasurementController extends Controller
             'nitrogen_dioxide.min' => 'El dióxido de nitrógeno no puede ser menor a 0.',
             'nitrogen_dioxide.max' => 'El dióxido de nitrógeno no puede superar 999.',
             'responsible_name.max' => 'El nombre del responsable no puede superar los 100 caracteres.',
-            'responsible_name.regex' => 'El nombre del responsable solo puede contener letras, espacios, puntos, apóstrofes y guiones.',
             'observation.max' => 'La observación no puede superar los 100 caracteres.',
-            'observation.regex' => 'La observación contiene caracteres no permitidos.',
         ]);
 
         $detalle->update($datosValidados);
@@ -164,10 +164,10 @@ class GasMeasurementController extends Controller
             'chief_signature' => ['nullable', 'string', 'max:3000000', 'regex:/^data:image\/(png|jpeg|webp);base64,/'],
             'sst_signature' => ['nullable', 'string', 'max:3000000', 'regex:/^data:image\/(png|jpeg|webp);base64,/'],
         ], [
-            'measurement_time.date_format' => 'La hora de ingreso debe tener el formato HH:MM.',
-            'chief_signature.regex' => 'La firma del jefe de mina debe ser una imagen PNG, JPG o WEBP.',
+            'measurement_time.date_format' => 'La hora de ingreso no es válida.',
+            'chief_signature.regex' => 'La firma del jefe de mina no es válida.',
             'chief_signature.max' => 'La firma del jefe de mina es demasiado pesada (máx. 2 MB).',
-            'sst_signature.regex' => 'La firma del líder SST debe ser una imagen PNG, JPG o WEBP.',
+            'sst_signature.regex' => 'La firma del líder SST no es válida.',
             'sst_signature.max' => 'La firma del líder SST es demasiado pesada (máx. 2 MB).',
         ]);
 

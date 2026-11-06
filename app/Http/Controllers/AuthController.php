@@ -33,6 +33,27 @@ class AuthController extends Controller
             'password' => 'required|string|min:8',
             'document_type' => 'required|in:CC,CE,TI,PA',
             'document_number' => 'required|string|max:20|unique:users',
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser texto.',
+            'name.max' => 'El nombre no puede superar los 255 caracteres.',
+            'last_name.required' => 'El apellido es obligatorio.',
+            'last_name.string' => 'El apellido debe ser texto.',
+            'last_name.max' => 'El apellido no puede superar los 255 caracteres.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.string' => 'El correo electrónico debe ser texto.',
+            'email.email' => 'El correo electrónico no es válido.',
+            'email.max' => 'El correo electrónico no puede superar los 255 caracteres.',
+            'email.unique' => 'Ya existe una cuenta con este correo electrónico.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.string' => 'La contraseña debe ser texto.',
+            'password.min' => 'La contraseña debe tener mínimo 8 caracteres.',
+            'document_type.required' => 'El tipo de documento es obligatorio.',
+            'document_type.in' => 'El tipo de documento seleccionado no es válido.',
+            'document_number.required' => 'El número de documento es obligatorio.',
+            'document_number.string' => 'El número de documento debe ser texto.',
+            'document_number.max' => 'El número de documento no puede superar los 20 caracteres.',
+            'document_number.unique' => 'Ya existe una cuenta con este número de documento.',
         ]);
 
         // El rol NUNCA viene del formulario: siempre Visitante.
@@ -101,6 +122,10 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+        ], [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico no es válido.',
+            'password.required' => 'La contraseña es obligatoria.',
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -143,7 +168,10 @@ class AuthController extends Controller
     public function forgotPassword(Request $request)
     {
         // Sin "exists": así nadie puede descubrir qué correos están registrados.
-        $request->validate(['email' => 'required|email']);
+        $request->validate(['email' => 'required|email'], [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico no es válido.',
+        ]);
 
         $user = User::where('email', $request->email)->first();
 
@@ -176,6 +204,15 @@ class AuthController extends Controller
             'email' => 'required|email',
             'code' => 'required|string|size:6',
             'password' => 'required|string|min:8',
+        ], [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico no es válido.',
+            'code.required' => 'El código es obligatorio.',
+            'code.string' => 'El código debe ser texto.',
+            'code.size' => 'El código debe tener exactamente 6 caracteres.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.string' => 'La contraseña debe ser texto.',
+            'password.min' => 'La contraseña debe tener mínimo 8 caracteres.',
         ]);
 
         $email = $request->email;
