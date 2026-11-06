@@ -15,7 +15,7 @@ class LocationController extends Controller
         $actual = $ubicacion?->location_category_id;
 
         $reglas = [
-            'nombre' => ['required', 'string', 'max:100', 'regex:/^[\p{L}\p{N}\s\-_.,#\/()°:]+$/u', Rule::unique('location', 'name')->ignore($ubicacion?->id)],
+            'nombre' => ['required', 'string', 'max:100', Rule::unique('location', 'name')->ignore($ubicacion?->id)],
             'descripcion' => 'required|string|max:5000',
             'categoria' => [
                 'required',
@@ -37,10 +37,11 @@ class LocationController extends Controller
     {
         return [
             'nombre.required' => 'El nombre es obligatorio.',
+            'nombre.string' => 'El nombre debe ser texto.',
             'nombre.max' => 'El nombre no puede superar los 100 caracteres.',
-            'nombre.regex' => 'El nombre solo puede contener letras, números, espacios y los caracteres - _ . , # / ( ) ° :',
             'nombre.unique' => 'Ya existe una ubicación registrada con este nombre.',
             'descripcion.required' => 'La descripción es obligatoria.',
+            'descripcion.string' => 'La descripción debe ser texto.',
             'descripcion.max' => 'La descripción no puede superar los 5000 caracteres.',
             'categoria.required' => 'La categoría es obligatoria.',
             'categoria.integer' => 'La categoría seleccionada no es válida.',

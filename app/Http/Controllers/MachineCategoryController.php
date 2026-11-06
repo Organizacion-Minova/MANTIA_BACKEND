@@ -28,6 +28,7 @@ class MachineCategoryController extends Controller
             'name.required' => 'El nombre es obligatorio.',
             'name.string' => 'El nombre debe ser texto.',
             'name.max' => 'El nombre no puede superar los 255 caracteres.',
+            'name.unique' => 'Ya existe una categoría de máquinas con este nombre.',
             'description.string' => 'La descripción debe ser texto.',
         ]);
 
@@ -59,10 +60,10 @@ class MachineCategoryController extends Controller
             'name.required' => 'El nombre es obligatorio.',
             'name.string' => 'El nombre debe ser texto.',
             'name.max' => 'El nombre no puede superar los 255 caracteres.',
-            'name.unique' => 'El nombre ya está en uso. Por favor, elige otro nombre.',
+            'name.unique' => 'Ya existe una categoría de máquinas con este nombre.',
             'description.string' => 'La descripción debe ser texto.',
             'status.required' => 'El estado es obligatorio.',
-            'status.in' => 'El estado debe ser "active" o "inactive".',
+            'status.in' => 'El estado seleccionado no es válido.',
         ]);
 
         $categoria->update($validado);
