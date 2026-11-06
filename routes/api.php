@@ -263,6 +263,10 @@ Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/g
 Route::middleware('auth:sanctum', 'permission:equipment.view')->get('/equipment/{id}/export/excel', [TechnicalSheetExportController::class, 'equipmentExcel']);
 Route::middleware('auth:sanctum', 'permission:equipment.view')->get('/equipment/{id}/export/pdf', [TechnicalSheetExportController::class, 'equipmentPdf']);
 
+# Exportaciones unitarias para Ficha técnica Máquinas
+Route::middleware('auth:sanctum', 'permission:machine.view')->get('/machine/{id}/export/excel', [TechnicalSheetExportController::class, 'machineExcel']);
+Route::middleware('auth:sanctum', 'permission:machine.view')->get('/machine/{id}/export/pdf', [TechnicalSheetExportController::class, 'machinePdf']);
+
 # Exportaciones unitarias para Uso diario
 Route::middleware(['auth:sanctum', 'permission:daily-use.view'])->get('/dailyuse/{id}/export/excel', [DailyUseExportController::class, 'dailyUseExcel']);
 Route::middleware(['auth:sanctum', 'permission:daily-use.view'])->get('/dailyuse/{id}/export/pdf', [DailyUseExportController::class, 'dailyUsePdf']);
