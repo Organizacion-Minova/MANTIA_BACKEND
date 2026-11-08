@@ -27,10 +27,12 @@ class LocationCategoryController extends Controller
     {
         return [
             'nombre.required' => 'El nombre es obligatorio.',
+            'nombre.string' => 'El nombre debe ser texto.',
             'nombre.max' => 'El nombre no puede superar los 45 caracteres.',
             'nombre.regex' => 'El nombre solo puede contener letras, números, espacios y guiones.',
             'nombre.unique' => 'Ya existe una categoría registrada con este nombre.',
             'descripcion.required' => 'La descripción es obligatoria.',
+            'descripcion.string' => 'La descripción debe ser texto.',
             'descripcion.max' => 'La descripción no puede superar los 5000 caracteres.',
             'estado.required' => 'El estado es obligatorio.',
             'estado.in' => 'El estado seleccionado no es válido.',

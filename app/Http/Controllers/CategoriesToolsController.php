@@ -28,9 +28,10 @@ class CategoriesToolsController extends Controller
             'category_group_id' => 'required|exists:category_group,id'
         ],[
             'name.required' => 'El nombre es obligatorio.',
-            'description.required' => 'La descripción es obligatoria.',
             'name.string' => 'El nombre debe ser texto.',
             'name.max' => 'El nombre no puede superar los 255 caracteres.',
+            'description.required' => 'La descripción es obligatoria.',
+            'description.string' => 'La descripción debe ser texto.',
             'status.required' => 'El estado es obligatorio.',
             'status.string' => 'El estado debe ser texto.',
             'status.in' => 'El estado debe ser uno de los valores permitidos.',
@@ -70,9 +71,10 @@ class CategoriesToolsController extends Controller
             'category_group_id' => 'required|exists:category_group,id'
         ],[
             'name.required' => 'El nombre es obligatorio.',
-            'description.required' => 'La descripción es obligatoria.',
             'name.string' => 'El nombre debe ser texto.',
             'name.max' => 'El nombre no puede superar los 255 caracteres.',
+            'description.required' => 'La descripción es obligatoria.',
+            'description.string' => 'La descripción debe ser texto.',
             'status.required' => 'El estado es obligatorio.',
             'status.string' => 'El estado debe ser texto.',
             'status.in' => 'El estado debe ser uno de los valores permitidos.',

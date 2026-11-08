@@ -38,6 +38,10 @@ class GasMeasurementExportController extends Controller
         $request->validate([
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+        ], [
+            'fecha_inicio.date' => 'La fecha inicio no es válida.',
+            'fecha_fin.date' => 'La fecha fin no es válida.',
+            'fecha_fin.after_or_equal' => 'La fecha fin no puede ser antes de la fecha de inicio.',
         ]);
 
         try {
@@ -71,6 +75,10 @@ class GasMeasurementExportController extends Controller
         $request->validate([
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+        ], [
+            'fecha_inicio.date' => 'La fecha inicio no es válida.',
+            'fecha_fin.date' => 'La fecha fin no es válida.',
+            'fecha_fin.after_or_equal' => 'La fecha fin no puede ser antes de la fecha de inicio.',
         ]);
 
         try {
