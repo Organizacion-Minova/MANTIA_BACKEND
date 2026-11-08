@@ -24,7 +24,7 @@
                 <img class="logo-sena" src="{{ public_path('images/sena-logo-naranja.png') }}" alt="Logo SENA">
             </td>
             <th colspan="6" rowspan="3" class="header-title" style="width: 55%;">
-                INSPECCIÓN PREOPERACIONAL<br>{{ strtoupper($equipment->name ?? '') }}
+                INSPECCIÓN PREOPERACIONAL<br>{{ mb_strtoupper($equipment->name ?? '') }}
             </th>
             <th colspan="3" style="width: 15%;">Código</th>
             <td colspan="2" style="width: 15%;">{{ $format->code ?? '' }}</td>
@@ -61,7 +61,7 @@
             @foreach(array_chunk($format->header_fields, 3) as $chunk)
                     @foreach($chunk as $field)
                     <tr>
-                        <th colspan="2">{{ $field['label'] }}:</th>
+                        <th colspan="2">{{ $field['label'] }}</th>
                         <td colspan="11">{{ $inspection->header_data[$field['key']] ?? '' }}</td>
                     </tr>
                     @endforeach
@@ -97,36 +97,43 @@
                     <td colspan="3">{{ $question->text }}</td>
                     @if($section->mode === 'weekly')
                         @php
-                            $val = $answersMap["{$question->id}-0"]['value'] ?? '';
-                            $obs = $answersMap["{$question->id}-0"]['observation'] ?? '';
+                            $val = $answersMap[$question->id][0]['value'] ?? '';
+                            $obs = $answersMap[$question->id][0]['observation'] ?? '';
                         @endphp
                         <td colspan="7">{{ $val }}</td>
                         <td colspan="2">{{ $obs }}</td>
                     @else
-                        @php $obsAccumulator = []; @endphp
+                        @php
+                            $diasNombres = [1 => 'L', 2 => 'M', 3 => 'M', 4 => 'J', 5 => 'V', 6 => 'S', 7 => 'D', 0 => 'D0'];
+                            $obsList = [];
+                        @endphp
                         @for($d = 1; $d <= 7; $d++)
                             @php
-                                $val = $answersMap["{$question->id}-{$d}"]['value'] ?? '';
-                                $o = $answersMap["{$question->id}-{$d}"]['observation'] ?? '';
-                                if ($o) { $obsAccumulator[] = "D{$d}: {$o}"; }
+                                $val = $answersMap[$question->id][$d]['value'] ?? '';
+                                $o = $answersMap[$question->id][$d]['observation'] ?? '';
+                                if ($o) { $obsList[] = "D{$diasNombres[$d]}: {$o}"; }
                             @endphp
                             <td>{{ $val }}</td>
                         @endfor
-                        <td colspan="2">{{ implode(' | ', $obsAccumulator) }}</td>
+                        @php
+                            $obs0 = $answersMap[$question->id][0]['observation'] ?? '';
+                            if ($obs0) { $obsList[] = $obs0; }
+                        @endphp
+                        <td colspan="2">{{ implode(' | ', $obsList) }}</td>
                     @endif
                 </tr>
             @endforeach
         @endforeach
 
         @if($inspection->general_observations)
-                <tr>
-                    <td colspan="13" class="section-header">OBSERVACIONES</td>
-                </tr>
-                <tr>
-                    <td colspan="13" style="height: 40px; vertical-align: top;">
-                        {{ $inspection->general_observations }}
-                    </td>
-                </tr>
+            <tr>
+                <td colspan="13" class="section-header">OBSERVACIONES</td>
+            </tr>
+            <tr>
+                <td colspan="13" style="height: 40px; vertical-align: top;">
+                    {{ $inspection->general_observations }}
+                </td>
+            </tr>
         @endif
     </table>
 

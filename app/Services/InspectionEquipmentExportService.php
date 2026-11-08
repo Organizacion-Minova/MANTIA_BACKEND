@@ -18,10 +18,23 @@ class InspectionEquipmentExportService
 
         $answersMap = [];
         foreach ($inspection->answers as $answer) {
-            $answersMap["{$answer->question_id}-{$answer->day}"] = [
-                'value' => $answer->value,
-                'observation' => $answer->observation,
-            ];
+            $qId = $answer->question_id;
+            $day = $answer->day;
+
+            if (!isset($answersMap[$qId][$day])) {
+                $answersMap[$qId][$day] = [
+                    'value' => null,
+                    'observation' => null,
+                ];
+            }
+
+            if (!is_null($answer->value)) {
+                $answersMap[$qId][$day]['value'] = $answer->value;
+            }
+
+            if (!is_null($answer->observation) && trim($answer->observation) !== '') {
+                $answersMap[$qId][$day]['observation'] = $answer->observation;
+            }
         }
 
         $signaturesMap = [];
