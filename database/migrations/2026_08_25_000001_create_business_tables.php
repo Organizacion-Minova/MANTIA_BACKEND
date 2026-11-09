@@ -48,14 +48,14 @@ return new class extends Migration
         Schema::create('equipment', function (Blueprint $table) {
             $table->id();
             $table->string('code', 20)->unique();
-            $table->string('name', 100);
+            $table->string('name', 100)->unique();
             $table->string('model', 20);
             $table->string('serial_number', 20)->unique();
             $table->string('responsible', 100);
-            $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
+            $table->enum('status', ['Activo', 'Inactivo', 'Mantenimiento'])->default('Activo');
             $table->date('start_up_date')->nullable();
             $table->string('brand', 100);
-            $table->string('plate', 30);
+            $table->string('plate', 100);
             $table->string('fuel', 50)->nullable();
             $table->string('power', 100)->nullable();
             $table->string('voltage', 50)->nullable();
@@ -74,7 +74,7 @@ return new class extends Migration
             $table->enum('status', ['Activo', 'Inactivo', 'Mantenimiento'])->default('Activo');
             $table->date('start_up_date')->nullable();
             $table->string('brand', 100);
-            $table->string('plate', 80);
+            $table->string('plate', 100);
             $table->string('fuel', 50)->nullable();
             $table->string('power', 100)->nullable();
             $table->string('voltage', 50)->nullable();
@@ -130,41 +130,84 @@ return new class extends Migration
             $table->string('observations', 255)->nullable();
             $table->foreignId('machine_id')->constrained('machine');
         });
-        Schema::create('inspection_question', function (Blueprint $table) {
+        Schema::create('inspection_format_machine', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('machine_id')->constrained('machine');
-            $table->string('text');
-            $table->enum('type', ['yes_no_na'])->default('yes_no_na');
-            $table->unsignedSmallInteger('position')->default(0);
+            $table->foreignId('category_id')->constrained('machine_category');
+            $table->string('code')->nullable();
+            $table->string('version')->nullable();
+            $table->date('valid_from')->nullable();
             $table->boolean('is_active')->default(true);
         });
-        Schema::create('inspection', function (Blueprint $table) {
+
+        Schema::create('inspection_section_machine', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('format_id')->constrained('inspection_format_machine')->cascadeOnDelete();
+            $table->string('title');
+            $table->unsignedSmallInteger('position')->default(1);
+        });
+        Schema::create('inspection_question_machine', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('section_id')->constrained('inspection_section_machine')->cascadeOnDelete();
+            $table->string('type')->default('item'); 
+            $table->string('text');
+            $table->unsignedSmallInteger('position')->default(1); 
+            $table->boolean('is_active')->default(true);
+        });
+        Schema::create('preoperational_machine', function (Blueprint $table) {
             $table->id();
             $table->foreignId('machine_id')->constrained('machine');
-            $table->date('inspection_date');
-            $table->unsignedSmallInteger('duration_minutes')->nullable();
+            $table->foreignId('format_id')->constrained('inspection_format_machine');
+            $table->date('week_start');
+            $table->date('week_end');
             $table->string('inspector');
+            $table->string('area')->nullable();
+            $table->unsignedSmallInteger('duration_minutes')->nullable();
             $table->string('reviewed_by')->nullable();
             $table->date('review_date')->nullable();
             $table->text('general_observations')->nullable();
             $table->string('signature')->nullable();
 
+            $table->unique(['machine_id', 'week_start']);
         });
-        Schema::create('inspection_answer', function (Blueprint $table) {
+        Schema::create('preoperational_answer_machine', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('inspection_id')->constrained('inspection')->cascadeOnDelete();
-            $table->foreignId('question_id')->constrained('inspection_question');
-            $table->enum('answer', ['yes', 'no', 'na'])->nullable();
+            $table->foreignId('inspection_id')->constrained('preoperational_machine')->cascadeOnDelete();
+            $table->foreignId('question_id')->constrained('inspection_question_machine');
+            $table->unsignedTinyInteger('day');           // 1 = lunes ... 7 = domingo
+            $table->string('value', 5);                   // SI | NO | N/A
+
+            $table->unique(['inspection_id', 'question_id', 'day'], 'preop_answer_machine_unique');
+        });
+        Schema::create('inspection_machine', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('machine_id')->constrained('machine');
+            $table->foreignId('format_id')->constrained('inspection_format_machine');
+            $table->date('inspection_date');
+            $table->string('inspector');
+            $table->string('area')->nullable();
+            $table->unsignedSmallInteger('duration_minutes')->nullable();
+            $table->string('reviewed_by')->nullable();
+            $table->date('review_date')->nullable();
+            $table->text('general_observations')->nullable();
+            $table->string('signature')->nullable();
+
+            $table->unique(['machine_id', 'inspection_date']);
+        });
+        Schema::create('inspection_answer_machine', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('inspection_id')->constrained('inspection_machine')->cascadeOnDelete();
+            $table->foreignId('question_id')->constrained('inspection_question_machine');
+            $table->string('value', 5)->nullable();
             $table->text('observation')->nullable();
 
             $table->unique(['inspection_id', 'question_id']);
         });
         Schema::create('inspection_format_equipment', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('equipment_id')->constrained('equipment');// "martillo neumático"
-            $table->string('code')->nullable();// ej. HSE-F-035
+            $table->foreignId('equipment_id')->constrained('equipment');
+            $table->string('code')->nullable();
             $table->string('version')->nullable();
-            $table->date('valid_from')->nullable();            // "vigente desde" / "fecha de emisión"
+            $table->date('valid_from')->nullable(); 
             $table->boolean('numbered')->default(false);
             $table->boolean('has_general_observations')->default(false);
             $table->boolean('is_active')->default(true);
@@ -235,6 +278,13 @@ return new class extends Migration
         Schema::dropIfExists('inspection_equipment');
         Schema::dropIfExists('inspection_answer_equipment');
         Schema::dropIfExists('inspection_signature_equipment');
+        Schema::dropIfExists('preoperational_answer_machine');
+        Schema::dropIfExists('preoperational_machine');
+        Schema::dropIfExists('inspection_answer_machine');
+        Schema::dropIfExists('inspection_machine');
+        Schema::dropIfExists('inspection_question_machine');
+        Schema::dropIfExists('inspection_section_machine');
+        Schema::dropIfExists('inspection_format_machine');
         Schema::dropIfExists('tool');
         Schema::dropIfExists('tool_stock_condition');
         Schema::dropIfExists('machine');

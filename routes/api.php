@@ -36,9 +36,10 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\RoleManagementController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\InspectionQuestionController;
 use App\Http\Controllers\InspectionFormatEquipmentController;
 use App\Http\Controllers\InspectionEquipmentController;
+use App\Http\Controllers\InspectionFormatMachineController;
+use App\Http\Controllers\MachineRecordController;
 use App\Http\Controllers\GasMeasurementExportController;
 use App\Http\Middleware\VerifyTurnstile;
 use App\Http\Controllers\TechnicalSheetExportController;
@@ -222,11 +223,6 @@ Route::middleware(['auth:sanctum', 'permission:daily-use.delete'])->delete('/dai
 
 Route::middleware(['auth:sanctum', 'permission:daily-use.update'])->put('/dailyuse/{id}', [DailyUseController::class, 'update']);
 
-# Preguntas inspeccion
-
-Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-questions', [InspectionQuestionController::class, 'index']);
-
-Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/inspection-questions', [InspectionQuestionController::class, 'store']);
 
 # Formato inspeccion equipos
 
@@ -250,6 +246,21 @@ Route::middleware(['auth:sanctum'])->get('/inspections/{id}', [InspectionEquipme
 
 Route::middleware(['auth:sanctum'])->post('/inspections', [InspectionEquipmentController::class, 'store']);
 
+# Formato inspeccion y preoperacional maquinas
+
+Route::get('/machines/{id}/inspection-format', [InspectionFormatMachineController::class, 'byMachine']);
+
+Route::post('/inspection-formats-machine', [InspectionFormatMachineController::class, 'store']);
+
+Route::put('/inspection-formats-machine/{id}', [InspectionFormatMachineController::class, 'update']);
+
+Route::get('/machines/{id}/records/{kind}', [MachineRecordController::class, 'index']);
+
+Route::get('/machines/{id}/records/{kind}/period', [MachineRecordController::class, 'period']);
+
+Route::get('/machine-records/{kind}/{id}', [MachineRecordController::class, 'show']);
+
+Route::post('/machine-records/{kind}', [MachineRecordController::class, 'store']);
 
 # Exportaciones unitarias Medición de gases
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/{id}/export/excel', [GasMeasurementExportController::class, 'unitaryGasExcel']);

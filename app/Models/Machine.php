@@ -40,4 +40,8 @@ class Machine extends Model
     {
         return $this->belongsTo(Location::class, 'location_id');
     }
+    public function preoperational_inspections()
+    {
+        return $this->hasMany(PreoperationalMachine::class, 'machine_id');
+    }
 }
