@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\CategoryTools;
+use Illuminate\Validation\Rule;
 
 class CategoriesToolsController extends Controller
 {
@@ -22,14 +23,15 @@ class CategoriesToolsController extends Controller
     public function store(Request $request)
     {
         $validado = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:50|unique:category,name',
             'description' => 'required|string',
             'status' => 'required|string|in:Activo,Inactivo,activo,inactivo,active,inactive',
             'category_group_id' => 'required|exists:category_group,id'
         ],[
             'name.required' => 'El nombre es obligatorio.',
             'name.string' => 'El nombre debe ser texto.',
-            'name.max' => 'El nombre no puede superar los 255 caracteres.',
+            'name.max' => 'El nombre no puede superar los 50 caracteres.',
+            'name.unique' => 'Ya existe una categoría con este nombre.',
             'description.required' => 'La descripción es obligatoria.',
             'description.string' => 'La descripción debe ser texto.',
             'status.required' => 'El estado es obligatorio.',
@@ -65,14 +67,15 @@ class CategoriesToolsController extends Controller
         $categoria = CategoryTools::findOrFail($id);
 
         $validado = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required','string','max:50',Rule::unique('category', 'name')->ignore($id),
             'description' => 'required|string',
             'status' => 'required|string|in:Activo,Inactivo,activo,inactivo,active,inactive',
             'category_group_id' => 'required|exists:category_group,id'
         ],[
             'name.required' => 'El nombre es obligatorio.',
             'name.string' => 'El nombre debe ser texto.',
-            'name.max' => 'El nombre no puede superar los 255 caracteres.',
+            'name.max' => 'El nombre no puede superar los 50 caracteres.',
+            'name.unique' => 'Ya existe una categoría con este nombre.',
             'description.required' => 'La descripción es obligatoria.',
             'description.string' => 'La descripción debe ser texto.',
             'status.required' => 'El estado es obligatorio.',
@@ -82,6 +85,10 @@ class CategoriesToolsController extends Controller
             'category_group_id.exists' => 'El grupo de categoría seleccionado no existe.'
         ]);
 
+        $validado['status'] = in_array(strtolower($validado['status']), ['activo', 'active'])
+            ? 'Activo'
+            : 'Inactivo';
+            
         $categoria->update($validado);
 
         return response()->json($categoria);
