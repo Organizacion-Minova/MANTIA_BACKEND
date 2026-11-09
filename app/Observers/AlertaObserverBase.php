@@ -7,6 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 
 abstract class AlertaObserverBase
 {
+    /** Estados guardados en la base de datos => texto para el usuario. */
+    private const ESTADOS = [
+        'active'      => 'Activo',
+        'inactive'    => 'Inactivo',
+        'maintenance' => 'En mantenimiento',
+        'approved'    => 'Aprobado',
+        'pending'     => 'Pendiente',
+        'rejected'    => 'Rechazado',
+    ];
+
     abstract protected function tipo(): string;
     abstract protected function etiqueta(Model $model): string;
 
@@ -33,7 +43,8 @@ abstract class AlertaObserverBase
                 'maintenance' => 'warning',
                 default => 'info',
             };
-            $this->notificar("{$this->etiqueta($model)} cambió a estado: {$model->status}", $nivel, $this->enlace($model));
+            $estado = self::ESTADOS[$model->status] ?? $model->status;
+            $this->notificar("{$this->etiqueta($model)} cambió a estado: {$estado}", $nivel, $this->enlace($model));
         }
     }
 
