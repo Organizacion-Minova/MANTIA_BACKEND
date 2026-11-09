@@ -7,7 +7,6 @@
         .page-break { page-break-after: always; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
         th, td { border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle; }
-        .text-left { text-align: left; }
         .header-title { font-size: 12px; font-weight: bold; text-align: center; margin-top: 0px; }
         .header-container { width: 100%; text-align: center; margin-bottom: 2px; }
         .logo-sena { max-height: 45px; display: block; margin-bottom: 2px; }
@@ -78,15 +77,15 @@
             @foreach($medicion->detail as $d)
             <tr>
                 <th rowspan="2">{{ $n = $n + 1 }}</th>
-                <th rowspan="1" class="text-left">{{ $d->location->name ?? '' }}</th>
-                <td rowspan="2">{{ $d->oxygen }}</td>
-                <td rowspan="2">{{ $d->methane }}</td>
-                <td rowspan="2">{{ $d->carbon_dioxide }}</td>
-                <td rowspan="2">{{ $d->carbon_monoxide }}</td>
-                <td rowspan="2">{{ $d->hydrogen_sulfide }}</td>
-                <td rowspan="2">{{ $d->nitrogen_dioxide }}</td>
-                <td rowspan="2" class="text-left">{{ $d->responsible_name }}</td>
-                <td rowspan="2" class="text-left">{{ $d->observation }}</td>
+                <th rowspan="1">{{ $d->location->name ?? '' }}</th>
+                <td rowspan="2">{{ $d->oxygen ?? '' }}</td>
+                <td rowspan="2">{{ $d->methane ?? '' }}</td>
+                <td rowspan="2">{{ $d->carbon_dioxide ?? '' }}</td>
+                <td rowspan="2">{{ $d->carbon_monoxide ?? '' }}</td>
+                <td rowspan="2">{{ $d->hydrogen_sulfide ?? '' }}</td>
+                <td rowspan="2">{{ $d->nitrogen_dioxide ?? '' }}</td>
+                <td rowspan="2">{{ $d->responsible_name ?? '' }}</td>
+                <td rowspan="2">{{ $d->observation ?? '' }}</td>
             </tr>
             <tr>
                 <td rowspan="1"></td>

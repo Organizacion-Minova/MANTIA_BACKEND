@@ -25,7 +25,7 @@
                 CÓDIGO:
             </th>
             <td colspan="1">
-                {{ $equipment->code }}
+                {{ $equipment->code ?? '' }}
             </td>
         </tr>
         <tr>
@@ -47,7 +47,7 @@
                 FECHA:
             </th>
             <td colspan="1">
-                {{ $equipment->start_up_date }}
+                {{ $equipment->start_up_date ?? '' }}
             </td>
         </tr>
         <tr>
@@ -64,35 +64,35 @@
         </tr>
         <tr>
             <th>CÓDIGO:</th>
-            <td>{{ $equipment->code ?? 'N/A' }}</td>
+            <td>{{ $equipment->code ?? '' }}</td>
             <th>NOMBRE:</th>
-            <td>{{ $equipment->name }}</td>
+            <td>{{ $equipment->name ?? '' }}</td>
             <th>PLACA:</th>
-            <td>{{ $equipment->plate }}</td>
+            <td>{{ $equipment->plate ?? '' }}</td>
         </tr>
         <tr>
             <th>MODELO:</th>
-            <td>{{ $equipment->model }}</td>
+            <td>{{ $equipment->model ?? '' }}</td>
             <th>NÚMERO DE SERIE:</th>
-            <td>{{ $equipment->serial_number }}</td>
+            <td>{{ $equipment->serial_number ?? '' }}</td>
             <th>FECHA DE INICIO:</th>
-            <td>{{ $equipment->start_up_date }}</td>
+            <td>{{ $equipment->start_up_date ?? '' }}</td>
         </tr>
         <tr>
             <th>UBICACIÓN:</th>
-            <td>{{ $equipment->ubicacion->name }}</td>
+            <td>{{ $equipment->ubicacion->name ?? '' }}</td>
             <th>RESPONSABLE:</th>
-            <td>{{ $equipment->responsible }}</td>
+            <td>{{ $equipment->responsible ?? '' }}</td>
             <th>ESTADO:</th>
             <td>{{ $equipment->status === 'active' ? 'Activo' : 'Inactivo' }}</td>
         </tr>
         <tr>
             <th>CONSUMIBLE:</th>
-            <td>{{ $equipment->fuel}}</td>
+            <td>{{ $equipment->fuel ?? '' }}</td>
             <th>POTENCIA:</th>
-            <td>{{ $equipment->power }}</td>
+            <td>{{ $equipment->power ?? '' }}</td>
             <th>VOLTAJE:</th>
-            <td>{{ $equipment->voltage }}</td>
+            <td>{{ $equipment->voltage ?? '' }}</td>
         </tr>
         <tr>
             <th colspan="6">
@@ -101,7 +101,7 @@
         </tr>
         <tr>
             <td colspan="6">
-                {{ $equipment->description }}
+                {{ $equipment->description ?? '' }}
             </td>
         </tr>
     </table>

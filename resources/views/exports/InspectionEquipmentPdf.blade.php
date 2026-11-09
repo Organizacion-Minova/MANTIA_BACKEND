@@ -130,8 +130,8 @@
                 <td colspan="13" class="section-header">OBSERVACIONES</td>
             </tr>
             <tr>
-                <td colspan="13" style="height: 40px; vertical-align: top;">
-                    {{ $inspection->general_observations }}
+                <td colspan="13">
+                    {{ $inspection->general_observations ?? ''}}
                 </td>
             </tr>
         @endif
