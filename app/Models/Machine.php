@@ -44,4 +44,8 @@ class Machine extends Model
     {
         return $this->hasMany(PreoperationalMachine::class, 'machine_id');
     }
+    public function consumables()
+    {
+        return $this->hasMany(ToolsMachine::class, 'machine_id');
+    }
 }

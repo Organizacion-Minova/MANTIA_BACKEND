@@ -61,6 +61,22 @@ class MachinesTest extends TestCase
         $this->getJson('/api/machines')->assertOk()->assertJsonCount(0);
     }
 
+    public function test_machine_list_stays_in_id_order_after_a_record_is_edited(): void
+    {
+        $this->withoutMiddleware();
+        $references = $this->createMachineReferences();
+
+        $firstId = $this->insertMachine($references, 'M-010', 'Primera máquina');
+        $secondId = $this->insertMachine($references, 'M-011', 'Segunda máquina');
+
+        DB::table('machine')->where('id', $firstId)->update(['name' => 'Máquina editada']);
+
+        $this->getJson('/api/machines')
+            ->assertOk()
+            ->assertJsonPath('0.id', $firstId)
+            ->assertJsonPath('1.id', $secondId);
+    }
+
     public function test_machine_optional_model_fields_accept_null_values(): void
     {
         $this->withoutMiddleware();
@@ -173,5 +189,18 @@ class MachinesTest extends TestCase
         ]);
 
         return compact('category', 'location');
+    }
+
+    private function insertMachine(array $references, string $code, string $name): int
+    {
+        return DB::table('machine')->insertGetId([
+            'code' => $code,
+            'name' => $name,
+            'responsible' => 'Operador',
+            'brand' => 'Minova',
+            'plate' => $code,
+            'location_id' => $references['location'],
+            'machine_category_id' => $references['category'],
+        ]);
     }
 }

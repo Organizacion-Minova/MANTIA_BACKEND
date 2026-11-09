@@ -45,7 +45,7 @@ use App\Http\Middleware\VerifyTurnstile;
 use App\Http\Controllers\TechnicalSheetExportController;
 use App\Http\Controllers\DailyUseExportController;
 use App\Http\Controllers\InspectionEquipmentExportController;
-use App\Http\Controllers\InspectionMachineExportController;
+use App\Http\Controllers\ToolsMachineController;
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register'])->middleware(['throttle:10,10', VerifyTurnstile::class]);
 Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
@@ -187,6 +187,13 @@ Route::middleware(['auth:sanctum', 'permission:machine.update'])->put('/machines
 Route::middleware(['auth:sanctum', 'permission:machine.delete'])->delete('/machines/{id}', [MachinesController::class, 'destroy']);
 
 Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('/machine-options', [MachinesController::class, 'options']);
+
+# Consumibles maquinas
+
+Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('consumable-tools', [ToolsMachineController::class, 'catalog']);
+
+Route::middleware(['auth:sanctum', 'permission:machine.view'])->apiResource('machine-tools', ToolsMachineController::class)->except(['show']);
+
 # Medición de gases
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements', [GasMeasurementController::class, 'index']);
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.create'])->post('/gas-measurements', [GasMeasurementController::class, 'store']);
@@ -284,9 +291,5 @@ Route::middleware(['auth:sanctum', 'permission:daily-use.view'])->get('/dailyuse
 Route::middleware(['auth:sanctum', 'permission:daily-use.view'])->get('/dailyuse/{id}/export/pdf', [DailyUseExportController::class, 'dailyUsePdf']);
 
 # Exportaciones unitarias para Inspección de equipos
-Route::middleware(['auth:sanctum'])->get('/inspection-equipment/{id}/export/excel', [InspectionEquipmentExportController::class, 'inspectionEquipmentExcel']);
-Route::middleware(['auth:sanctum'])->get('/inspection-equipment/{id}/export/pdf', [InspectionEquipmentExportController::class, 'inspectionEquipmentPdf']);
-
-# Exportaciones unitarias para Inspección de máquinas
-Route::middleware(['auth:sanctum'])->get('/inspection-machine/{id}/export/excel', [InspectionMachineExportController::class, 'inspectionMachineExcel']);
-Route::middleware(['auth:sanctum'])->get('/inspection-machine/{id}/export/pdf', [InspectionMachineExportController::class, 'inspectionMachinePdf']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-equipment/{id}/export/excel', [InspectionEquipmentExportController::class, 'inspectionEquipmentExcel']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-equipment/{id}/export/pdf', [InspectionEquipmentExportController::class, 'inspectionEquipmentPdf']);

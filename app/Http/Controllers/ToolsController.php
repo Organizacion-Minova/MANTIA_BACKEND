@@ -61,7 +61,6 @@ class ToolsController extends Controller
             'condiciones.regular.max' => 'La cantidad de herramientas en estado regular no puede superar los 1000.',
             'condiciones.malo.max' => 'La cantidad de herramientas en mal estado no puede superar los 1000.',
         ]);
-
         $this->validarStockMinimo($validado['condiciones']);
 
         $tool = Tools::create([

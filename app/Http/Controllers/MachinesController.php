@@ -17,7 +17,9 @@ class MachinesController extends Controller
      */
     public function index()
     {
-        $machines = Machine::with('category_maquina', 'ubicacion')->get();
+        $machines = Machine::with('category_maquina', 'ubicacion')
+            ->orderBy('id')
+            ->get();
 
         return response()->json($machines);
     }

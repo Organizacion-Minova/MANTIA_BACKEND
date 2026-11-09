@@ -72,6 +72,22 @@ class EquipmentTest extends TestCase
         Storage::disk('public')->assertMissing($replacementPath);
     }
 
+    public function test_equipment_list_stays_in_id_order_after_a_record_is_edited(): void
+    {
+        $this->withoutMiddleware();
+        $locationId = $this->createEquipmentLocation();
+
+        $firstId = $this->insertEquipment($locationId, 'EQ-010', 'Primer equipo');
+        $secondId = $this->insertEquipment($locationId, 'EQ-011', 'Segundo equipo');
+
+        DB::table('equipment')->where('id', $firstId)->update(['name' => 'Equipo editado']);
+
+        $this->getJson('/api/equipment')
+            ->assertOk()
+            ->assertJsonPath('0.id', $firstId)
+            ->assertJsonPath('1.id', $secondId);
+    }
+
     private function createEquipmentLocation(): int
     {
         $locationCategory = DB::table('location_category')->insertGetId([
@@ -86,5 +102,20 @@ class EquipmentTest extends TestCase
         ]);
 
         return $location;
+    }
+
+    private function insertEquipment(int $locationId, string $code, string $name): int
+    {
+        return DB::table('equipment')->insertGetId([
+            'code' => $code,
+            'name' => $name,
+            'model' => 'Modelo',
+            'serial_number' => "SN-{$code}",
+            'responsible' => 'Ana',
+            'brand' => 'Minova',
+            'plate' => $code,
+            'location_id' => $locationId,
+            'description' => 'Equipo de prueba',
+        ]);
     }
 }
