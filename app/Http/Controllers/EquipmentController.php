@@ -14,7 +14,9 @@ class EquipmentController extends Controller
      */
     public function index()
     {
-        $equipments = Equipment::with('ubicacion')->get();
+        $equipments = Equipment::with('ubicacion')
+            ->orderBy('id')
+            ->get();
 
         return response()->json($equipments);
     }
