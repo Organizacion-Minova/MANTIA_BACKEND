@@ -67,7 +67,7 @@ return new class extends Migration
         Schema::create('machine', function (Blueprint $table) {
             $table->id();
             $table->string('code', 20)->unique();
-            $table->string('name', 100);
+            $table->string('name', 100)->unique();
             $table->string('model', 80)->nullable();
             $table->string('serial_number', 100)->nullable();
             $table->string('responsible', 45);
