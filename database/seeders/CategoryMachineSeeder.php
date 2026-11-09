@@ -36,5 +36,13 @@ class CategoryMachineSeeder extends Seeder
                 'status' => 'active'
             ]
         );
+
+        MachineCategory::firstOrCreate(
+            ['name'=>'Malacates'],
+            [
+                'description'=>'Se utiliza para levantar o arrastrar cargas pesadas mediante un cable enrollado en un tambor',
+                'status'=>'active'
+            ]
+        );
     }
 }
