@@ -161,8 +161,8 @@ class GasMeasurementController extends Controller
 
         $datosValidados = $request->validate([
             'measurement_time' => 'nullable|date_format:H:i',
-            'chief_signature' => ['nullable', 'string', 'max:3000000', 'regex:/^data:image\/(png|jpeg|webp);base64,/'],
-            'sst_signature' => ['nullable', 'string', 'max:3000000', 'regex:/^data:image\/(png|jpeg|webp);base64,/'],
+            'chief_signature' => ['nullable', 'string', 'max:2000000', 'regex:/^data:image\/(png|jpeg|webp);base64,/'],
+            'sst_signature' => ['nullable', 'string', 'max:2000000', 'regex:/^data:image\/(png|jpeg|webp);base64,/'],
         ], [
             'measurement_time.date_format' => 'La hora de ingreso no es válida.',
             'chief_signature.regex' => 'La firma del jefe de mina no es válida.',
