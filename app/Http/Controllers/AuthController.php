@@ -120,7 +120,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|email:rfc',
             'password' => 'required',
         ], [
             'email.required' => 'El correo electrónico es obligatorio.',
@@ -168,7 +168,7 @@ class AuthController extends Controller
     public function forgotPassword(Request $request)
     {
         // Sin "exists": así nadie puede descubrir qué correos están registrados.
-        $request->validate(['email' => 'required|email'], [
+        $request->validate(['email' => 'required|email:rfc'], [
             'email.required' => 'El correo electrónico es obligatorio.',
             'email.email' => 'El correo electrónico no es válido.',
         ]);
@@ -201,7 +201,7 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|email:rfc',
             'code' => 'required|string|size:6',
             'password' => 'required|string|min:8',
         ], [
