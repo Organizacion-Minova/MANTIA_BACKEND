@@ -305,10 +305,30 @@ class MachinesSeeder extends Seeder
 
 
         // ==========================================
-        // CATEGORÍA 4: GENERADORES
+        // CATEGORÍA 4: MALACATES
         // ==========================================
         
-        
+        Machine::firstOrCreate(
+            ['code' => 'PM-M01'],
+            [
+            'name' => 'MALACATE ELECTRICO',
+            'model' => "M-30-01",
+            'serial_number'  => '58.02.4634',
+            'responsible' => 'Jefe de mina',
+            'status' => 'Activo',
+            'start_up_date'=> null,
+            'brand'=>'STROPO',
+            'plate' => "34277",
+            'fuel'=> null,
+            'power'=> "30HP",
+            'voltage'=> "220/440 V",
+            'location_id' => 5,
+            'machine_category_id' => 4,
+            'image'=> null,
+            'characteristics' => 'Capacidad: 30HP-KV:22-Motor RPM:71 - Cos:0.84 - V: 220/440 - A:75.0/37.5 -HZ:60- KG:330 - NM:2960 - F.S:1.45.
+             OPERACIÓN:  En un primer arranque sin guaya se debe chequear  la direccion de rotacion de la TURRA, con el fin de determinar la direccion de trabajo. Ya que los frenos tienen una direccion de frenado. En la arrancada se debe hacer con personal autorizadoy se debe tener en cuenta los siguientes puntos: - Magnitud de las vibraciones de la maquina, el ruido generado por la maquina, consumo de corriente , velocidad de trabajo.'
+            ]
+        );
         
         // ==========================================
         // CATEGORÍA 5: EQUIPOS DE VENTILACIÓN

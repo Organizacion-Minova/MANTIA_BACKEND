@@ -76,7 +76,6 @@ class AppServiceProvider extends ServiceProvider
         Machine::observe(MachineObserver::class);
         Equipment::observe(EquipmentObserver::class);
         Tool::observe(ToolObserver::class);
-        Inspection::observe(InspectionObserver::class);
         GasMeasurement::observe(GasMeasurementObserver::class);
         GasMeasurementDetail::observe(GasMeasurementDetailObserver::class);
         DailyUse::observe(DailyUseObserver::class);

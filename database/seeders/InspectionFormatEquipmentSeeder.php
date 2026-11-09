@@ -146,7 +146,7 @@ class InspectionFormatEquipmentSeeder extends Seeder
 
             'sections' => [
                 [
-                    'title' => '1. Motosoldador',
+                    'title' => ' Motosoldador',
                     'mode' => 'daily',
                     'options' => ['C', 'NC', 'N/A'],
                     'has_observation' => true,
@@ -169,7 +169,7 @@ class InspectionFormatEquipmentSeeder extends Seeder
                 ],
 
                 [
-                    'title' => '2. Cables',
+                    'title' => 'Cables',
                     'mode' => 'daily',
                     'options' => ['C', 'NC', 'N/A'],
                     'has_observation' => true,
@@ -183,7 +183,7 @@ class InspectionFormatEquipmentSeeder extends Seeder
                 ],
 
                 [
-                    'title' => '3. Amoladora',
+                    'title' => 'Amoladora',
                     'mode' => 'daily',
                     'options' => ['C', 'NC', 'N/A'],
                     'has_observation' => true,
@@ -196,7 +196,7 @@ class InspectionFormatEquipmentSeeder extends Seeder
                 ],
 
                 [
-                    'title' => '4. Oxicorte',
+                    'title' => 'Oxicorte',
                     'mode' => 'daily',
                     'options' => ['C', 'NC', 'N/A'],
                     'has_observation' => true,
