@@ -48,6 +48,7 @@ use App\Http\Controllers\InspectionEquipmentExportController;
 use App\Http\Controllers\ToolsMachineController;
 use App\Http\Controllers\InspectionOverviewController;
 use App\Http\Controllers\InspectionMachineExportController;
+use App\Http\Controllers\PreoperationalMachineExportController;
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register'])->middleware(['throttle:10,10', VerifyTurnstile::class]);
 Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
@@ -305,3 +306,7 @@ Route::middleware(['auth:sanctum'])->get('/inspection-equipment/{id}/export/pdf'
 # Exportaciones unitarias para Inspección de máquinas
 Route::middleware(['auth:sanctum'])->get('/inspection-machine/{id}/export/excel', [InspectionMachineExportController::class, 'inspectionMachineExcel']);
 Route::middleware(['auth:sanctum'])->get('/inspection-machine/{id}/export/pdf', [InspectionMachineExportController::class, 'inspectionMachinePdf']);
+
+# Exportaciones unitarias para Preoperacional de máquinas
+Route::middleware(['auth:sanctum'])->get('/preoperational-machine/{id}/export/excel', [PreoperationalMachineExportController::class, 'preoperationalMachineExcel']);
+Route::middleware(['auth:sanctum'])->get('/preoperational-machine/{id}/export/pdf', [PreoperationalMachineExportController::class, 'preoperationalMachinePdf']);
