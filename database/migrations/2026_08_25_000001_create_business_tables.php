@@ -261,11 +261,21 @@ return new class extends Migration
             $table->string('signature')->nullable();
             $table->unique(['inspection_id', 'role']);
         });
-
+        Schema::create('tools_machine', function (Blueprint $table){
+            $table->id();
+            $table->foreignId('tool_id')->constrained('tool');
+            $table->string('brand', 100)->nullable();
+            $table->unsignedInteger('stock')->default(0);
+            $table->text('observations')->nullable();
+            $table->foreignId('machine_id')->constrained('machine')->cascadeOnDelete();
+            $table->unique(['tool_id', 'machine_id']);
+        });
     }
+
 
     public function down(): void
     {
+        Schema::dropIfExists('tools_machine');
         Schema::dropIfExists('daily_use');
         Schema::dropIfExists('gas_measurement_location');
         Schema::dropIfExists('gas_measurement');

@@ -23,7 +23,7 @@ class InspectionEquipmentExportController extends Controller
 
         $pdf = Pdf::loadView('exports.InspectionEquipmentPdf', $data);
 
-        return $pdf->download("Inspeccion_{$equipmentName}_{$data['inspection']->week_start}.pdf");
+        return $pdf->download("Inspección_{$equipmentName}_{$data['inspection']->week_start}.pdf");
     }
 
     public function inspectionEquipmentExcel(int $id)
@@ -33,7 +33,7 @@ class InspectionEquipmentExportController extends Controller
 
         return Excel::download(
             new InspectionEquipmentExcelExport($data),
-            "Inspeccion_{$equipmentName}_{$data['inspection']->week_start}.xlsx"
+            "Inspección_{$equipmentName}_{$data['inspection']->week_start}.xlsx"
         );
     }
 }

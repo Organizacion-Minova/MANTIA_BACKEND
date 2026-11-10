@@ -23,7 +23,7 @@
         </tr>
         <tr>
             <th colspan="2">NOMBRE MÁQUINA:</th>
-            <td colspan="4">{{ $machine->name }}</td>
+            <td colspan="4">{{ $machine->name ?? '' }}</td>
         </tr>
         <tr>
             <th>Fecha</th>
@@ -36,12 +36,12 @@
 
         @forelse($records as $r)
         <tr>
-            <td>{{ $r->date }}</td>
-            <td>{{ $r->operating_status }}</td>
-            <td>{{ $r->operation_start }}</td>
-            <td>{{ $r->operation_end }}</td>
-            <td>{{ $r->responsible }}</td>
-            <td>{{ $r->observations ?? 'Ninguna' }}</td>
+            <td>{{ $r->date ?? '' }}</td>
+            <td>{{ $r->operating_status ?? '' }}</td>
+            <td>{{ $r->operation_start ?? '' }}</td>
+            <td>{{ $r->operation_end ?? '' }}</td>
+            <td>{{ $r->responsible ?? '' }}</td>
+            <td>{{ $r->observations ?? '' }}</td>
         </tr>
         @empty
         <tr>

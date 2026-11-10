@@ -45,6 +45,7 @@ use App\Http\Middleware\VerifyTurnstile;
 use App\Http\Controllers\TechnicalSheetExportController;
 use App\Http\Controllers\DailyUseExportController;
 use App\Http\Controllers\InspectionEquipmentExportController;
+use App\Http\Controllers\ToolsMachineController;
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register'])->middleware(['throttle:10,10', VerifyTurnstile::class]);
 Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
@@ -186,6 +187,13 @@ Route::middleware(['auth:sanctum', 'permission:machine.update'])->put('/machines
 Route::middleware(['auth:sanctum', 'permission:machine.delete'])->delete('/machines/{id}', [MachinesController::class, 'destroy']);
 
 Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('/machine-options', [MachinesController::class, 'options']);
+
+# Consumibles maquinas
+
+Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('consumable-tools', [ToolsMachineController::class, 'catalog']);
+
+Route::middleware(['auth:sanctum', 'permission:machine.view'])->apiResource('machine-tools', ToolsMachineController::class)->except(['show']);
+
 # Medición de gases
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements', [GasMeasurementController::class, 'index']);
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.create'])->post('/gas-measurements', [GasMeasurementController::class, 'store']);
