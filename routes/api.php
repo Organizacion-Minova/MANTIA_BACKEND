@@ -46,6 +46,7 @@ use App\Http\Controllers\TechnicalSheetExportController;
 use App\Http\Controllers\DailyUseExportController;
 use App\Http\Controllers\InspectionEquipmentExportController;
 use App\Http\Controllers\ToolsMachineController;
+use App\Http\Controllers\InspectionOverviewController;
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register'])->middleware(['throttle:10,10', VerifyTurnstile::class]);
 Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
@@ -256,19 +257,25 @@ Route::middleware(['auth:sanctum'])->post('/inspections', [InspectionEquipmentCo
 
 # Formato inspeccion y preoperacional maquinas
 
-Route::get('/machines/{id}/inspection-format', [InspectionFormatMachineController::class, 'byMachine']);
+Route::middleware(['auth:sanctum'])->get('/machines/{id}/inspection-format', [InspectionFormatMachineController::class, 'byMachine']);
 
-Route::post('/inspection-formats-machine', [InspectionFormatMachineController::class, 'store']);
+Route::middleware(['auth:sanctum'])->post('/inspection-formats-machine', [InspectionFormatMachineController::class, 'store']);
 
-Route::put('/inspection-formats-machine/{id}', [InspectionFormatMachineController::class, 'update']);
+Route::middleware(['auth:sanctum'])->put('/inspection-formats-machine/{id}', [InspectionFormatMachineController::class, 'update']);
 
-Route::get('/machines/{id}/records/{kind}', [MachineRecordController::class, 'index']);
+Route::middleware(['auth:sanctum'])->get('/machines/{id}/records/{kind}', [MachineRecordController::class, 'index']);
 
-Route::get('/machines/{id}/records/{kind}/period', [MachineRecordController::class, 'period']);
+Route::middleware(['auth:sanctum'])->get('/machines/{id}/records/{kind}/period', [MachineRecordController::class, 'period']);
 
-Route::get('/machine-records/{kind}/{id}', [MachineRecordController::class, 'show']);
+Route::middleware(['auth:sanctum'])->get('/machine-records/{kind}/{id}', [MachineRecordController::class, 'show']);
 
-Route::post('/machine-records/{kind}', [MachineRecordController::class, 'store']);
+Route::middleware(['auth:sanctum'])->post('/machine-records/{kind}', [MachineRecordController::class, 'store']);
+
+# Vista general de inspecciones: equipos y máquinas
+
+Route::middleware(['auth:sanctum'])->get('/inspection-overview/equipment', [InspectionOverviewController::class, 'equipment']);
+
+Route::middleware(['auth:sanctum'])->get('/inspection-overview/machines', [InspectionOverviewController::class, 'machines']);
 
 # Exportaciones unitarias Medición de gases
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/{id}/export/excel', [GasMeasurementExportController::class, 'unitaryGasExcel']);
