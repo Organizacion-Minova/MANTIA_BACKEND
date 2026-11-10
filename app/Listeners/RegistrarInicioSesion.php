@@ -2,17 +2,20 @@
 
 namespace App\Listeners;
 
-use Illuminate\Auth\Events\Login;
+use App\Models\User;
 use App\Notifications\AlertaSistema;
+use Illuminate\Auth\Events\Login;
 
 class RegistrarInicioSesion
 {
     public function handle(Login $event): void
     {
-        $event->user->notify(new AlertaSistema(
-            tipo: 'login',
-            mensaje: "Inicio de sesión: {$event->user->name}",
-            nivel: 'info'
-        ));
+        if ($event->user instanceof User) {
+            $event->user->notify(new AlertaSistema(
+                tipo: 'login',
+                mensaje: "Inicio de sesión: {$event->user->name}",
+                nivel: 'info'
+            ));
+        }
     }
 }
