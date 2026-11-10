@@ -230,8 +230,19 @@ class InspectionEquipmentExcelExport implements FromArray, WithEvents, WithTitle
         if ($inspeccion->general_observations) {
             $this->celda($hoja, "A{$fila}:M{$fila}", 'OBSERVACIONES', true);
             $fila++;
-            $this->celda($hoja, "A{$fila}:M{$fila}", $inspeccion->general_observations, false, 'center', 'top');
-            $hoja->getRowDimension($fila)->setRowHeight($this->altofila([[$inspeccion->general_observations, 130]], 30));
+
+            $generales = $inspeccion->general_observations ?? '';
+            $rango = "A{$fila}:M{$fila}";
+            $this->celda($hoja, $rango, $generales);
+            $hoja->getStyle($rango)->getAlignment()->setWrapText(true);
+            $caracteresPorLinea = 180; 
+            $altoPorLinea = 12; 
+            $altoMinimo = 20; 
+            $lineasPorSaltos = substr_count($generales, "\n") + 1;
+            $lineasPorLongitud = ceil(strlen($generales) / $caracteresPorLinea);
+            $totalLineas = max($lineasPorSaltos, $lineasPorLongitud);
+            $altoFinal = max($altoMinimo, $totalLineas * $altoPorLinea);
+            $hoja->getRowDimension($fila)->setRowHeight($altoFinal);
             $fila++;
         }
 
