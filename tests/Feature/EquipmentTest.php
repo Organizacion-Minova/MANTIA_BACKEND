@@ -24,7 +24,7 @@ class EquipmentTest extends TestCase
             'description' => 'Detector portátil',
             'serial_number' => 'SN-001',
             'responsible' => 'Ana',
-            'status' => 'active',
+            'status' => 'Activo',
             'model' => 'D-1',
             'start_up_date' => '2025-01-15',
             'brand' => 'Minova',
@@ -33,6 +33,7 @@ class EquipmentTest extends TestCase
             'power' => '100 W',
             'voltage' => '220 V',
             'location_id' => $locationId,
+            'category' => 'Consumible',
         ];
 
         $created = $this->post('/api/equipment', [
@@ -70,6 +71,52 @@ class EquipmentTest extends TestCase
 
         $this->deleteJson("/api/equipment/{$equipmentId}")->assertOk();
         Storage::disk('public')->assertMissing($replacementPath);
+    }
+
+    public function test_equipment_can_be_created_without_a_description(): void
+    {
+        $this->withoutMiddleware();
+        Storage::fake('public');
+        $locationId = $this->createEquipmentLocation();
+
+        $this->post('/api/equipment', [
+            'code' => 'EQ-EMPTY-DESC',
+            'name' => 'Equipo sin descripción',
+            'model' => 'Modelo',
+            'serial_number' => 'SN-EMPTY-DESC',
+            'responsible' => 'Ana',
+            'status' => 'Activo',
+            'brand' => 'Minova',
+            'plate' => 'PL-EMPTY-DESC',
+            'location_id' => $locationId,
+            'category' => 'Consumible',
+            'description' => '',
+            'image' => UploadedFile::fake()->image('equipment.png'),
+        ], ['Accept' => 'application/json'])
+            ->assertCreated()
+            ->assertJsonPath('description', '');
+    }
+
+    public function test_equipment_can_be_created_without_an_image(): void
+    {
+        $this->withoutMiddleware();
+        $locationId = $this->createEquipmentLocation();
+
+        $this->post('/api/equipment', [
+            'code' => 'EQ-NO-IMAGE',
+            'name' => 'Equipo sin imagen',
+            'model' => 'Modelo',
+            'serial_number' => 'SN-NO-IMAGE',
+            'responsible' => 'Ana',
+            'status' => 'Activo',
+            'brand' => 'Minova',
+            'plate' => 'PL-NO-IMAGE',
+            'location_id' => $locationId,
+            'category' => 'Consumible',
+            'description' => 'Equipo de prueba sin imagen',
+        ], ['Accept' => 'application/json'])
+            ->assertCreated()
+            ->assertJsonPath('image', null);
     }
 
     public function test_equipment_list_stays_in_id_order_after_a_record_is_edited(): void
@@ -116,6 +163,7 @@ class EquipmentTest extends TestCase
             'plate' => $code,
             'location_id' => $locationId,
             'description' => 'Equipo de prueba',
+            'category' => 'NoConsumible',
         ]);
     }
 }
