@@ -87,6 +87,7 @@ return new class extends Migration
 
         Schema::create('tool', function (Blueprint $table) {
             $table->id();
+            $table->string('code',30)->nullable();
             $table->string('name', 100);
             $table->foreignId('location_id')->constrained('location');
             $table->foreignId('category_id')->constrained('category');
@@ -271,6 +272,7 @@ return new class extends Migration
             $table->foreignId('machine_id')->constrained('machine')->cascadeOnDelete();
             $table->unique(['tool_id', 'machine_id']);
         });
+
     }
 
 

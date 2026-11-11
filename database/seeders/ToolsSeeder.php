@@ -14,7 +14,7 @@ class ToolsSeeder extends Seeder
     public function run(): void
     {
         Tools::firstOrCreate(
-            ['name' => 'Disco de corte 4.5"'],
+            ['code'=>'4ft-p','name' => 'Disco de corte 4.5"'],
             [
                 'location_id' => 1, 
                 'category_id' => 1, 
@@ -22,7 +22,7 @@ class ToolsSeeder extends Seeder
         );
 
        Tools::firstOrCreate(
-    ['name' => 'Lija de banda grano 80'],
+    ['code'=>'lij-80','name' => 'Lija de banda grano 80'],
     [
         'location_id' => 1,
         'category_id' => 1,
@@ -31,7 +31,7 @@ class ToolsSeeder extends Seeder
 
 // CATEGORÍA 2: Lubricantes
 Tools::firstOrCreate(
-    ['name' => 'Grasa multipropósito industrial'],
+    ['code'=>'lub-1','name' => 'Grasa multipropósito industrial'],
     [
         'location_id' => 1,
         'category_id' => 2,
@@ -39,7 +39,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Aceite lubricante para cadenas'],
+    ['code'=>'lub-2','name' => 'Aceite lubricante para cadenas'],
     [
         'location_id' => 1,
         'category_id' => 2,
@@ -48,7 +48,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 3: Adhesivos
 Tools::firstOrCreate(
-    ['name' => 'Pegante epóxico de dos componentes'],
+    ['code'=>'adh-1','name' => 'Pegante epóxico de dos componentes'],
     [
         'location_id' => 1,
         'category_id' => 3,
@@ -56,7 +56,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Adhesivo instantáneo industrial'],
+    ['code'=>'adh-2','name' => 'Adhesivo instantáneo industrial'],
     [
         'location_id' => 1,
         'category_id' => 3,
@@ -65,7 +65,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 4: Sellantes
 Tools::firstOrCreate(
-    ['name' => 'Silicona sellante industrial'],
+    ['code'=>'sel-1','name' => 'Silicona sellante industrial'],
     [
         'location_id' => 1,
         'category_id' => 4,
@@ -73,7 +73,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Cinta selladora de teflón'],
+    ['code'=>'sel-2','name' => 'Cinta selladora de teflón'],
     [
         'location_id' => 1,
         'category_id' => 4,
@@ -82,7 +82,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 5: Soldadura
 Tools::firstOrCreate(
-    ['name' => 'Electrodo revestido E6013'],
+    ['code'=>'sol-1','name' => 'Electrodo revestido E6013'],
     [
         'location_id' => 1,
         'category_id' => 5,
@@ -90,7 +90,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Alambre para soldadura MIG'],
+    ['code'=>'sol-2','name' => 'Alambre para soldadura MIG'],
     [
         'location_id' => 1,
         'category_id' => 5,
@@ -99,7 +99,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 6: Fijaciones
 Tools::firstOrCreate(
-    ['name' => 'Pernos hexagonales galvanizados'],
+    ['code'=>'fij-1','name' => 'Pernos hexagonales galvanizados'],
     [
         'location_id' => 1,
         'category_id' => 6,
@@ -107,7 +107,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Tuercas de seguridad industriales'],
+    ['code'=>'fij-2','name' => 'Tuercas de seguridad industriales'],
     [
         'location_id' => 1,
         'category_id' => 6,
@@ -116,7 +116,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 7: Filtros
 Tools::firstOrCreate(
-    ['name' => 'Filtro de aceite para motor'],
+    ['code'=>'fil-1','name' => 'Filtro de aceite para motor'],
     [
         'location_id' => 1,
         'category_id' => 7,
@@ -124,7 +124,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Filtro de aire industrial'],
+    ['code'=>'fil-2','name' => 'Filtro de aire industrial'],
     [
         'location_id' => 1,
         'category_id' => 7,
@@ -133,7 +133,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 8: Material eléctrico
 Tools::firstOrCreate(
-    ['name' => 'Cable eléctrico calibre 12 AWG'],
+    ['code'=>'ele-1','name' => 'Cable eléctrico calibre 12 AWG'],
     [
         'location_id' => 1,
         'category_id' => 8,
@@ -141,7 +141,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Terminales eléctricos de cobre'],
+    ['code'=>'ele-2','name' => 'Terminales eléctricos de cobre'],
     [
         'location_id' => 1,
         'category_id' => 8,
@@ -150,7 +150,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 9: Refrigerantes
 Tools::firstOrCreate(
-    ['name' => 'Refrigerante para motor'],
+    ['code'=>'ref-1','name' => 'Refrigerante para motor'],
     [
         'location_id' => 1,
         'category_id' => 9,
@@ -158,7 +158,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Líquido refrigerante concentrado'],
+    ['code'=>'ref-2','name' => 'Líquido refrigerante concentrado'],
     [
         'location_id' => 1,
         'category_id' => 9,
@@ -167,7 +167,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 10: Productos químicos
 Tools::firstOrCreate(
-    ['name' => 'Desengrasante industrial'],
+    ['code'=>'quim-1','name' => 'Desengrasante industrial'],
     [
         'location_id' => 1,
         'category_id' => 10,
@@ -175,7 +175,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Limpiador de contactos eléctricos'],
+    ['code'=>'quim-2','name' => 'Limpiador de contactos eléctricos'],
     [
         'location_id' => 1,
         'category_id' => 10,
@@ -184,7 +184,7 @@ Tools::firstOrCreate(
         //segunda categoria
         // CATEGORÍA 12: Eléctricas
 Tools::firstOrCreate(
-    ['name' => 'Taladro eléctrico industrial'],
+    ['code'=>'ele-3','name' => 'Taladro eléctrico industrial'],
     [
         'location_id' => 1,
         'category_id' => 12,
@@ -192,7 +192,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Esmeril angular eléctrico'],
+    ['code'=>'ele-4','name' => 'Esmeril angular eléctrico'],
     [
         'location_id' => 1,
         'category_id' => 12,
@@ -201,7 +201,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 13: Neumáticas
 Tools::firstOrCreate(
-    ['name' => 'Llave de impacto neumática'],
+    ['code'=>'neu-1','name' => 'Llave de impacto neumática'],
     [
         'location_id' => 1,
         'category_id' => 13,
@@ -209,7 +209,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Martillo neumático'],
+    ['code'=>'neu-2','name' => 'Martillo neumático'],
     [
         'location_id' => 1,
         'category_id' => 13,
@@ -218,7 +218,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 14: De medición
 Tools::firstOrCreate(
-    ['name' => 'Calibrador Vernier'],
+    ['code'=>'med-1','name' => 'Calibrador Vernier'],
     [
         'location_id' => 1,
         'category_id' => 14,
@@ -226,7 +226,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Multímetro digital'],
+    ['code'=>'med-2','name' => 'Multímetro digital'],
     [
         'location_id' => 1,
         'category_id' => 14,
@@ -235,7 +235,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 15: De corte
 Tools::firstOrCreate(
-    ['name' => 'Sierra circular portátil'],
+    ['code'=>'cort-1',  'name' => 'Sierra circular portátil'],
     [
         'location_id' => 1,
         'category_id' => 15,
@@ -243,7 +243,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Cizalla manual para metal'],
+    ['code'=>'cort-2','name' => 'Cizalla manual para metal'],
     [
         'location_id' => 1,
         'category_id' => 15,
@@ -252,7 +252,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 16: De perforación
 Tools::firstOrCreate(
-    ['name' => 'Rotomartillo industrial'],
+    ['code'=>'perf-1','name' => 'Rotomartillo industrial'],
     [
         'location_id' => 1,
         'category_id' => 16,
@@ -260,7 +260,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Perforadora manual para roca'],
+    ['code'=>'perf-2','name' => 'Perforadora manual para roca'],
     [
         'location_id' => 1,
         'category_id' => 16,
@@ -269,7 +269,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 17: De sujeción
 Tools::firstOrCreate(
-    ['name' => 'Prensa de banco'],
+    ['code'=>'suj-1','name' => 'Prensa de banco'],
     [
         'location_id' => 1,
         'category_id' => 17,
@@ -277,7 +277,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Pinza de presión'],
+    ['code'=>'suj-2','name' => 'Pinza de presión'],
     [
         'location_id' => 1,
         'category_id' => 17,
@@ -286,7 +286,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 18: De mantenimiento
 Tools::firstOrCreate(
-    ['name' => 'Extractor de rodamientos'],
+    ['code'=>'mant-1','name' => 'Extractor de rodamientos'],
     [
         'location_id' => 1,
         'category_id' => 18,
@@ -294,7 +294,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Llave dinamométrica'],
+    ['code'=>'mant-2','name' => 'Llave dinamométrica'],
     [
         'location_id' => 1,
         'category_id' => 18,
@@ -303,7 +303,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 19: De excavación
 Tools::firstOrCreate(
-    ['name' => 'Pico minero'],
+    ['code'=>'exc-1','name' => 'Pico minero'],
     [
         'location_id' => 1,
         'category_id' => 19,
@@ -311,7 +311,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Pala de punta reforzada'],
+    ['code'=>'exc-2','name' => 'Pala de punta reforzada'],
     [
         'location_id' => 1,
         'category_id' => 19,
@@ -320,7 +320,7 @@ Tools::firstOrCreate(
 
 // CATEGORÍA 20: De limpieza
 Tools::firstOrCreate(
-    ['name' => 'Cepillo de alambre industrial'],
+    ['code'=>'lim-1','name' => 'Cepillo de alambre industrial'],
     [
         'location_id' => 1,
         'category_id' => 20,
@@ -328,7 +328,7 @@ Tools::firstOrCreate(
 );
 
 Tools::firstOrCreate(
-    ['name' => 'Aspiradora industrial'],
+    ['code'=>'lim-2','name' => 'Aspiradora industrial'],
     [
         'location_id' => 1,
         'category_id' => 20,
