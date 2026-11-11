@@ -21,16 +21,8 @@ class GasMeasurementExportController extends Controller
 
     public function unitaryGasExcel($id)
     {
-        try {
-            $medicion = $this->service->obtenerDatosUnitarios($id);
-            return Excel::download(new GasMeasurementExcelExport($medicion), "medicion_gases_{$id}.xlsx");
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile()
-            ], 500)->header('Access-Control-Allow-Origin', '*');
-        }
+        $medicion = $this->service->obtenerDatosUnitarios($id);
+        return Excel::download(new GasMeasurementExcelExport($medicion), "Medición gases {$id}.xlsx");
     }
 
     public function rangeGasExcel(Request $request)
@@ -51,7 +43,7 @@ class GasMeasurementExportController extends Controller
                 return response()->json(['message' => 'No hay registros en el rango seleccionado.'], 404);
             }
 
-            return Excel::download(new GasMeasurementMultipleSheetExport($mediciones), "medicion_gases_{$request->fecha_inicio}_al_{$request->fecha_fin}.xlsx");
+            return Excel::download(new GasMeasurementMultipleSheetExport($mediciones), "Medición gases {$request->fecha_inicio}_al_{$request->fecha_fin}.xlsx");
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al generar Excel por rango', 'message' => $e->getMessage()], 500);
         }
@@ -59,15 +51,10 @@ class GasMeasurementExportController extends Controller
 
     public function unitaryGasPdf($id)
     {
-        try {
-            $medicion = $this->service->obtenerDatosUnitarios($id);
-            $pdf = Pdf::loadView('exports.GasMeasurementPdf', ['medicion' => $medicion])
-                      ->setPaper('letter', 'portrait');
-           
-            return $pdf->download("medicion_gases_{$id}.pdf");
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al generar PDF Unitario', 'message' => $e->getMessage()], 500);
-        }
+        $medicion = $this->service->obtenerDatosUnitarios($id);
+        $pdf = Pdf::loadView('exports.GasMeasurementPdf', ['medicion' => $medicion]);
+        
+        return $pdf->download("Medición gases {$id}.pdf");
     }
 
     public function rangeGasPdf(Request $request)
@@ -88,10 +75,9 @@ class GasMeasurementExportController extends Controller
                 return response()->json(['message' => 'No hay registros en el rango seleccionado.'], 404);
             }
 
-            $pdf = Pdf::loadView('exports.GasMeasurementMultipleSheet', ['mediciones' => $mediciones])
-                      ->setPaper('letter', 'portrait');
+            $pdf = Pdf::loadView('exports.GasMeasurementMultipleSheet', ['mediciones' => $mediciones]);
            
-            return $pdf->download("medicion_gases_{$request->fecha_inicio}_al_{$request->fecha_fin}.pdf");
+            return $pdf->download("Medición gases {$request->fecha_inicio}_al_{$request->fecha_fin}.pdf");
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al generar PDF por rango', 'message' => $e->getMessage()], 500);
         }

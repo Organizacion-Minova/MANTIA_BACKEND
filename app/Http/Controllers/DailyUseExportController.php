@@ -16,7 +16,7 @@ class DailyUseExportController extends Controller
         $records = DailyUse::where('machine_id', $id)->get();
 
         $pdf = Pdf::loadView('exports.DailyUsePdf', compact('machine', 'records'));
-        return $pdf->download("Uso_diario_{$machine->name}.pdf");
+        return $pdf->download("Uso diario {$machine->name}.pdf");
     }
 
     public function dailyUseExcel($id)
@@ -24,6 +24,6 @@ class DailyUseExportController extends Controller
         $machine = Machine::findOrFail($id);
         $records = DailyUse::where('machine_id', $id)->get();
 
-        return Excel::download(new DailyUseExcelExport($machine, $records), "Uso_diario_{$machine->name}.xlsx");
+        return Excel::download(new DailyUseExcelExport($machine, $records), "Uso diario {$machine->name}.xlsx");
     }
 }

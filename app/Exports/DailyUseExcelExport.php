@@ -33,7 +33,7 @@ class DailyUseExcelExport implements FromArray, WithEvents, WithColumnWidths, Wi
 
     public function title(): string
     {
-        return 'Uso diario';
+        return 'USO DIARIO ' . mb_strtoupper($this->machine->name ?? '', 'UTF-8');
     }
 
     public function columnWidths(): array

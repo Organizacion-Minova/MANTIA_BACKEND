@@ -29,7 +29,8 @@ class EquipmentExcelExport implements FromArray, WithTitle, WithEvents
     private const header_row_height_pt = 24;
     private const image_row_height_pt = 240;
     private const data_row_height_pt = 24;
-    private const description_row_height_pt = 60;
+    private const line_height_pt = 12; 
+    private const min_row_height_pt = 20;
 
     public function __construct($equipment)
     {
@@ -43,7 +44,27 @@ class EquipmentExcelExport implements FromArray, WithTitle, WithEvents
 
     public function title(): string
     {
-        return 'Ficha Equipo';
+        return 'FICHA TÉCNICA ' . mb_strtoupper($this->equipment->name ?? '', 'UTF-8');
+    }
+
+    private function ajustarAltoFila($sheet, int $rowIndex, string $texto, float $anchoTotalColumnas): void
+    {
+        $sheet->getStyle("A{$rowIndex}:Z{$rowIndex}")->getAlignment()->setWrapText(true);
+
+        $caracteresPorLinea = max(1, floor($anchoTotalColumnas * 0.85));
+
+        $parrafos = explode("\n", $texto);
+        $totalLineas = 0;
+
+        foreach ($parrafos as $parrafo) {
+            $longitud = mb_strlen(trim($parrafo));
+            $totalLineas += max(1, ceil($longitud / $caracteresPorLinea));
+        }
+
+        $alturaCalculada = ($totalLineas * self::line_height_pt) + 6;
+        $alturaFinal = max(self::min_row_height_pt, $alturaCalculada);
+
+        $sheet->getRowDimension($rowIndex)->setRowHeight($alturaFinal);
     }
 
     public function registerEvents(): array
@@ -85,7 +106,7 @@ class EquipmentExcelExport implements FromArray, WithTitle, WithEvents
 
                 $rows = [
                     6 => [
-                        ['CÓDIGO:', $equipment->code ?? 'N/A'],
+                        ['CÓDIGO:', $equipment->code ?? ''],
                         ['NOMBRE:', $equipment->name ?? ''],
                         ['PLACA:', $equipment->plate ?? ''],
                     ],
@@ -149,8 +170,7 @@ class EquipmentExcelExport implements FromArray, WithTitle, WithEvents
                     $sheet->getRowDimension($row)->setRowHeight(self::data_row_height_pt);
                 }
                 $sheet->getRowDimension(10)->setRowHeight(self::data_row_height_pt);
-                $sheet->getRowDimension(11)->setRowHeight(self::description_row_height_pt);
-
+                $this->ajustarAltoFila($sheet, 11, (string) ($equipment->description ?? ''), self::columns * self::column_width_chars);
                 $logoPath = public_path('images/sena-logo-naranja.png');
                 if (is_file($logoPath)) {
                     $this->placeImage(
