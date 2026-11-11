@@ -41,7 +41,8 @@ class EquipmentController extends Controller
             'voltage' => 'nullable|string|max:100',
             'location_id' => ['required',Rule::exists('location', 'id')->where(fn ($query) => $query->where('status', 'active')),],
             'description' => 'nullable|string',
-            'image' => 'required|image|max:10240',
+            'image' => 'nullable|image|max:10240',
+            'category' => 'nullable|string|max:20',
         ], [
             'code.required' => 'El código es obligatorio.',
             'code.string' => 'El código debe ser texto.',
@@ -80,21 +81,24 @@ class EquipmentController extends Controller
             'location_id.required' => 'La ubicación es obligatoria.',
             'location_id.exists' => 'La ubicación seleccionada no existe o está inactiva.',
             'description.string' => 'La descripción debe ser texto.',
-            'image.required' => 'Debes seleccionar una imagen para el equipo.',
-            'image.image' => 'El archivo seleccionado debe ser una imagen válida.',
-            'image.max' => 'La imagen no puede superar los 10 MB.',
+            'category.string' => 'La categoría debe ser texto.',
+            'category.max' => 'La categoría no puede superar los 20 caracteres.',
         ]);
 
-        // Guardar la imagen en storage/app/public/equipos.
-        $rutaImagen = $request->file('image')->store('equipos', 'public');
+        $validado['description'] ??= '';
 
-        if (!$rutaImagen) {
-            return response()->json([
-                'message' => 'No fue posible guardar la imagen del equipo.',
-            ], 500);
+        $rutaImagen = null;
+        if ($request->hasFile('image')) {
+            $rutaImagen = $request->file('image')->store('equipos', 'public');
+
+            if (!$rutaImagen) {
+                return response()->json([
+                    'message' => 'No fue posible guardar la imagen del equipo.',
+                ], 500);
+            }
+
+            $validado['image'] = $rutaImagen;
         }
-
-        $validado['image'] = $rutaImagen;
 
         try {
             $equipo = Equipment::create($validado);
@@ -105,7 +109,9 @@ class EquipmentController extends Controller
             );
         } catch (\Throwable $e) {
             // Evitar dejar una imagen sin registro asociado.
-            Storage::disk('public')->delete($rutaImagen);
+            if ($rutaImagen) {
+                Storage::disk('public')->delete($rutaImagen);
+            }
 
             throw $e;
         }
@@ -144,6 +150,7 @@ class EquipmentController extends Controller
             'location_id' => ['required',Rule::exists('location', 'id')->where(fn ($query) => $query->where('status', 'active')),],
             'description' => 'nullable|string',
             'image' => 'sometimes|nullable|image|max:10240',
+            'category' => 'nullable|string|max:20',
         ], [
             'code.required' => 'El código es obligatorio.',
             'code.string' => 'El código debe ser texto.',
@@ -182,9 +189,15 @@ class EquipmentController extends Controller
             'location_id.required' => 'La ubicación es obligatoria.',
             'location_id.exists' => 'La ubicación seleccionada no existe o está inactiva.',
             'description.string' => 'La descripción debe ser texto.',
+            'category.string' => 'La categoría debe ser texto.',
+            'category.max' => 'La categoría no puede superar los 20 caracteres.',
             'image.image' => 'El archivo seleccionado debe ser una imagen válida.',
             'image.max' => 'La imagen no puede superar los 10 MB.',
         ]);
+
+        if (array_key_exists('description', $validado) && $validado['description'] === null) {
+            $validado['description'] = '';
+        }
 
         $imagenAnterior = $equipo->image;
         $nuevaImagen = null;

@@ -61,7 +61,8 @@ return new class extends Migration
             $table->string('voltage', 50)->nullable();
             $table->foreignId('location_id')->constrained('location');
             $table->string('image')->nullable();
-            $table->text('description');
+            $table->text('description')->nullable();
+            $table->string('category',20);
         });
 
         Schema::create('machine', function (Blueprint $table) {

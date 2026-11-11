@@ -29,6 +29,7 @@ class Equipment extends Model
         'location_id',
         'image', 
         'description', 
+        'category',
     ];
     public function ubicacion()
     {
