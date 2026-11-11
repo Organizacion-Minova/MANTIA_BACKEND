@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:18
+    container_name: mantia_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: Mantia_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - mantia_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d Mantia_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mantia_backend
+    restart: unless-stopped
+    working_dir: /var/www/html
+    env_file:
+      - .env.docker
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../MANTIA_FRONTEND
+      dockerfile: Dockerfile
+    container_name: mantia_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  mantia_postgres_data:
+    external: true
+    name: proyectos_mantia_postgres_data
