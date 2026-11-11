@@ -35,6 +35,7 @@ class EquipmentsSeeder extends Seeder
                                 CLP:  3076
                                 RELANTI: 800 R/ MIN  
                                 TASA DE COMBUSTIBLE : 85 mm/',
+                'category'=>'NoConsumible'  
                 
             ]
 
@@ -56,6 +57,7 @@ class EquipmentsSeeder extends Seeder
                 'location_id' => 1,
                 'image' => 'codes/Equipments/T1-SO01.jpg',
                 'description' => 'Equipo de soldadura utilizado para realizar trabajos de mantenimiento y reparación de maquinaria minera.',
+                'category'=>'NoConsumible'
             ]
         );
         Equipment::firstOrCreate(
@@ -75,6 +77,7 @@ class EquipmentsSeeder extends Seeder
                 'location_id' => 1,
                 'image' => 'codes/Equipments/T1-TA01.jpg',
                 'description' => 'Taladro utilizado para perforación y trabajos de mantenimiento mecánico en las instalaciones de la mina.',
+                'category'=>'NoConsumible'
             ]
         );
         Equipment::firstOrCreate(
@@ -94,6 +97,7 @@ class EquipmentsSeeder extends Seeder
                 'location_id' => 1,
                 'image' => 'codes/Equipments/T1-PU01.jpg',
                 'description' => 'Pulidora angular utilizada para corte y desbaste de metales en labores de mantenimiento.',
+                'category'=>'NoConsumible'
             ]
         );
         Equipment::firstOrCreate(
@@ -113,6 +117,7 @@ class EquipmentsSeeder extends Seeder
                 'location_id' => 1,
                 'image' => 'codes/Equipments/T1-MN01.jpg',
                 'description' => 'Martillo neumático utilizado para demolición, rompimiento de roca y labores de excavación en la mina.',
+                'category'=>'NoConsumible'
             ]
         );
 
@@ -136,6 +141,7 @@ class EquipmentsSeeder extends Seeder
                             CAUDAL DE AIRE: 5.2 m3/min
                             MOTOR: Diesel
                             CAPACIDAD DEL TANQUE: 80 L',
+                'category'=>'NoConsumible'
             ]
         );
 
@@ -159,6 +165,7 @@ class EquipmentsSeeder extends Seeder
                             DIAMETRO DE DESCARGA: 3 pulgadas
                             CAUDAL MAXIMO: 1100 L/min
                             ALTURA MAXIMA: 23 m',
+                'category'=>'NoConsumible'
             ]
         );
 
@@ -182,6 +189,7 @@ class EquipmentsSeeder extends Seeder
                                 CICLO DE TRABAJO: 60%
                                 VOLTAJE EN VACIO: 65 V
                                 TIPO DE SOLDADURA: MMA',
+                    'category'=>'NoConsumible'
                 ]
             );
             
@@ -205,6 +213,7 @@ class EquipmentsSeeder extends Seeder
                                 VELOCIDADES: 5
                                 ALTURA: 840 mm
                                 TIPO: Banco',
+                    'category'=>'Consumible'
                 ]
             );
             
@@ -228,6 +237,7 @@ class EquipmentsSeeder extends Seeder
                                 CAUDAL: 5.2 m3/min
                                 MOTOR: Diesel
                                 SISTEMA DE REFRIGERACION: Aire',
+                    'category'=>'Consumible'
                 ]
             );
             
@@ -251,6 +261,7 @@ class EquipmentsSeeder extends Seeder
                                 POTENCIA NOMINAL: 5.0 kW
                                 FRECUENCIA: 60 Hz
                                 ARRANQUE: Electrico',
+                    'category'=>'Consumible'
                 ]
             );
             
@@ -274,6 +285,7 @@ class EquipmentsSeeder extends Seeder
                                 VELOCIDAD: 2850 RPM
                                 POTENCIA: 250 W
                                 USO: Desbaste y afilado',
+                    'category'=>'Consumible'
                 ]
             );
             
@@ -297,6 +309,7 @@ class EquipmentsSeeder extends Seeder
                                 CAPACIDAD DE MEZCLA: 280 L
                                 MOTOR: Gasolina
                                 USO: Mezcla de concreto',
+                    'category'=>'Consumible'
                 ]
             );
             
@@ -320,6 +333,7 @@ class EquipmentsSeeder extends Seeder
                                 FRECUENCIA DE IMPACTO: 1500 golpes/min
                                 TIPO: Neumático
                                 USO: Demolición y excavación',
+                    'category'=>'Consumible'
                 ]
             );
             
@@ -343,6 +357,7 @@ class EquipmentsSeeder extends Seeder
                                 ALTURA DE ELEVACION: 3000 mm
                                 TIPO DE TRANSMISION: Automática
                                 TIPO DE MOTOR: Diesel',
+                    'category'=>'Consumible'
                 ]
             );
 
