@@ -25,6 +25,7 @@ class ToolsController extends Controller
     public function store(Request $request)
     {
         $validado = $request->validate([
+            'code' => 'nullable|string|max:30|unique:tool,code',
             'name' => 'required|string|max:100|unique:tool,name',
             'location_id' => [
                 'required',
@@ -38,6 +39,9 @@ class ToolsController extends Controller
             'condiciones.regular' => 'required|integer|min:0|max:1000',
             'condiciones.malo' => 'required|integer|min:0|max:1000',
         ],[
+            'code.string' => 'El código debe ser texto.',
+            'code.max' => 'El código no puede superar los 30 caracteres.',
+            'code.unique' => 'Ya existe una herramienta registrada con este código.',
             'name.required' => 'El nombre es obligatorio.',
             'name.string' => 'El nombre debe ser texto.',
             'name.max' => 'El nombre no puede superar los 100 caracteres.',
@@ -64,6 +68,7 @@ class ToolsController extends Controller
         $this->validarStockMinimo($validado['condiciones']);
 
         $tool = Tools::create([
+            'code' => $validado['code'] ?? null,
             'name' => $validado['name'],
             'location_id' => $validado['location_id'],
             'category_id' => $validado['category_id'],
@@ -98,65 +103,73 @@ class ToolsController extends Controller
     {
         $tool = Tools::findOrFail($id);
 
-    $validado = $request->validate([
-        'name' => 'required|string|max:100|unique:tool,name,' . $tool->id,
-        'location_id' => [
-                'required',
-                Rule::exists('location', 'id')->where(function ($query) {
-                    $query->where('status', 'active');
-                }),
-            ],
-        'category_id' => 'required|exists:category,id',
-        'condiciones' => 'required|array',
-        'condiciones.bueno' => 'required|integer|min:0|max:1000',
-        'condiciones.regular' => 'required|integer|min:0|max:1000',
-        'condiciones.malo' => 'required|integer|min:0|max:1000',
-    ],[
-        'name.required' => 'El nombre es obligatorio.',
-        'name.string' => 'El nombre debe ser texto.',
-        'name.max' => 'El nombre no puede superar los 100 caracteres.',
-        'name.unique' => 'Ya existe una herramienta registrada con este nombre.',
-        'location_id.required' => 'La ubicación es obligatoria.',
-        'location_id.exists' => 'La ubicación seleccionada no existe.',
-        'category_id.required' => 'La categoría es obligatoria.',
-        'category_id.exists' => 'La categoría seleccionada no existe.',
-        'condiciones.required' => 'Las condiciones son obligatorias.',
-        'condiciones.array' => 'Las condiciones deben ser un arreglo.',
-        'condiciones.bueno.required' => 'La cantidad de herramientas en buen estado es obligatoria.',
-        'condiciones.bueno.integer' => 'La cantidad de herramientas en buen estado debe ser un número entero.',
-        'condiciones.bueno.min' => 'La cantidad de herramientas en buen estado no puede ser negativa.',
-        'condiciones.regular.required' => 'La cantidad de herramientas en estado regular es obligatoria.',
-        'condiciones.regular.integer' => 'La cantidad de herramientas en estado regular debe ser un número entero.',
-        'condiciones.regular.min' => 'La cantidad de herramientas en estado regular no puede ser negativa.',
-        'condiciones.malo.required' => 'La cantidad de herramientas en mal estado es obligatoria.',
-        'condiciones.malo.integer' => 'La cantidad de herramientas en mal estado debe ser un número entero.',
-        'condiciones.malo.min' => 'La cantidad de herramientas en mal estado no puede ser negativa.',
-        'condiciones.bueno.max' => 'La cantidad de herramientas en buen estado no puede superar los 1000.',
-        'condiciones.regular.max' => 'La cantidad de herramientas en estado regular no puede superar los 1000.',
-        'condiciones.malo.max' => 'La cantidad de herramientas en mal estado no puede superar los 1000.',
-    ]);
+        $validado = $request->validate([
+            'code' => 'nullable|string|max:30|unique:tool,code,' . $tool->id,
+            'name' => 'required|string|max:100|unique:tool,name,' . $tool->id,
+            'location_id' => [
+                    'required',
+                    Rule::exists('location', 'id')->where(function ($query) {
+                        $query->where('status', 'active');
+                    }),
+                ],
+            'category_id' => 'required|exists:category,id',
+            'condiciones' => 'required|array',
+            'condiciones.bueno' => 'required|integer|min:0|max:1000',
+            'condiciones.regular' => 'required|integer|min:0|max:1000',
+            'condiciones.malo' => 'required|integer|min:0|max:1000',
+        ],[
+            'code.string' => 'El código debe ser texto.',
+            'code.max' => 'El código no puede superar los 50 caracteres.',
+            'code.unique' => 'Ya existe una herramienta registrada con este código.',
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser texto.',
+            'name.max' => 'El nombre no puede superar los 100 caracteres.',
+            'name.unique' => 'Ya existe una herramienta registrada con este nombre.',
+            'location_id.required' => 'La ubicación es obligatoria.',
+            'location_id.exists' => 'La ubicación seleccionada no existe.',
+            'category_id.required' => 'La categoría es obligatoria.',
+            'category_id.exists' => 'La categoría seleccionada no existe.',
+            'condiciones.required' => 'Las condiciones son obligatorias.',
+            'condiciones.array' => 'Las condiciones deben ser un arreglo.',
+            'condiciones.bueno.required' => 'La cantidad de herramientas en buen estado es obligatoria.',
+            'condiciones.bueno.integer' => 'La cantidad de herramientas en buen estado debe ser un número entero.',
+            'condiciones.bueno.min' => 'La cantidad de herramientas en buen estado no puede ser negativa.',
+            'condiciones.regular.required' => 'La cantidad de herramientas en estado regular es obligatoria.',
+            'condiciones.regular.integer' => 'La cantidad de herramientas en estado regular debe ser un número entero.',
+            'condiciones.regular.min' => 'La cantidad de herramientas en estado regular no puede ser negativa.',
+            'condiciones.malo.required' => 'La cantidad de herramientas en mal estado es obligatoria.',
+            'condiciones.malo.integer' => 'La cantidad de herramientas en mal estado debe ser un número entero.',
+            'condiciones.malo.min' => 'La cantidad de herramientas en mal estado no puede ser negativa.',
+            'condiciones.bueno.max' => 'La cantidad de herramientas en buen estado no puede superar los 1000.',
+            'condiciones.regular.max' => 'La cantidad de herramientas en estado regular no puede superar los 1000.',
+            'condiciones.malo.max' => 'La cantidad de herramientas en mal estado no puede superar los 1000.',
+        ]);
 
-    $this->validarStockMinimo($validado['condiciones']);
+        $this->validarStockMinimo($validado['condiciones']);
 
-    // Stock antes de editar, para avisar solo si baja o aumentan las de mal estado
-    $stockAntes = $tool->condiciones()->pluck('stock', 'condition')->map(fn ($n) => (int) $n)->all();
+        // Stock antes de editar, para avisar solo si baja o aumentan las de mal estado
+        $stockAntes = $tool->condiciones()->pluck('stock', 'condition')->map(fn ($n) => (int) $n)->all();
 
-    $tool->update([
-        'name' => $validado['name'],
-        'location_id' => $validado['location_id'],
-        'category_id' => $validado['category_id'],
-    ]);
+        $datosActualizacion = [
+            'name' => $validado['name'],
+            'location_id' => $validado['location_id'],
+            'category_id' => $validado['category_id'],
+        ];
+        if (array_key_exists('code', $validado)) {
+            $datosActualizacion['code'] = $validado['code'];
+        }
+        $tool->update($datosActualizacion);
 
-    foreach ($validado['condiciones'] as $estado => $cantidad) {
-        $tool->condiciones()->updateOrCreate(
-            ['condition' => $estado],
-            ['stock' => $cantidad]
-        );
-    }
+        foreach ($validado['condiciones'] as $estado => $cantidad) {
+            $tool->condiciones()->updateOrCreate(
+                ['condition' => $estado],
+                ['stock' => $cantidad]
+            );
+        }
 
-    AlertaStockHerramienta::revisar($tool, $stockAntes);
+        AlertaStockHerramienta::revisar($tool, $stockAntes);
 
-    return response()->json($tool->load(['ubicacion', 'condiciones','categoria']));
+        return response()->json($tool->load(['ubicacion', 'condiciones','categoria']));
     }
 
     private function validarStockMinimo(array $condiciones): void

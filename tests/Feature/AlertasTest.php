@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -69,6 +70,14 @@ class AlertasTest extends TestCase
     private function alertasDe(User $u): array
     {
         return $u->fresh()->notifications()->get()->pluck('data')->all();
+    }
+
+    private function asignarPermisosDeHerramientas(): void
+    {
+        $this->admin->givePermissionTo(
+            Permission::firstOrCreate(['name' => 'tool.create']),
+            Permission::firstOrCreate(['name' => 'tool.update'])
+        );
     }
 
     private function assertAlerta(User $u, string $tipo, ?string $nivel = null, ?string $contiene = null): void
@@ -234,6 +243,54 @@ class AlertasTest extends TestCase
         $this->actingAs($this->admin);
         $this->crearHerramienta(10, 0, 0)->assertSuccessful();
         $this->assertAlerta($this->admin, 'herramienta', 'info', 'Se registró');
+    }
+
+    public function test_codigo_de_herramienta_se_guarda_al_crear_y_actualizar(): void
+    {
+        $this->asignarPermisosDeHerramientas();
+        $this->actingAs($this->admin);
+
+        $creada = $this->postJson('/api/tools', [
+            'code' => 'LL-001',
+            'name' => 'Llave con código',
+            'location_id' => $this->ref['location'],
+            'category_id' => $this->ref['category'],
+            'condiciones' => ['bueno' => 10, 'regular' => 0, 'malo' => 0],
+        ])->assertCreated()->assertJsonPath('code', 'LL-001');
+
+        $id = $creada->json('id');
+
+        $this->putJson("/api/tools/{$id}", [
+            'code' => 'LL-002',
+            'name' => 'Llave con código',
+            'location_id' => $this->ref['location'],
+            'category_id' => $this->ref['category'],
+            'condiciones' => ['bueno' => 10, 'regular' => 0, 'malo' => 0],
+        ])->assertOk()->assertJsonPath('code', 'LL-002');
+
+        $this->assertSame('LL-002', DB::table('tool')->where('id', $id)->value('code'));
+    }
+
+    public function test_actualizar_herramienta_sin_codigo_conserva_el_codigo_existente(): void
+    {
+        $this->asignarPermisosDeHerramientas();
+        $this->actingAs($this->admin);
+        $id = $this->postJson('/api/tools', [
+            'code' => 'LL-003',
+            'name' => 'Llave existente',
+            'location_id' => $this->ref['location'],
+            'category_id' => $this->ref['category'],
+            'condiciones' => ['bueno' => 10, 'regular' => 0, 'malo' => 0],
+        ])->assertCreated()->json('id');
+
+        $this->putJson("/api/tools/{$id}", [
+            'name' => 'Llave existente',
+            'location_id' => $this->ref['location'],
+            'category_id' => $this->ref['category'],
+            'condiciones' => ['bueno' => 9, 'regular' => 1, 'malo' => 0],
+        ])->assertOk()->assertJsonPath('code', 'LL-003');
+
+        $this->assertSame('LL-003', DB::table('tool')->where('id', $id)->value('code'));
     }
 
     public function test_15_stock_bajo_de_herramienta_alerta(): void
