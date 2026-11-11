@@ -17,6 +17,7 @@ class Tools extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'code',
         'name',
         'location_id',
         'category_id',

@@ -23,7 +23,7 @@ class PreoperationalMachineExportController extends Controller
     
         $pdf = Pdf::loadView('exports.PreoperationalMachinePdf', $data);
 
-        return $pdf->download("Preoperacional_{$machineName}_{$data['inspection']->week_start}.pdf");
+        return $pdf->download("Preoperacional {$machineName} {$data['inspection']->week_start}.pdf");
     }
 
     public function preoperationalMachineExcel(int $id)
@@ -33,7 +33,7 @@ class PreoperationalMachineExportController extends Controller
 
         return Excel::download(
             new PreoperationalMachineExcelExport($data),
-            "Preoperacional_{$machineName}_{$data['inspection']->week_start}.xlsx"
+            "Preoperacional {$machineName} {$data['inspection']->week_start}.xlsx"
         );
     }
 }

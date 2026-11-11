@@ -23,7 +23,7 @@ class InspectionMachineExportController extends Controller
 
         $pdf = Pdf::loadView('exports.InspectionMachinePdf', $data);
 
-        return $pdf->download("Inspección_{$machineName}_{$data['inspection']->inspection_date}.pdf");
+        return $pdf->download("Inspección {$machineName} {$data['inspection']->inspection_date}.pdf");
     }
 
     public function inspectionMachineExcel(int $id)
@@ -33,7 +33,7 @@ class InspectionMachineExportController extends Controller
 
         return Excel::download(
             new InspectionMachineExcelExport($data),
-            "Inspección_{$machineName}_{$data['inspection']->inspection_date}.xlsx"
+            "Inspección {$machineName} {$data['inspection']->inspection_date}.xlsx"
         );
     }
 }

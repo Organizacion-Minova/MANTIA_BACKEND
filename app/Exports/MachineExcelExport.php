@@ -29,8 +29,8 @@ class MachineExcelExport implements FromArray, WithTitle, WithEvents
     private const header_row_height_pt = 24;
     private const image_row_height_pt = 240;
     private const data_row_height_pt = 24;
-    private const characteristics_row_height_pt = 60;
-
+    private const line_height_pt = 12; 
+    private const min_row_height_pt = 20;
     public function __construct($machine)
     {
         $this->machine = $machine;
@@ -43,7 +43,27 @@ class MachineExcelExport implements FromArray, WithTitle, WithEvents
 
     public function title(): string
     {
-        return 'Ficha Equipo';
+        return 'FICHA TÉCNICA ' . mb_strtoupper($this->machine->name ?? '', 'UTF-8');
+    }
+
+    private function ajustarAltoFila($sheet, int $rowIndex, string $texto, float $anchoTotalColumnas): void
+    {
+        $sheet->getStyle("A{$rowIndex}:Z{$rowIndex}")->getAlignment()->setWrapText(true);
+
+        $caracteresPorLinea = max(1, floor($anchoTotalColumnas * 0.85));
+
+        $parrafos = explode("\n", $texto);
+        $totalLineas = 0;
+
+        foreach ($parrafos as $parrafo) {
+            $longitud = mb_strlen(trim($parrafo));
+            $totalLineas += max(1, ceil($longitud / $caracteresPorLinea));
+        }
+
+        $alturaCalculada = ($totalLineas * self::line_height_pt) + 6;
+        $alturaFinal = max(self::min_row_height_pt, $alturaCalculada);
+
+        $sheet->getRowDimension($rowIndex)->setRowHeight($alturaFinal);
     }
 
     public function registerEvents(): array
@@ -68,6 +88,9 @@ class MachineExcelExport implements FromArray, WithTitle, WithEvents
                 $sheet->mergeCells('A5:F5');
                 $sheet->mergeCells('A10:F10');
                 $sheet->mergeCells('A11:F11');
+                $sheet->mergeCells('A12:F12');
+                $sheet->mergeCells('A13:B13');
+                $sheet->mergeCells('E13:F13');
 
                 $sheet->setCellValue('C1', 'SISTEMA DE GESTIÓN DE SEGURIDAD Y SALUD EN EL TRABAJO');
                 $sheet->setCellValue('E1', 'CÓDIGO:');
@@ -85,7 +108,7 @@ class MachineExcelExport implements FromArray, WithTitle, WithEvents
 
                 $rows = [
                     6 => [
-                        ['CÓDIGO:', $machine->code ?? 'N/A'],
+                        ['CÓDIGO:', $machine->code ?? ''],
                         ['NOMBRE:', $machine->name ?? ''],
                         ['PLACA:', $machine->plate ?? ''],
                     ],
@@ -120,7 +143,31 @@ class MachineExcelExport implements FromArray, WithTitle, WithEvents
                 $sheet->setCellValue('A10', 'DESCRIPCIÓN:');
                 $sheet->setCellValueExplicit('A11', (string) ($machine->characteristics ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
 
-                $sheet->getStyle('A1:F11')->applyFromArray([
+                $sheet->setCellValue('A12', 'CONSUMIBLES');
+                $sheet->setCellValue('A13', 'Nombre');
+                $sheet->setCellValue('C13', 'Marca');
+                $sheet->setCellValue('D13', 'Cantidad');
+                $sheet->setCellValue('E13', 'Observaciones');
+
+                if ($machine->consumables->isEmpty()) {
+                    $sheet->mergeCells("A14:F14");
+                    $sheet->setCellValueExplicit('A14', 'No hay consumibles asociados a esta máquina.', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                    $sheet->getRowDimension(14)->setRowHeight(self::data_row_height_pt);
+                    $fila = 14;
+                } else {
+                    foreach ($machine->consumables as $n => $consumible) {
+                        $fila = 14 + $n;
+                        $sheet->mergeCells("A{$fila}:B{$fila}");
+                        $sheet->mergeCells("E{$fila}:F{$fila}");
+                        $sheet->setCellValueExplicit("A{$fila}", (string) ($consumible->tool->name ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        $sheet->setCellValueExplicit("C{$fila}", (string) ($consumible->brand ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        $sheet->setCellValueExplicit("D{$fila}", (string) ($consumible->stock ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        $sheet->setCellValueExplicit("E{$fila}", (string) ($consumible->observations ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        $sheet->getRowDimension($fila)->setRowHeight(self::data_row_height_pt);
+                    } 
+                }         
+
+                $sheet->getStyle("A1:F{$fila}")->applyFromArray([
                     'font' => [
                         'name' => 'Arial',
                         'size' => 8,
@@ -149,7 +196,9 @@ class MachineExcelExport implements FromArray, WithTitle, WithEvents
                     $sheet->getRowDimension($row)->setRowHeight(self::data_row_height_pt);
                 }
                 $sheet->getRowDimension(10)->setRowHeight(self::data_row_height_pt);
-                $sheet->getRowDimension(11)->setRowHeight(self::characteristics_row_height_pt);
+                $this->ajustarAltoFila($sheet, 11, (string) ($machine->characteristics ?? ''), self::columns * self::column_width_chars);
+                $sheet->getRowDimension(12)->setRowHeight(self::data_row_height_pt);
+                $sheet->getRowDimension(13)->setRowHeight(self::data_row_height_pt);
 
                 $logoPath = public_path('images/sena-logo-naranja.png');
                 if (is_file($logoPath)) {
@@ -188,7 +237,7 @@ class MachineExcelExport implements FromArray, WithTitle, WithEvents
                     ->setFitToHeight(0);
                 $sheet->getSheetView()->setZoomScale(100);
                 $sheet->getPageSetup()->setHorizontalCentered(true);
-                $sheet->getPageSetup()->setPrintArea('A1:F11');
+                $sheet->getPageSetup()->setPrintArea("A1:F{$fila}");
                 $sheet->getPageMargins()->setTop(0.4)->setBottom(0.4)->setLeft(0.4)->setRight(0.4);
                 $sheet->getParent()->getActiveSheet()->getPageSetup()->setFitToPage(true);
                 $sheet->getSheetView()->setView(\PhpOffice\PhpSpreadsheet\Worksheet\SheetView::SHEETVIEW_NORMAL);

@@ -8,7 +8,7 @@
         .table th, .table td { border: 1px solid #000; padding: 8px; vertical-align: middle; text-align: center;}
         .table th { font-weight: bold; }
         .logo-sena { height: 55px; }
-        .image-container { text-align: center; padding: 10px; }
+        .image-container { text-align: center; padding: 10px; height: 180px; }
         .image-container img { max-height: 180px; max-width: 100%; object-fit: contain; }
     </style>
 </head>

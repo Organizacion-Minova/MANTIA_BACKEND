@@ -28,3 +28,4 @@ Homestead.yaml
 Thumbs.db
 composer.json
 composer.lock
+.env.docker
