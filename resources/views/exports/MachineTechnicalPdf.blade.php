@@ -8,7 +8,7 @@
         .table th, .table td { border: 1px solid #000; padding: 8px; vertical-align: middle; text-align: center;}
         .table th { font-weight: bold; }
         .logo-sena { height: 55px; }
-        .image-container { text-align: center; padding: 10px; }
+        .image-container { text-align: center; padding: 10px; height: 180px; }
         .image-container img { max-height: 180px; max-width: 100%; object-fit: contain; }
     </style>
 </head>
@@ -104,6 +104,49 @@
                 {{ $machine->characteristics ?? '' }}
             </td>
         </tr>
+        <tr>
+            <th colspan="6">
+                CONSUMIBLES
+            </th>
+        </tr>
+        <tr>
+            <th colspan="2">
+                Nombre
+            </th>
+            <th>
+                Marca
+            </th>
+            <th>
+                Cantidad 
+            </th>
+            <th colspan="2">
+                Observaciones
+            </th>
+        </tr>
+        @if ($machine->consumables->isEmpty())
+            <tr>
+                <td colspan="6">
+                    No hay consumibles asociados a esta máquina.
+                </td>
+            </tr>
+        @else
+            @foreach($machine->consumables as $consumible)
+                <tr>
+                    <td colspan="2">
+                        {{ $consumible->tool->name ?? '' }}
+                    </td>
+                    <td>
+                        {{ $consumible->brand ?? '' }}
+                    </td>
+                    <td>
+                        {{ $consumible->stock ?? '' }}
+                    </td>
+                    <td colspan="2">
+                        {{ $consumible->observations ?? '' }}
+                    </td>
+                </tr>
+            @endforeach
+        @endif
     </table>
 </body>
 </html>
