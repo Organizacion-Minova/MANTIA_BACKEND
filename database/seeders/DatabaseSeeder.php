@@ -33,6 +33,8 @@ class DatabaseSeeder extends Seeder
             DailyUseSeeder::class,
             InspectionFormatEquipmentSeeder::class,
             InspectionFormatMachineSeeder::class,
+            InspectionEquipmentRecordSeeder::class,
+            InspectionMachineRecordSeeder::class,
             MachineRecordSeeder::class,
         ]);
     }

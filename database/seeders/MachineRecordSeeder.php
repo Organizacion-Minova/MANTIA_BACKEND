@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\InspectionFormatMachine;
-use App\Models\InspectionMachine;
 use App\Models\Machine;
 use App\Models\MachineCategory;
 use App\Models\PreoperationalMachine;
@@ -19,7 +18,6 @@ class MachineRecordSeeder extends Seeder
     public function run(): void
     {
         $this->preoperacional('%malacate%');
-        $this->inspeccion('%electrobomba%');
     }
 
     // Máquina, formato y preguntas respondibles de una categoría
@@ -105,46 +103,6 @@ class MachineRecordSeeder extends Seeder
             for ($dia = 1; $dia <= $hasta; $dia++) {
                 $filas[] = ['question_id' => $q->id, 'day' => $dia, 'value' => $this->valor($q->id, $dia)];
             }
-        }
-
-        $registro->answers()->createMany($filas);
-    }
-
-    private function inspeccion(string $patron): void
-    {
-        $datos = $this->buscar($patron);
-        if (!$datos) {
-            return;
-        }
-        [$maquina, $formato, $preguntas] = $datos;
-
-        $registro = InspectionMachine::firstOrCreate(
-            ['machine_id' => $maquina->id, 'inspection_date' => now()->toDateString()],
-            [
-                'format_id' => $formato->id,
-                'inspector' => 'Inspector de prueba',
-                'area' => 'Mina didáctica',
-                'duration_minutes' => 45,
-                'reviewed_by' => 'Jefe de área',
-                'review_date' => now()->toDateString(),
-                'general_observations' => 'Inspección de prueba generada por el seeder.',
-                'signature' => null,
-            ]
-        );
-
-        if (!$registro->wasRecentlyCreated) {
-            $this->command->info("{$maquina->name}: ya tiene la inspección de hoy.");
-            return;
-        }
-
-        $filas = [];
-        foreach ($preguntas as $q) {
-            $valor = $this->valor($q->id);
-            $filas[] = [
-                'question_id' => $q->id,
-                'value' => $valor,
-                'observation' => $valor === 'NO' ? 'Se recomienda revisar y programar mantenimiento.' : null,
-            ];
         }
 
         $registro->answers()->createMany($filas);
