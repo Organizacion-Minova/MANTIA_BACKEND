@@ -49,6 +49,9 @@ use App\Http\Controllers\ToolsMachineController;
 use App\Http\Controllers\InspectionOverviewController;
 use App\Http\Controllers\InspectionMachineExportController;
 use App\Http\Controllers\PreoperationalMachineExportController;
+use App\Http\Controllers\AlertaExportController;
+use App\Http\Controllers\LocationInventoryController;
+use App\Http\Controllers\LocationExportController;
 // Auth públicas
 Route::post('/register', [AuthController::class, 'register'])->middleware(['throttle:10,10', VerifyTurnstile::class]);
 Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
@@ -137,7 +140,9 @@ Route::middleware(['auth:sanctum', 'permission:location.create'])->post('/locati
 Route::middleware(['auth:sanctum', 'permission:location.update'])->put('/location/{id}', [LocationController::class, 'update']);
 Route::middleware(['auth:sanctum', 'permission:location.delete'])->delete('/location/{id}', [LocationController::class, 'destroy']);
 Route::middleware(['auth:sanctum', 'permission:location.view'])->get('/location-options', [LocationController::class, 'options']);
-
+Route::middleware(['auth:sanctum', 'permission:location.view'])->get('/location/{id}/inventory', [LocationInventoryController::class, 'show']);
+Route::middleware(['auth:sanctum', 'permission:location.view'])->get('/location/{id}/export/excel', [LocationExportController::class, 'inventarioExcel']);
+Route::middleware(['auth:sanctum', 'permission:location.view'])->get('/location/{id}/export/pdf', [LocationExportController::class, 'inventarioPdf']);
 
 # Categorías de herramientas
 
@@ -206,6 +211,9 @@ Route::middleware(['auth:sanctum', 'permission:gas-measurements.update'])->put('
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.delete'])->delete('/gas-measurements/{id}', [GasMeasurementController::class, 'destroy']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notificaciones', [NotificacionController::class, 'index']);
+    Route::get('/notificaciones/historial', [NotificacionController::class, 'historial']);
+    Route::get('/notificaciones/export/excel', [AlertaExportController::class, 'alertasExcel']);
+    Route::get('/notificaciones/export/pdf', [AlertaExportController::class, 'alertasPdf']);
     Route::post('/notificaciones/leer-todas', [NotificacionController::class, 'leerTodas']);
     Route::post('/notificaciones/{id}/leer', [NotificacionController::class, 'leer']);
 });

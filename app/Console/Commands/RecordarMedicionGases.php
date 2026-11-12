@@ -41,7 +41,7 @@ class RecordarMedicionGases extends Command
         }
 
         // Mismo "hoy" que usa GasMeasurementController al crear la medición
-        $hoy = Carbon::today()->toDateString();
+        $hoy = Carbon::today(config('alertas.zona_horaria', 'America/Bogota'))->toDateString();
         $medicion = GasMeasurement::whereDate('measurement_date', $hoy)->first();
 
         if (!$medicion) {
@@ -83,13 +83,15 @@ class RecordarMedicionGases extends Command
             $resto = count($pendientes['ubicaciones']) - count($nombres);
             $lista = implode(', ', $nombres) . ($resto > 0 ? " y {$resto} más" : '');
 
-            $faltan[] = count($pendientes['ubicaciones']) . " de {$pendientes['total_ubicaciones']} ubicaciones sin diligenciar ({$lista})";
+            $faltan[] = "datos pendientes en " . count($pendientes['ubicaciones'])
+                . " de {$pendientes['total_ubicaciones']} ubicaciones ({$lista})";
         }
 
         foreach ($pendientes['cabecera'] as $campo) {
             $faltan[] = $campo;
         }
 
-        return 'la medición de gases de hoy está incompleta. Falta: ' . implode('; ', $faltan) . '. Entra al formato y complétalo.';
+        return 'La medición de gases de hoy está incompleta. Falta completar: '
+            . implode('; ', $faltan) . '. Abre el formato para finalizarla.';
     }
 }

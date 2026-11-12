@@ -7,7 +7,7 @@ use App\Services\AlertaService;
 
 /**
  * Revisa los valores de gases de cada ubicación contra los límites de config/alertas.php
- * y avisa al Administrador si alguno está fuera de rango.
+ * y avisa al Jefe de mina y al equipo de Seguridad y Salud en el Trabajo (SST).
  *
  * Solo revisa los gases que cambiaron en esta edición, para no repetir la misma
  * alerta cada vez que alguien guarda la observación o el nombre del responsable.
@@ -15,12 +15,12 @@ use App\Services\AlertaService;
 class GasMeasurementDetailObserver
 {
     private const GASES = [
-        'oxygen'           => ['Oxígeno', '%'],
-        'methane'          => ['Metano', '%'],
-        'carbon_dioxide'   => ['Dióxido de carbono', '%'],
-        'hydrogen_sulfide' => ['Ácido sulfhídrico', ' ppm'],
-        'carbon_monoxide'  => ['Monóxido de carbono', ' ppm'],
-        'nitrogen_dioxide' => ['Dióxido de nitrógeno', ' ppm'],
+        'oxygen'           => ['Oxígeno (O2)', '%'],
+        'methane'          => ['Metano (CH4)', '%'],
+        'carbon_dioxide'   => ['Dióxido de carbono (CO2)', '%'],
+        'hydrogen_sulfide' => ['Sulfuro de hidrógeno (H2S)', ' ppm'],
+        'carbon_monoxide'  => ['Monóxido de carbono (CO)', ' ppm'],
+        'nitrogen_dioxide' => ['Dióxido de nitrógeno (NO2)', ' ppm'],
     ];
 
     public function created(GasMeasurementDetail $detalle): void
@@ -51,7 +51,8 @@ class GasMeasurementDetailObserver
 
         $ubicacion = $detalle->location?->name ?? "ubicación #{$detalle->location_id}";
 
-        $mensajeAlerta = "Riesgo detectado en {$ubicacion}: " . implode('; ', $riesgos) . '.';
+        $mensajeAlerta = "Riesgo de gases en {$ubicacion}: " . implode('; ', $riesgos)
+            . '. Informe al responsable de SST y siga el protocolo de seguridad.';
 
         foreach (['Jefe de mina', 'SST'] as $rol) {
             AlertaService::porRol(
@@ -75,10 +76,10 @@ class GasMeasurementDetailObserver
         [$nombre, $unidad] = self::GASES[$campo];
 
         if (isset($limite['min']) && $valor < $limite['min']) {
-            return "{$nombre} bajo ({$valor}{$unidad}, mínimo {$limite['min']}{$unidad})";
+            return "{$nombre} por debajo del límite ({$valor}{$unidad}; mínimo {$limite['min']}{$unidad})";
         }
         if (isset($limite['max']) && $valor > $limite['max']) {
-            return "{$nombre} elevado ({$valor}{$unidad}, máximo {$limite['max']}{$unidad})";
+            return "{$nombre} por encima del límite ({$valor}{$unidad}; máximo {$limite['max']}{$unidad})";
         }
 
         return null;

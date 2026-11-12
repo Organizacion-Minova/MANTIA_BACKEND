@@ -30,7 +30,7 @@ class GasMeasurementController extends Controller
             'measurement_time.date_format' => 'La hora de ingreso no es válida.',
         ]);
 
-        $today = Carbon::today()->toDateString();
+        $today = Carbon::today(config('alertas.zona_horaria', 'America/Bogota'))->toDateString();
 
         if (GasMeasurement::where('measurement_date', $today)->exists()) {
             return response()->json([

@@ -43,7 +43,7 @@ abstract class AlertaObserverBase
                 'maintenance' => 'warning',
                 default => 'info',
             };
-            $estado = self::ESTADOS[$model->status] ?? $model->status;
+            $estado = self::ESTADOS[$model->status] ?? 'Actualizado';
             $this->notificar("{$this->etiqueta($model)} cambió a estado: {$estado}", $nivel, $this->enlace($model));
         }
     }

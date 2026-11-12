@@ -11,6 +11,14 @@ class EquipmentObserver extends AlertaObserverBase
 
     protected function enlace(Model $model, bool $eliminado = false): ?string
     {
-        return $eliminado ? '/equipment' : "/equipment/cardequipment/{$model->id}";
+        if (!$eliminado) {
+            return "/equipment/cardequipment/{$model->id}";
+        }
+
+        $ruta = strtolower((string) $model->category) === 'noconsumible'
+            ? '/equipment/noconsumables'
+            : '/equipment/consumables';
+
+        return $ruta;
     }
 }

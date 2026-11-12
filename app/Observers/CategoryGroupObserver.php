@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class CategoryGroupObserver extends AlertaObserverBase
 {
     protected function tipo(): string { return 'categoria'; }
-    protected function etiqueta(Model $model): string { return "Grupo de categoría {$model->name}"; }
+    protected function etiqueta(Model $model): string { return "Grupo de herramientas {$model->name}"; }
 
     protected function enlace(Model $model, bool $eliminado = false): ?string
     {
