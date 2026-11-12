@@ -43,7 +43,7 @@ class GasMeasurementExportController extends Controller
                 return response()->json(['message' => 'No hay registros en el rango seleccionado.'], 404);
             }
 
-            return Excel::download(new GasMeasurementMultipleSheetExport($mediciones), "Medición gases {$request->fecha_inicio}_al_{$request->fecha_fin}.xlsx");
+            return Excel::download(new GasMeasurementMultipleSheetExport($mediciones), "Medición gases {$request->fecha_inicio} al {$request->fecha_fin}.xlsx");
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al generar Excel por rango', 'message' => $e->getMessage()], 500);
         }
@@ -77,7 +77,7 @@ class GasMeasurementExportController extends Controller
 
             $pdf = Pdf::loadView('exports.GasMeasurementMultipleSheet', ['mediciones' => $mediciones]);
            
-            return $pdf->download("Medición gases {$request->fecha_inicio}_al_{$request->fecha_fin}.pdf");
+            return $pdf->download("Medición gases {$request->fecha_inicio} al {$request->fecha_fin}.pdf");
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al generar PDF por rango', 'message' => $e->getMessage()], 500);
         }

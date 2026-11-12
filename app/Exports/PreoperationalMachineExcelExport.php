@@ -46,10 +46,10 @@ class PreoperationalMachineExcelExport implements FromArray, WithEvents, WithTit
             : mb_substr((string) ($inspeccion->week_start ?? ''), 0, 10);
 
         $nombre = preg_replace('/[\\\\\\/\\?\\*\\:\\[\\]]/', '', (string) ($maquina->name ?? 'Maquina'));
-        $limitenombre = max(1, 31 - mb_strlen('Preop__' . $fecha));
+        $limitenombre = max(1, 31 - mb_strlen('PREOP  ' . $fecha));
         $nombrecorto = mb_substr($nombre, 0, $limitenombre);
 
-        return mb_substr("Preop_{$nombrecorto}_{$fecha}", 0, 31);
+        return mb_strtoupper(mb_substr("PREOP {$nombrecorto} {$fecha}", 0, 31));
     }
 
     public function registerEvents(): array
