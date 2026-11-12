@@ -44,6 +44,7 @@ class ContextoPantalla
         '/gases' => ['nombre' => 'Mediciones de gases', 'permiso' => 'gas-measurements.view'],
         '/gases/compare_gases' => ['nombre' => 'Comparar mediciones de gases', 'permiso' => 'gas-measurements.view'],
         '/inspection' => ['nombre' => 'Inspecciones', 'permiso' => 'inspection.view'],
+        '/alerts' => ['nombre' => 'Alertas'],
         '/admin' => ['nombre' => 'Panel de administración', 'roles' => ['Jefe de mina']],
         '/help' => ['nombre' => 'Ayuda'],
         '/about' => ['nombre' => 'Acerca de'],
@@ -85,6 +86,13 @@ class ContextoPantalla
                 return $equipo
                     ? "El usuario está viendo la ficha del equipo \"{$equipo->name}\" (código {$equipo->code}). Si dice \"este equipo\", se refiere a él: búscalo por su código."
                     : 'El usuario está viendo la ficha de un equipo que ya no existe.';
+            }
+
+                        if (preg_match('#^/ubications/cardubication/(\d+)$#i', $ruta, $m)) {
+                $ubicacion = DB::table('location')->where('id', (int) $m[1])->value('name');
+                return $ubicacion
+                    ? "El usuario está viendo la ficha de la ubicación \"{$ubicacion}\", con sus máquinas, equipos, herramientas y mediciones de gases. Si dice \"esta ubicación\", se refiere a ella."
+                    : 'El usuario está viendo la ficha de una ubicación que ya no existe.';
             }
 
             if (preg_match('#^/gases/gas_format/(\d+)$#i', $ruta, $m)) {
