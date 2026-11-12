@@ -138,7 +138,7 @@
         </table>
 
         @if(!$loop->last)
-            <div class="page-break"></div>
+            <div style="page-break-after: always;"></div>        
         @endif
     @endforeach
 </body>

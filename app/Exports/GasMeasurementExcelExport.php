@@ -50,7 +50,7 @@ class GasMeasurementExcelExport implements FromArray, WithTitle, WithEvents
             return 'Medición';
         }
 
-        return Carbon::parse($this->medicion->measurement_date)->format('Y-m-d');
+        return 'MEDICIÓN GASES ' . Carbon::parse($this->medicion->measurement_date)->format('Y-m-d');
     }
 
     public function registerEvents(): array

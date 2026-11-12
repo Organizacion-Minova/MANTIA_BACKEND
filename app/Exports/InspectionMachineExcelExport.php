@@ -50,10 +50,10 @@ class InspectionMachineExcelExport implements FromArray, WithEvents, WithTitle
             : mb_substr((string) ($inspeccion->inspection_date ?? ''), 0, 10);
 
         $nombre = preg_replace('/[\\\\\\/\\?\\*\\:\\[\\]]/', '', (string) ($maquina->name ?? 'Maquina'));
-        $limitenombre = max(1, 31 - mb_strlen('Insp__' . $fecha));
+        $limitenombre = max(1, 31 - mb_strlen('INSP  ' . $fecha));
         $nombrecorto = mb_substr($nombre, 0, $limitenombre);
 
-        return mb_substr("Insp_{$nombrecorto}_{$fecha}", 0, 31);
+        return mb_strtoupper(mb_substr("INSP {$nombrecorto} {$fecha}", 0, 31));
     }
 
     public function registerEvents(): array

@@ -16,6 +16,27 @@ class InspectionMachineExportService
             'answers',
         ])->findOrFail($inspectionId);
 
+        return $this->formatInspectionData($inspection);
+    }
+
+    public function getExportDataRange(int $machineId, string $fechaInicio, string $fechaFin)
+    {
+        $inspections = InspectionMachine::with([
+            'machine.ubicacion',
+            'format.category',
+            'format.sections.questions',
+            'answers',
+        ])
+        ->where('machine_id', $machineId)
+        ->whereBetween('inspection_date', [$fechaInicio, $fechaFin])
+        ->orderBy('inspection_date', 'asc')
+        ->get();
+
+        return $inspections->map(fn ($inspection) => $this->formatInspectionData($inspection));
+    }
+
+    private function formatInspectionData(InspectionMachine $inspection): array
+    {
         $answersMap = [];
         foreach ($inspection->answers as $answer) {
             $qId = $answer->question_id;
@@ -64,4 +85,5 @@ class InspectionMachineExportService
 
         return 'data:' . $mime . ';base64,' . base64_encode($content);
     }
+
 }
