@@ -91,6 +91,7 @@ return new class extends Migration
             $table->string('name', 100);
             $table->foreignId('location_id')->constrained('location');
             $table->foreignId('category_id')->constrained('category');
+            $table->text('observations')->nullable();
         });
 
         Schema::create('tool_stock_condition', function (Blueprint $table) {
