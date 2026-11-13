@@ -6,7 +6,6 @@ use App\Models\GasMeasurement;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-
 class GasMeasurementSeeder extends Seeder
 {
     /**
@@ -14,26 +13,22 @@ class GasMeasurementSeeder extends Seeder
      */
     public function run(): void
     {
-        GasMeasurement::firstOrCreate(
-            ['measurement_date' => '2026-10-20'],
-            [
-                'measurement_time' => '07:15:00',
-                'chief_signature' => null,
-                'sst_signature' => null,
-                'created_at' => '2026-10-20 07:15:00',
-                'updated_at' => '2026-10-20 07:15:00'
-            ]
-        );
+        $startDate = now()->subDays(15);
 
-        GasMeasurement::firstOrCreate(
-            ['measurement_date' => '2026-10-19'],
-            [
-                'measurement_time' => '08:00:00',
-                'chief_signature' => null,
-                'sst_signature' => null,
-                'created_at' => '2026-10-19 08:00:00', 
-                'updated_at' => '2026-10-19 08:00:00'
-            ]
-        );
+        for ($i = 0; $i < 14; $i++) {
+            $date = $startDate->copy()->addDays($i)->format('Y-m-d');
+            $time = ($i % 2 === 0) ? '07:00:00' : '14:30:00';
+
+            GasMeasurement::firstOrCreate(
+                ['measurement_date' => $date],
+                [
+                    'measurement_time' => $time,
+                    'chief_signature'  => 'Firma digital - Jefe de Mina',
+                    'sst_signature'    => 'Firma digital - Líder SST',
+                    'created_at'       => "{$date} {$time}",
+                    'updated_at'       => "{$date} {$time}",
+                ]
+            );
+        }
     }
 }
