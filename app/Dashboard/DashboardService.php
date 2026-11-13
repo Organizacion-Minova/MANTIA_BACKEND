@@ -23,13 +23,14 @@ class DashboardService
     /** Qué necesita el usuario para ver cada sección: un permiso o uno de varios roles. */
     private const ACCESO = [
         'machines'       => ['permiso' => 'machine.view'],
-        'equipments'     => ['permiso' => 'equipment.view'],
-        'consumables'    => ['permiso' => 'tool.view'],
-        'nonConsumables' => ['permiso' => 'tool.view'],
-        'dailyUsage'     => ['permiso' => 'daily-use.view'],
-        'gases'          => ['permiso' => 'gas-measurements.view'],
-        'locations'      => ['roles' => ['Jefe de mina', 'SST']],
-        'activity'       => ['roles' => ['Jefe de mina', 'SST']],
+        'equipmentsConsumables'    => ['permiso' => 'equipment.view'],
+        'equipmentsNonConsumables' => ['permiso' => 'equipment.view'],
+        'consumables'              => ['permiso' => 'tool.view'],
+        'nonConsumables'           => ['permiso' => 'tool.view'],
+        'dailyUsage'               => ['permiso' => 'daily-use.view'],
+        'gases'                    => ['permiso' => 'gas-measurements.view'],
+        'locations'                => ['roles' => ['Jefe de mina', 'SST']],
+        'activity'                 => ['roles' => ['Jefe de mina', 'SST']],
     ];
 
     /** Solo las secciones que el usuario actual puede ver. @return array<string, SectionResult> */
