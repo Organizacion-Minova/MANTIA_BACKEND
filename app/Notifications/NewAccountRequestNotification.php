@@ -28,10 +28,12 @@ class NewAccountRequestNotification extends Notification
         return (new MailMessage)
             ->subject('Nueva cuenta verificada en MANTIA')
             ->greeting('¡Hola, Jefe de mina!')
-            ->line('Una persona nueva verificó su correo y quedó como Visitante. Datos:')
+            ->line('Se ha registrado un nuevo usuario en la plataforma con el rol de visitante pendiente de verificación.')
+            ->line('Detalles del usuario:')
             ->line('• Nombre: ' . $this->newUser->name)
             ->line('• Correo: ' . $this->newUser->email)
-            ->action('Ir a MANTIA', url('http://localhost:5173/login'))
-            ->line('Si es una persona real, asígnale su rol desde el panel de administración. Si no, puedes desactivarla.');
+            ->action('Ir en MANTIA', url('http://localhost:5173/login'))
+            ->line('Si reconoces a esta persona, asígnale su rol correspondiente desde el panel de administración.')
+            ->salutation(' ');
     }
 }

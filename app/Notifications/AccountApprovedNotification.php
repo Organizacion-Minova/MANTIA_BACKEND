@@ -24,6 +24,7 @@ class AccountApprovedNotification extends Notification
             ->line('Nos complace informarte que tu solicitud de cuenta en MANTIA ha sido aprobada por el administrador.')
             ->line('Ya puedes iniciar sesión en el sistema y comenzar a utilizar la plataforma.')
             ->action('Iniciar Sesión', url('http://localhost:5173/login'))
-            ->line('¡Gracias por unirte a MANTIA!');
+            ->line('¡Gracias por unirte a MANTIA!')
+            ->salutation(' ');
     }
 }

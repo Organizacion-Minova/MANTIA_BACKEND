@@ -28,8 +28,9 @@ class VerifyAccountNotification extends Notification
         return (new MailMessage)
             ->subject('Verifica tu cuenta en MANTIA')
             ->greeting('¡Hola, ' . $notifiable->name . '!')
-            ->line('Recibimos una solicitud para crear una cuenta en MANTIA con este correo.')
+            ->line('Recibimos una solicitud para crear tu cuenta en MANTIA. Para empezar a utilizar la plataforma, por favor confirma tu dirección de correo electrónico:')
             ->action('Verificar mi correo', $url)
-            ->line('El enlace dura 24 horas. Si no fuiste tú, ignora este mensaje y la cuenta se borrará sola.');
+            ->line('Este enlace de verificación expirará en 24 horas. Si no creaste esta cuenta, puedes ignorar este mensaje.')
+            ->salutation(' ');
     }
 }
