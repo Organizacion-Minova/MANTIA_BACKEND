@@ -10,4 +10,11 @@ return [
         'nitrogen_dioxide'  => ['max' => 3.0],
     ],
     'stock_minimo_herramienta' => 2,
+
+    // Zona horaria con la que se muestran las fechas y horas en los archivos exportados
+    // (la aplicación guarda las alertas en UTC)
+    'zona_horaria' => env('ALERTAS_ZONA_HORARIA', 'America/Bogota'),
+
+    // Máximo de alertas que admite una exportación (Excel o PDF)
+    'limite_exportacion' => 2000,
 ];

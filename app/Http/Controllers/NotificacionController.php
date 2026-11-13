@@ -15,6 +15,19 @@ class NotificacionController extends Controller
             ->get(['id', 'data', 'read_at', 'created_at']);
     }
 
+    /**
+     * Historial para la pantalla Alertas: más reciente primero, hasta 1000.
+     * La campana sigue usando index() (solo las últimas 50).
+     */
+    public function historial(Request $request)
+    {
+        return $request->user()
+            ->notifications()
+            ->latest()
+            ->limit(1000)
+            ->get(['id', 'data', 'read_at', 'created_at']);
+    }
+
     public function leer(Request $request, string $id)
     {
         $request->user()->notifications()->findOrFail($id)->markAsRead();
