@@ -16,10 +16,30 @@ class InspectionEquipmentExportService
             'signatures',
         ])->findOrFail($inspectionId);
 
+        return $this->formatInspectionData($inspection);
+    }
+
+    public function getExportDataRange(int $equipmentId, string $weekStart, string $weekEnd)
+    {
+        $inspections = InspectionEquipment::with([
+            'format.equipment.ubicacion',
+            'format.sections.questions',
+            'answers',
+        ])
+        ->whereHas('format', fn ($q) => $q->where('equipment_id', $equipmentId))
+        ->whereBetween('week_start', [$weekStart, $weekEnd])
+        ->orderBy('week_start', 'asc')
+        ->get();
+
+        return $inspections->map(fn ($inspection) => $this->formatInspectionData($inspection));
+    }
+
+    private function formatInspectionData(InspectionEquipment $inspection): array
+    {
         $answersMap = [];
         foreach ($inspection->answers as $answer) {
             $qId = $answer->question_id;
-            $day = $answer->day;
+            $day = $answer->day ?? 0;
 
             if (!isset($answersMap[$qId][$day])) {
                 $answersMap[$qId][$day] = [
@@ -37,21 +57,14 @@ class InspectionEquipmentExportService
             }
         }
 
-        $signaturesMap = [];
-        foreach ($inspection->signatures as $sig) {
-            $signaturesMap[$sig->role] = [
-                'name' => $sig->name,
-                'id_number' => $sig->id_number,
-                'signature_base64' => $this->resolveSignatureBase64($sig->signature),
-            ];
-        }
+        $signatureBase64 = $this->resolveSignatureBase64($inspection->signature);
 
         return [
             'inspection' => $inspection,
             'format' => $inspection->format,
             'equipment' => $inspection->format?->equipment,
             'answersMap' => $answersMap,
-            'signaturesMap' => $signaturesMap,
+            'signatureBase64' => $signatureBase64,
         ];
     }
 
