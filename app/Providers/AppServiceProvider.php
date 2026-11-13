@@ -40,8 +40,9 @@ use Illuminate\Support\ServiceProvider;
 
 use App\Dashboard\DashboardService;
 use App\Dashboard\Sections\{
-    ActivitySection, ConsumablesSection, DailyUsageSection, EquipmentsSection,
-    GasesSection, LocationsSection, MachinesSection, NonConsumablesSection
+    ActivitySection, ConsumablesSection, DailyUsageSection, EquipmentsConsumablesSection,
+    EquipmentsNonConsumablesSection, GasesSection, LocationsSection, MachinesSection,
+    NonConsumablesSection
 };
 
 class AppServiceProvider extends ServiceProvider
@@ -51,7 +52,8 @@ class AppServiceProvider extends ServiceProvider
         //REGISTRAR SECCIONES DEL DASHBOARD LOL XD, CON ESTO SE PUEDE HACER UN IDENTIFICADOR PARA QUE EL DASHBOARD SERVICE PUEDA OBTENER TODAS LAS SECCIONES
         $this->app->tag([
         MachinesSection::class,
-        EquipmentsSection::class,
+        EquipmentsConsumablesSection::class,
+        EquipmentsNonConsumablesSection::class,
         ConsumablesSection::class,
         NonConsumablesSection::class,
         ActivitySection::class,

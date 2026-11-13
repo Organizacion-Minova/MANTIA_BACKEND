@@ -9,6 +9,9 @@ class Equipment extends Model
 {
     use HasFactory;
 
+    public const CATEGORY_CONSUMABLE = 'Consumible';
+    public const CATEGORY_NON_CONSUMABLE = 'NoConsumible';
+
     protected $table = 'equipment';
 
     public $timestamps = false;
