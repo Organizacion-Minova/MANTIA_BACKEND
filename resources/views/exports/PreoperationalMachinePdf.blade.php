@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <style>
         body { font-family: Arial, sans-serif; font-size: 10px; color: #000; margin: 0; padding: 0; }
-        table { width: 100%; border-collapse: collapse; page-break-inside: avoid; border-spacing: 0; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; page-break-inside: avoid; border-spacing: 0; page-break-inside: auto; margin-bottom: 10px; }
         th, td { border: 1px solid #000; padding: 3px 4px; text-align: center; vertical-align: middle; }
         th { font-weight: bold; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
         .logo-sena { height: 38px; }
         .signature-img { max-height: 40px; max-width: 120px; }
         .section-title { font-weight: bold; padding-left: 6px; }

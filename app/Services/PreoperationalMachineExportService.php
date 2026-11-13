@@ -16,6 +16,27 @@ class PreoperationalMachineExportService
             'answers',
         ])->findOrFail($inspectionId);
 
+        return $this->formatInspectionData($inspection);
+    }
+
+    public function getExportDataRange(int $machineId, string $weekStart, string $weekEnd)
+    {
+        $inspections = PreoperationalMachine::with([
+            'machine.category_maquina',
+            'machine.ubicacion',
+            'format.sections.questions',
+            'answers',
+        ])
+        ->where('machine_id', $machineId)
+        ->whereBetween('week_start', [$weekStart, $weekEnd])
+        ->orderBy('week_start', 'asc')
+        ->get();
+
+        return $inspections->map(fn ($inspection) => $this->formatInspectionData($inspection));
+    }
+
+    private function formatInspectionData(PreoperationalMachine $inspection): array
+    {
         $answersMap = [];
         foreach ($inspection->answers as $answer) {
             $qId = $answer->question_id;

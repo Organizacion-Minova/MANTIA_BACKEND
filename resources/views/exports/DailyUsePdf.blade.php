@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <style>
         body { font-family: Arial, sans-serif; font-size: 10px; color: #000; margin: 0; padding: 0; }
-        .table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .table { width: 100%; border-collapse: collapse; page-break-inside: avoid; border-spacing: 0; page-break-inside: auto; margin-bottom: 15px; }
         .table th, .table td { border: 1px solid #000; padding: 8px; vertical-align: middle; text-align: center;}
         .table th { font-weight: bold; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
         .header-container { width: 100%; text-align: center; margin-bottom: 2px; }
         .logo-sena { max-height: 45px; display: block; margin-bottom: 2px; }
     </style>
