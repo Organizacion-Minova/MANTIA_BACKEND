@@ -101,11 +101,12 @@ class LocationInventoryService
     {
         return Equipment::where('location_id', $ubicacionId)
             ->orderBy('name')
-            ->get(['id', 'code', 'name', 'status', 'responsible'])
+            ->get(['id', 'code', 'name', 'status', 'responsible', 'category'])
             ->map(fn ($e) => [
                 'id' => $e->id,
                 'codigo' => $e->code,
                 'nombre' => $e->name,
+                'categoria' => $e->category,
                 'estado' => $this->estado($e->status),
                 'responsable' => $e->responsible,
             ])
