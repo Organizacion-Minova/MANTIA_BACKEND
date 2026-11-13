@@ -5,8 +5,9 @@
     <style>
         body { font-family: Arial, sans-serif; font-size: 10px; color: #000; margin: 0; padding: 0; }
         .page-break { page-break-after: always; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; page-break-inside: avoid; border-spacing: 0; page-break-inside: auto; margin-bottom: 15px; }
         th, td { border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
         .header-title { font-size: 12px; font-weight: bold; text-align: center; margin-top: 0px; }
         .header-container { width: 100%; text-align: center; margin-bottom: 2px; }
         .logo-sena { max-height: 45px; display: block; margin-bottom: 2px; }
