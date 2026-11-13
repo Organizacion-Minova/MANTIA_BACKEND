@@ -326,3 +326,7 @@ Route::middleware(['auth:sanctum'])->get('/machines/{machineId}/inspection-machi
 # Exportaciones unitarias para Preoperacional de máquinas
 Route::middleware(['auth:sanctum'])->get('/preoperational-machine/{id}/export/excel', [PreoperationalMachineExportController::class, 'preoperationalMachineExcel']);
 Route::middleware(['auth:sanctum'])->get('/preoperational-machine/{id}/export/pdf', [PreoperationalMachineExportController::class, 'preoperationalMachinePdf']);
+
+# Exportaciones por rango de fechas para Preoperacional de máquinas
+Route::middleware(['auth:sanctum'])->get('/machines/{machineId}/preoperational-machine/export/range/excel', [PreoperationalMachineExportController::class, 'rangePreoperationalMachineExcel']);
+Route::middleware(['auth:sanctum'])->get('/machines/{machineId}/preoperational-machine/export/range/pdf', [PreoperationalMachineExportController::class, 'rangePreoperationalMachinePdf']);
