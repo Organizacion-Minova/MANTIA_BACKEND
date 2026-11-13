@@ -21,6 +21,7 @@ class Tools extends Model
         'name',
         'location_id',
         'category_id',
+        'observations'
     ];
 
     protected $appends = ['stock_total'];

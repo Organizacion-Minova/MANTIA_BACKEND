@@ -34,6 +34,7 @@ class ToolsController extends Controller
                 }),
             ],
             'category_id' => 'required|exists:category,id',
+            'observations' => 'nullable|string',
             'condiciones' => 'required|array',
             'condiciones.bueno' => 'required|integer|min:0|max:1000',
             'condiciones.regular' => 'required|integer|min:0|max:1000',
@@ -72,6 +73,7 @@ class ToolsController extends Controller
             'name' => $validado['name'],
             'location_id' => $validado['location_id'],
             'category_id' => $validado['category_id'],
+            'observations' => $validado['observations'] ?? null,
         ]);
 
         $tool->condiciones()->createMany([
@@ -113,6 +115,7 @@ class ToolsController extends Controller
                     }),
                 ],
             'category_id' => 'required|exists:category,id',
+            'observations' => 'nullable|string',
             'condiciones' => 'required|array',
             'condiciones.bueno' => 'required|integer|min:0|max:1000',
             'condiciones.regular' => 'required|integer|min:0|max:1000',
@@ -154,6 +157,7 @@ class ToolsController extends Controller
             'name' => $validado['name'],
             'location_id' => $validado['location_id'],
             'category_id' => $validado['category_id'],
+            'observations' => $validado['observations'] ?? null,
         ];
         if (array_key_exists('code', $validado)) {
             $datosActualizacion['code'] = $validado['code'];
