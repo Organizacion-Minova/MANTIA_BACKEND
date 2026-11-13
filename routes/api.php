@@ -311,6 +311,10 @@ Route::middleware(['auth:sanctum', 'permission:daily-use.view'])->get('/dailyuse
 Route::middleware(['auth:sanctum'])->get('/inspection-equipment/{id}/export/excel', [InspectionEquipmentExportController::class, 'inspectionEquipmentExcel']);
 Route::middleware(['auth:sanctum'])->get('/inspection-equipment/{id}/export/pdf', [InspectionEquipmentExportController::class, 'inspectionEquipmentPdf']);
 
+# Exportaciones por rango de fechas para Inspección de equipos
+Route::middleware(['auth:sanctum'])->get('/equipment/{equipmentId}/inspection-equipment/export/range/excel', [InspectionEquipmentExportController::class, 'rangeInspectionEquipmentExcel']);
+Route::middleware(['auth:sanctum'])->get('/equipment/{equipmentId}/inspection-equipment/export/range/pdf', [InspectionEquipmentExportController::class, 'rangeInspectionEquipmentPdf']);
+
 # Exportaciones unitarias para Inspección de máquinas
 Route::middleware(['auth:sanctum'])->get('/inspection-machine/{id}/export/excel', [InspectionMachineExportController::class, 'inspectionMachineExcel']);
 Route::middleware(['auth:sanctum'])->get('/inspection-machine/{id}/export/pdf', [InspectionMachineExportController::class, 'inspectionMachinePdf']);
