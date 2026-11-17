@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 /**
+ * Conversa con el modelo de IA: Gemini (en internet) u Ollama (LOCAL, sin internet).
+ * Se elige con AI_PROVIDER=gemini|ollama en el .env del backend.
+ *
  * Conversa con la API de Gemini. Si el modelo necesita datos de MANTIA,
  * pide una "función" (ver AiTools), se ejecuta aquí en el servidor
  * y el resultado se le devuelve hasta que responde con texto.
@@ -40,6 +43,11 @@ class AiService
     public function reply(string $mensaje, array $historial, ?User $usuario, ?string $pantalla = null): string
     {
         $this->pantalla = $pantalla; // CAMBIO
+
+        if (config('services.ai.provider') === 'ollama') {
+            return $this->replyOllama($mensaje, $historial, $usuario);
+        }
+
         $contenidos = $this->normalizarHistorial($historial);
         $contenidos[] = ['role' => 'user', 'parts' => [['text' => $mensaje]]];
 
@@ -82,6 +90,112 @@ class AiService
         }
 
         return 'Esa consulta es demasiado amplia. Intenta con una pregunta más concreta.';
+    }
+
+    // ------------------------------------------------------------------
+    // Ollama: modelo de IA que corre en el mismo computador (sin internet)
+    // https://ollama.com  ->  ollama pull qwen2.5:3b
+    // ------------------------------------------------------------------
+
+    private function replyOllama(string $mensaje, array $historial, ?User $usuario): string
+    {
+        $mensajes = [['role' => 'system', 'content' => $this->instrucciones($usuario)]];
+
+        foreach ($this->normalizarHistorial($historial) as $m) {
+            $mensajes[] = [
+                'role' => $m['role'] === 'model' ? 'assistant' : 'user',
+                'content' => $m['parts'][0]['text'] ?? '',
+            ];
+        }
+        $mensajes[] = ['role' => 'user', 'content' => $mensaje];
+
+        $herramientas = array_map(fn ($def) => [
+            'type' => 'function',
+            'function' => [
+                'name' => $def['name'],
+                'description' => $def['description'],
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => (object) ($def['input_schema']['properties'] ?? []),
+                ],
+            ],
+        ], $this->tools->definitions($usuario));
+
+        for ($vuelta = 0; $vuelta < self::MAX_VUELTAS; $vuelta++) {
+            $respuesta = $this->llamarOllama($mensajes, $herramientas);
+            $mensajeModelo = $respuesta['message'] ?? [];
+            $llamadas = $mensajeModelo['tool_calls'] ?? [];
+
+            if (empty($llamadas)) {
+                $texto = trim((string) ($mensajeModelo['content'] ?? ''));
+                // Algunos modelos escriben su "razonamiento" entre <think></think>: no se muestra
+                $texto = trim(preg_replace('/<think>.*?<\/think>/s', '', $texto));
+
+                return $texto !== '' ? $texto : 'No pude generar una respuesta. Intenta reformular la pregunta.';
+            }
+
+            $mensajes[] = [
+                'role' => 'assistant',
+                'content' => (string) ($mensajeModelo['content'] ?? ''),
+                'tool_calls' => $llamadas,
+            ];
+
+            foreach ($llamadas as $llamada) {
+                $nombre = $llamada['function']['name'] ?? '';
+                $argumentos = $llamada['function']['arguments'] ?? [];
+                if (is_string($argumentos)) {
+                    $argumentos = json_decode($argumentos, true) ?: [];
+                }
+
+                $datos = $this->tools->execute($nombre, (array) $argumentos, $usuario);
+                $mensajes[] = [
+                    'role' => 'tool',
+                    'tool_name' => $nombre,
+                    'content' => json_encode($datos, JSON_UNESCAPED_UNICODE),
+                ];
+            }
+        }
+
+        return 'Esa consulta es demasiado amplia. Intenta con una pregunta más concreta.';
+    }
+
+    private function llamarOllama(array $mensajes, array $herramientas): array
+    {
+        $url = rtrim((string) config('services.ollama.url'), '/') . '/api/chat';
+
+        try {
+            $respuesta = Http::acceptJson()
+                ->timeout((int) config('services.ollama.timeout', 120))
+                ->post($url, [
+                    'model' => config('services.ollama.model'),
+                    'messages' => $mensajes,
+                    'tools' => $herramientas,
+                    'stream' => false,
+                    'options' => [
+                        'temperature' => 0.3,
+                        'num_ctx' => (int) config('services.ollama.contexto', 8192),
+                    ],
+                ]);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('AI: Ollama no responde: ' . $e->getMessage());
+
+            throw new RuntimeException('La IA local (Ollama) no está encendida. Ábrela y vuelve a intentar.', 503);
+        }
+
+        if ($respuesta->failed()) {
+            Log::error('AI: Ollama devolvió un error', [
+                'estado' => $respuesta->status(),
+                'cuerpo' => mb_substr($respuesta->body(), 0, 500),
+            ]);
+
+            $detalle = $respuesta->status() === 404
+                ? 'No está descargado el modelo ' . config('services.ollama.model') . ' (ollama pull ' . config('services.ollama.model') . ').'
+                : 'Error de la IA local (' . $respuesta->status() . ').';
+
+            throw new RuntimeException($detalle, $respuesta->status());
+        }
+
+        return $respuesta->json();
     }
 
     private function llamarApi(array $contenidos, ?User $usuario = null): array

@@ -128,11 +128,12 @@ POST	/login	Iniciar sesión con correo y contraseña
 POST	/logout	Cerrar sesión
 POST	/forgot-password	Envía un código de 6 dígitos al correo
 POST	/reset-password	Cambia la contraseña usando el código
-POST	/dev-login/{letra}	Login rápido por letra (solo entorno local)
+GET	/captcha	Imagen del captcha local (funciona sin internet)
+GET	/session	Sesión actual (responde user = null si no hay sesión)
 Usuario autenticado (auth:sanctum)
 Método	Ruta	Descripción
 GET	/user	Usuario actual con sus roles
-Administración (rol Administrador)
+Administración (roles Superadministrador y Jefe de mina)
 Método	Ruta	Descripción
 GET	/admin/requests	Solicitudes de cuenta pendientes
 POST	/admin/approve/{id}	Aprobar solicitud
@@ -152,34 +153,14 @@ Autenticación
 
 Se usa Laravel Sanctum en modo SPA: el frontend (localhost:5173) pide la cookie CSRF en /sanctum/csrf-cookie, inicia sesión y el navegador guarda la cookie de sesión. Las rutas protegidas usan el middleware auth:sanctum.
 
-<<<<<<< HEAD
-- `users` — Usuarios del sistema
-- `category_group` / `category` — Grupos y categorías de elementos
-- `machine_category` — Categorías de máquinas
-- `location_category` / `location` — Categorías y ubicaciones
-- `equipment` — Equipos
-- `machine` — Máquinas
-- `tool` — Herramientas
-- `inspection` — Inspecciones
-- `gas_measurement` / `gas_measurement_location` — Mediciones de gases
-- `personal_access_tokens` — Tokens Sanctum
-- `permissions`, `roles`, `model_has_permissions`, `model_has_roles`, `role_has_permissions` — Roles y permisos (Spatie)
-- `jobs`, `failed_jobs`, `job_batches` — Colas
-=======
 Para que funcione en local, SANCTUM_STATEFUL_DOMAINS y SESSION_DOMAIN deben coincidir con el dominio del frontend (ver .env), y config/cors.php debe permitir ese origen.
->>>>>>> 4a920f20e5e8c6e005b45971abc6241e7734d62d
 
-Login rápido (solo desarrollo)
+Crear el Superadministrador
 
-Entra sin contraseña usando la letra de un usuario de desarrollo:
+php artisan migrate
+php artisan mantia:superadmin correo@ejemplo.com
 
-POST /api/dev-login/D  → Daniela
-POST /api/dev-login/S  → Santiago
-POST /api/dev-login/J  → Joan
-POST /api/dev-login/L  → Leonardo
-POST /api/dev-login/K  → Kevin
-
-Solo existe cuando APP_ENV=local. Nunca lo dejes activo en producción.
+La cuenta debe existir antes (registro o panel de administración).
 
 Alertas
 
@@ -202,8 +183,6 @@ Seeders
 php artisan migrate:fresh --seed ejecuta DatabaseSeeder, que llama a:
 
 Seeder	Qué crea
-UserSeeder	Usuario de prueba (solo desarrollo)
-DevUsersSeeder	5 usuarios de desarrollo para el login por letra
 RoleAndAdminSeeder	Roles y el usuario administrador inicial
 CategoryLocationSeeder / LocationSeeder	Categorías y ubicaciones iniciales
 CategoryGroupToolsSeeder / CategoryToolsSeeder	Grupos y categorías de herramientas

@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
+use App\Support\ReglasUsuario;
 
 class ProfileController extends Controller
 {
@@ -15,19 +15,17 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        ReglasUsuario::normalizar($request);
+        $tipo = is_string($request->input('document_type')) ? $request->input('document_type') : null;
+
         $datos = $request->validate([
-            'name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'document_type' => 'required|in:CC,CE,TI,PA',
-            'document_number' => ['required', 'string', 'max:20', Rule::unique('users', 'document_number')->ignore($user->id)],
+            'name' => ReglasUsuario::nombre(),
+            'last_name' => ReglasUsuario::nombre(),
+            'document_type' => ReglasUsuario::tipoDocumento(),
+            'document_number' => ReglasUsuario::numeroDocumento($tipo, $user->id),
             'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'remove_photo' => 'nullable|boolean',
-        ], [
-            'name.required' => 'El nombre es obligatorio.',
-            'last_name.required' => 'El apellido es obligatorio.',
-            'document_type.in' => 'El tipo de documento no es válido.',
-            'document_number.required' => 'El número de documento es obligatorio.',
-            'document_number.unique' => 'Ese número de documento ya está registrado.',
+        ], ReglasUsuario::mensajes($tipo) + [
             'photo.image' => 'El archivo debe ser una imagen.',
             'photo.mimes' => 'La foto debe ser JPG, PNG o WEBP.',
             'photo.max' => 'La foto no puede superar los 2 MB.',
@@ -62,12 +60,11 @@ class ProfileController extends Controller
     {
         $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
+            'password' => [...ReglasUsuario::contrasena('La nueva contraseña'), 'confirmed', 'different:current_password'],
         ], [
             'current_password.required' => 'Escribe tu contraseña actual.',
             'current_password.current_password' => 'La contraseña actual no es correcta.',
             'password.required' => 'Escribe la nueva contraseña.',
-            'password.min' => 'La nueva contraseña debe tener mínimo 8 caracteres.',
             'password.confirmed' => 'La confirmación no coincide con la nueva contraseña.',
             'password.different' => 'La nueva contraseña debe ser diferente a la actual.',
         ]);

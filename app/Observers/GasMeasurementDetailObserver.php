@@ -54,7 +54,7 @@ class GasMeasurementDetailObserver
         $mensajeAlerta = "Riesgo de gases en {$ubicacion}: " . implode('; ', $riesgos)
             . '. Informe al responsable de SST y siga el protocolo de seguridad.';
 
-        foreach (['Jefe de mina', 'SST'] as $rol) {
+        foreach (['Superadministrador', 'Jefe de mina', 'SST'] as $rol) {
             AlertaService::porRol(
                 $rol,
                 'gas',

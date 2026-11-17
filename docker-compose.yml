@@ -34,6 +34,16 @@ services:
       db:
         condition: service_healthy
 
+  # Bandeja de correo local (sin internet): http://localhost:8025
+  # En .env.docker: MAIL_HOST=mailpit y MAIL_PORT=1025
+  mailpit:
+    image: axllent/mailpit
+    container_name: mantia_mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
   frontend:
     build:
       context: ../MANTIA_FRONTEND

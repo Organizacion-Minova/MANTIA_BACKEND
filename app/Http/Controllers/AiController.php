@@ -32,9 +32,12 @@ class AiController extends Controller
             // El detalle técnico queda en storage/logs/laravel.log; al usuario solo un mensaje amable
             Log::error('AI: could not answer', ['error' => $e->getMessage()]);
 
-            return response()->json([
-                'message' => 'El asistente no está disponible en este momento. Intenta de nuevo más tarde.',
-            ], 503);
+            // Con la IA local se dice qué falta (Ollama apagado o modelo sin descargar)
+            $mensaje = config('services.ai.provider') === 'ollama' && $e instanceof \RuntimeException
+                ? $e->getMessage()
+                : 'El asistente no está disponible en este momento. Intenta de nuevo más tarde.';
+
+            return response()->json(['message' => $mensaje], 503);
         }
 
         return response()->json([

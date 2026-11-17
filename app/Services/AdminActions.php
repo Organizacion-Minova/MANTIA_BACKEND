@@ -69,11 +69,18 @@ class AdminActions
 
         switch ($tipo) {
             case 'crear_rol':
-                Role::create(['name' => $datos['nombre']]);
+                Role::create(['name' => $datos['nombre'], 'guard_name' => 'web']);
                 return "Rol \"{$datos['nombre']}\" creado.";
 
             case 'asignar_rol':
-                $this->usuario($datos['correo'])->syncRoles([$datos['rol']]);
+                $usuario = $this->usuario($datos['correo']);
+                $antes = $usuario->roles->pluck('name')->implode(', ') ?: 'Sin rol';
+                $usuario->syncRoles([$datos['rol']]);
+                \App\Services\Auditoria::registrar(
+                    'role_changed', 'Usuarios',
+                    "Cambió el rol de {$usuario->name} {$usuario->last_name}: {$antes} → {$datos['rol']} (desde el asistente)",
+                    ['role' => $antes], ['role' => $datos['rol']], $admin
+                );
                 return "Rol \"{$datos['rol']}\" asignado a {$this->nombreDe($datos['correo'])}.";
 
             case 'desactivar_usuario':
@@ -112,6 +119,16 @@ class AdminActions
         // Un administrador no puede cambiarse a sí mismo: así el sistema nunca se queda sin administradores
         if ($usuario->is($admin)) {
             throw ValidationException::withMessages(['correo' => 'No puedes modificar tu propia cuenta desde el asistente.']);
+        }
+
+        // El rol Superadministrador y sus cuentas solo los maneja otro Superadministrador
+        if (! \App\Support\Roles::esSuperadmin($admin)) {
+            if (($datos['rol'] ?? null) === \App\Support\Roles::SUPERADMIN) {
+                throw ValidationException::withMessages(['rol' => 'Solo un Superadministrador puede asignar ese rol.']);
+            }
+            if ($usuario->hasRole(\App\Support\Roles::SUPERADMIN)) {
+                throw ValidationException::withMessages(['correo' => 'Solo un Superadministrador puede modificar esa cuenta.']);
+            }
         }
 
         // Las solicitudes nuevas se aprueban o rechazan en Perfil, no desde aquí

@@ -27,7 +27,7 @@ class NewAccountRequestNotification extends Notification
     {
         return (new MailMessage)
             ->subject('Nueva cuenta verificada en MANTIA')
-            ->greeting('¡Hola, Jefe de mina!')
+            ->greeting('¡Hola!')
             ->line('Se ha registrado un nuevo usuario en la plataforma con el rol de visitante pendiente de verificación.')
             ->line('Detalles del usuario:')
             ->line('• Nombre: ' . $this->newUser->name)

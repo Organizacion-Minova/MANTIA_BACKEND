@@ -37,6 +37,9 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+use App\Services\Auditoria;
+use App\Support\Roles;
 
 use App\Dashboard\DashboardService;
 use App\Dashboard\Sections\{
@@ -70,6 +73,12 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // El Superadministrador tiene acceso completo: cualquier permiso le da "sí"
+        Gate::before(fn ($user, $ability) => Roles::esSuperadmin($user) ? true : null);
+
+        // Historial de cambios de todos los usuarios (vista tipo ramas en el panel de administración)
+        Auditoria::escucharEventos();
+
         CategoryGroup::observe(CategoryGroupObserver::class);
         Category::observe(CategoryObserver::class);
         MachineCategory::observe(MachineCategoryObserver::class);

@@ -13,63 +13,41 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\PermissionRegistrar;
+use App\Services\Auditoria;
+use App\Support\EsquemaBD;
+use App\Support\Roles;
+use Illuminate\Support\Facades\RateLimiter;
 
 /**
- * Copias de seguridad en JSON.
+ * Copias de seguridad GENERALES (toda la base de datos) en JSON.
  *
+ *  - La primera copia requiere la contraseña de la cuenta autenticada.
+ *    Las siguientes copias, descargas, restauraciones y eliminaciones requieren BACKUP_ADMIN_KEY.
+ *    Tras 5 intentos fallidos la clave interna se bloquea 15 minutos para ese usuario.
  *  - Los datos van CIFRADOS (con la APP_KEY del servidor): quien abra el archivo no puede leerlos.
- *    Las copias de la versión 1 (sin cifrar) todavía se pueden restaurar.
  *  - Cada copia lleva un HASH (SHA-256) y una FIRMA (HMAC con la APP_KEY del servidor).
  *    Si alguien edita el archivo a mano, la firma deja de coincidir y no se puede restaurar.
- *  - Descargar, restaurar y eliminar piden la contraseña del usuario que hace la acción.
- *  - Al respaldar una tabla se incluyen automáticamente las tablas que dependen de ella
- *    (por ejemplo, máquinas incluye uso diario e inspecciones), para que la copia sea coherente.
- *  - Restaurar reemplaza esas tablas dentro de UNA transacción: si algo falla, no se cambia nada.
+ *  - Restaurar reemplaza los datos dentro de UNA transacción: si algo falla, no se cambia nada.
+ *  - No se respaldan ni se restauran las tablas internas (sesiones, caché, colas, migraciones),
+ *    el historial de cambios ni los ajustes internos.
  */
 class BackupController extends Controller
 {
     private const DISCO = 'local';
     private const CARPETA = 'backups';
     private const FORMATO = 'mantia-backup';
-    private const VERSION = 2;
+    private const VERSION = 3;
+    private const MAX_INTENTOS = 5;
 
-    // Lo que el administrador puede elegir respaldar, con su nombre en español.
-    private const TABLAS_DISPONIBLES = [
-        'location' => 'Ubicaciones',
-        'location_category' => 'Categorías de ubicación',
-        'machine' => 'Máquinas',
-        'machine_category' => 'Categorías de máquina',
-        'equipment' => 'Equipos',
-        'tool' => 'Herramientas',
-        'category' => 'Categorías de herramientas',
-        'inspection' => 'Inspecciones',
-        'gas_measurement' => 'Mediciones de gases',
-        'daily_use' => 'Uso diario',
-        'users' => 'Usuarios',
-        'roles' => 'Roles',
+    // Tablas que nunca entran en una copia (ni se tocan al restaurar)
+    private const EXCLUIDAS = [
+        'migrations', 'sessions', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs',
+        'password_reset_tokens', 'personal_access_tokens', 'activity_logs', 'app_settings', 'ai_pending_actions',
     ];
-
-    private ?array $grafo = null;
 
     // ------------------------------------------------------------------
     // Listado
     // ------------------------------------------------------------------
-
-    public function options()
-    {
-        $opciones = [];
-        foreach (self::TABLAS_DISPONIBLES as $tabla => $etiqueta) {
-            if (Schema::hasTable($tabla)) {
-                $opciones[] = [
-                    'tabla' => $tabla,
-                    'etiqueta' => $etiqueta,
-                    'registros' => DB::table($tabla)->count(),
-                ];
-            }
-        }
-
-        return response()->json(['opciones' => $opciones]);
-    }
 
     public function index()
     {
@@ -82,33 +60,49 @@ class BackupController extends Controller
             ->sortByDesc('creado_en')
             ->values();
 
-        return response()->json(['backups' => $backups]);
+        $tablas = $this->tablasRespaldables();
+
+        return response()->json([
+            'backups' => $backups,
+            'primer_backup' => ! $this->hayBackups(),
+            'clave_admin_configurada' => filled(config('services.backups.admin_key')),
+            'resumen' => [
+                'tablas' => count($tablas),
+                'registros' => array_sum(array_map(fn ($t) => DB::table($t)->count(), $tablas)),
+            ],
+        ]);
     }
 
     // ------------------------------------------------------------------
-    // Crear
+    // Crear (backup general)
     // ------------------------------------------------------------------
 
     public function store(Request $request)
     {
-        $request->validate([
-            'tablas' => 'required|array|min:1',
-            'tablas.*' => 'string|in:' . implode(',', array_keys(self::TABLAS_DISPONIBLES)),
-        ]);
+        $error = $this->hayBackups()
+            ? $this->verificarClaveAdmin($request)
+            : $this->verificarPasswordCuenta($request);
 
-        $incluye = $this->ordenar($this->cierre($request->tablas));
+        if ($error) {
+            return $error;
+        }
+
+        $incluye = EsquemaBD::ordenar($this->tablasRespaldables());
 
         $datos = [];
+        $registros = 0;
         foreach ($incluye as $tabla) {
             $datos[$tabla] = $this->leerTabla($tabla);
+            $registros += count($datos[$tabla]);
         }
 
         $payload = [
             'formato' => self::FORMATO,
             'version' => self::VERSION,
+            'tipo' => 'general',
             'creado_en' => now()->toDateTimeString(),
-            'creado_por' => $request->user()->name,
-            'tablas' => array_values($request->tablas),
+            'creado_por' => trim($request->user()->name . ' ' . $request->user()->last_name),
+            'tablas' => $incluye,
             'incluye' => $incluye,
             'cifrado' => true,
             // Los datos se guardan cifrados; el hash y la firma se calculan sobre este texto cifrado
@@ -135,8 +129,10 @@ class BackupController extends Controller
 
         $meta = [
             'archivo' => $nombreArchivo,
-            'tablas' => $payload['tablas'],
+            'tipo' => 'general',
+            'tablas' => $incluye,
             'incluye' => $incluye,
+            'registros' => $registros,
             'creado_en' => $payload['creado_en'],
             'creado_por' => $payload['creado_por'],
             'cifrado' => true,
@@ -146,7 +142,9 @@ class BackupController extends Controller
 
         $disco->put($ruta . '.meta.json', json_encode($meta, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-        return response()->json(['message' => 'Backup generado correctamente.', 'backup' => $meta], 201);
+        Auditoria::registrar('backup_created', 'Copias de seguridad', "Generó la copia general {$nombreArchivo} ({$registros} registros)");
+
+        return response()->json(['message' => 'Backup general generado correctamente.', 'backup' => $meta], 201);
     }
 
     // ------------------------------------------------------------------
@@ -155,7 +153,7 @@ class BackupController extends Controller
 
     public function download(Request $request, $archivo)
     {
-        if ($error = $this->confirmarPassword($request)) {
+        if ($error = $this->verificarClaveAdmin($request)) {
             return $error;
         }
 
@@ -170,6 +168,7 @@ class BackupController extends Controller
         }
 
         Log::info("Backup descargado: {$archivo} por usuario #{$request->user()->id}");
+        Auditoria::registrar('backup_downloaded', 'Copias de seguridad', "Descargó la copia {$archivo}");
 
         return Storage::disk(self::DISCO)->download($ruta);
     }
@@ -180,7 +179,7 @@ class BackupController extends Controller
 
     public function destroy(Request $request, $archivo)
     {
-        if ($error = $this->confirmarPassword($request)) {
+        if ($error = $this->verificarClaveAdmin($request)) {
             return $error;
         }
 
@@ -192,6 +191,7 @@ class BackupController extends Controller
         Storage::disk(self::DISCO)->delete([$ruta, $ruta . '.meta.json']);
 
         Log::warning("Backup eliminado: {$archivo} por usuario #{$request->user()->id}");
+        Auditoria::registrar('backup_deleted', 'Copias de seguridad', "Eliminó la copia {$archivo}");
 
         return response()->json(['message' => 'Backup eliminado correctamente.']);
     }
@@ -202,7 +202,7 @@ class BackupController extends Controller
 
     public function restore(Request $request, $archivo)
     {
-        if ($error = $this->confirmarPassword($request)) {
+        if ($error = $this->verificarClaveAdmin($request)) {
             return $error;
         }
 
@@ -226,10 +226,8 @@ class BackupController extends Controller
             return response()->json(['message' => 'No se pudo abrir la copia: se hizo con otra APP_KEY o está dañada. No se restauró nada.'], 422);
         }
 
-        $permitidas = $this->cierre(array_keys(self::TABLAS_DISPONIBLES));
-
         foreach (array_keys($datos) as $tabla) {
-            if (! in_array($tabla, $permitidas, true) || ! Schema::hasTable($tabla)) {
+            if (in_array($tabla, self::EXCLUIDAS, true) || ! Schema::hasTable($tabla)) {
                 return response()->json(['message' => "La copia incluye una tabla no permitida: {$tabla}."], 422);
             }
         }
@@ -246,7 +244,7 @@ class BackupController extends Controller
             }
         }
 
-        $orden = $this->ordenar(array_keys($datos));
+        $orden = EsquemaBD::ordenar(array_keys($datos));
         $yo = $request->user();
         $total = 0;
 
@@ -264,21 +262,23 @@ class BackupController extends Controller
                 $this->reiniciarSecuencias($orden);
                 $this->verificarQueSigoPudiendoEntrar($yo, $orden);
             });
-        } catch (\RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
         } catch (QueryException $e) {
+            // Va primero: QueryException también es RuntimeException y su texto trae el SQL crudo
             Log::error('Error al restaurar backup: ' . $e->getMessage());
 
-            $mensaje = $e->getCode() === '23503'
+            $mensaje = (string) $e->getCode() === '23503'
                 ? 'No se pudo restaurar: hay datos actuales que dependen de esta información. No se cambió nada.'
                 : 'No se pudo restaurar la copia. No se cambió nada.';
 
             return response()->json(['message' => $mensaje], 422);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
         }
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         Log::warning("Backup restaurado: {$archivo} por usuario #{$yo->id} ({$total} registros)");
+        Auditoria::registrar('backup_restored', 'Copias de seguridad', "Restauró la copia {$archivo} ({$total} registros)", actor: $yo);
 
         return response()->json([
             'message' => 'Copia restaurada correctamente.',
@@ -291,17 +291,91 @@ class BackupController extends Controller
     // Seguridad: contraseña, ruta, hash y firma
     // ------------------------------------------------------------------
 
-    private function confirmarPassword(Request $request): ?JsonResponse
+    private function tablasRespaldables(): array
     {
-        $request->validate(['password' => 'required|string'], [
-            'password.required' => 'Escribe tu contraseña para continuar.',
+        return array_values(array_filter(
+            EsquemaBD::tablas(),
+            fn ($t) => ! in_array($t, self::EXCLUIDAS, true)
+        ));
+    }
+
+    private function hayBackups(): bool
+    {
+        return collect(Storage::disk(self::DISCO)->files(self::CARPETA))
+            ->contains(fn ($ruta) => preg_match('/^backup_[0-9_-]+\.json$/', basename($ruta)) === 1);
+    }
+
+    private function verificarPasswordCuenta(Request $request): ?JsonResponse
+    {
+        $request->validate(['password' => 'required|string|max:64'], [
+            'password.required' => 'Escribe la contraseña de inicio de sesión.',
         ]);
 
-        if (! Hash::check($request->password, $request->user()->password)) {
-            return response()->json(['message' => 'La contraseña es incorrecta.'], 422);
+        $limite = 'backup-primer-password:' . $request->user()->id;
+        if (RateLimiter::tooManyAttempts($limite, self::MAX_INTENTOS)) {
+            return $this->respuestaBloqueo($limite);
         }
 
+        if (! Hash::check($request->input('password'), $request->user()->password)) {
+            RateLimiter::hit($limite, 900);
+            $mensaje = 'La contraseña de inicio de sesión es incorrecta.';
+
+            return response()->json(['message' => $mensaje, 'errors' => ['password' => [$mensaje]]], 422);
+        }
+
+        RateLimiter::clear($limite);
+
         return null;
+    }
+
+    // Revisa BACKUP_ADMIN_KEY. Tras 5 errores se bloquea 15 minutos para ese usuario.
+    private function verificarClaveAdmin(Request $request): ?JsonResponse
+    {
+        $claveEsperada = config('services.backups.admin_key');
+
+        if (! is_string($claveEsperada) || $claveEsperada === '') {
+            return response()->json([
+                'message' => 'La variable BACKUP_ADMIN_KEY no está configurada en el servidor.',
+                'codigo' => 'clave_admin_no_configurada',
+            ], 503);
+        }
+
+        $request->validate(['clave_admin' => 'required|string|max:255'], [
+            'clave_admin.required' => 'Escribe la clave administrativa configurada en el servidor.',
+            'clave_admin.string' => 'La clave administrativa no es válida.',
+            'clave_admin.max' => 'La clave administrativa no es válida.',
+        ]);
+
+        $limite = 'backup-admin-key:' . $request->user()->id;
+        if (RateLimiter::tooManyAttempts($limite, self::MAX_INTENTOS)) {
+            return $this->respuestaBloqueo($limite);
+        }
+
+        if (! hash_equals($claveEsperada, (string) $request->input('clave_admin'))) {
+            RateLimiter::hit($limite, 900);
+            $quedan = max(0, self::MAX_INTENTOS - RateLimiter::attempts($limite));
+
+            Log::warning("Clave administrativa de backups incorrecta, usuario #{$request->user()->id}");
+
+            $mensaje = $quedan > 0
+                ? "La clave administrativa es incorrecta. Te quedan {$quedan} intento(s)."
+                : 'La clave administrativa es incorrecta. Se bloqueó por 15 minutos.';
+
+            return response()->json(['message' => $mensaje, 'errors' => ['clave_admin' => [$mensaje]]], 422);
+        }
+
+        RateLimiter::clear($limite);
+
+        return null;
+    }
+
+    private function respuestaBloqueo(string $limite): JsonResponse
+    {
+        $minutos = (int) ceil(RateLimiter::availableIn($limite) / 60);
+
+        return response()->json([
+            'message' => "Demasiados intentos fallidos. Intenta de nuevo en {$minutos} minuto(s).",
+        ], 429);
     }
 
     // Solo nombres como backup_2026-10-30_101500.json; evita salir de la carpeta de backups.
@@ -366,85 +440,6 @@ class BackupController extends Controller
 
         return hash_equals((string) $archivo['hash'], hash('sha256', $canonico))
             && hash_equals((string) $archivo['firma'], hash_hmac('sha256', $canonico, (string) config('app.key')));
-    }
-
-    // ------------------------------------------------------------------
-    // Dependencias entre tablas (se leen de las llaves foráneas de la base de datos)
-    // ------------------------------------------------------------------
-
-    /** @return array<string, string[]> tabla hija => tablas padre */
-    private function padres(): array
-    {
-        if ($this->grafo !== null) {
-            return $this->grafo;
-        }
-
-        // model_has_roles no tiene llave foránea, pero depende de roles y usuarios
-        $grafo = ['model_has_roles' => ['roles', 'users']];
-
-        if (DB::getDriverName() === 'pgsql') {
-            $filas = DB::select(
-                "select c.relname as hijo, p.relname as padre
-                 from pg_constraint k
-                 join pg_class c on c.oid = k.conrelid
-                 join pg_class p on p.oid = k.confrelid
-                 where k.contype = 'f'
-                   and c.relnamespace = (select oid from pg_namespace where nspname = current_schema())"
-            );
-
-            foreach ($filas as $fila) {
-                if ($fila->hijo !== $fila->padre) {
-                    $grafo[$fila->hijo][] = $fila->padre;
-                }
-            }
-        }
-
-        return $this->grafo = $grafo;
-    }
-
-    // Las tablas elegidas + todas las que dependen de ellas.
-    private function cierre(array $tablas): array
-    {
-        $conjunto = array_values(array_filter(array_unique($tablas), fn ($t) => Schema::hasTable($t)));
-
-        do {
-            $cambio = false;
-            foreach ($this->padres() as $hijo => $padres) {
-                if (! in_array($hijo, $conjunto, true) && Schema::hasTable($hijo) && array_intersect($padres, $conjunto)) {
-                    $conjunto[] = $hijo;
-                    $cambio = true;
-                }
-            }
-        } while ($cambio);
-
-        return $conjunto;
-    }
-
-    // Padres antes que hijos.
-    private function ordenar(array $conjunto): array
-    {
-        $orden = [];
-        $pendientes = array_values($conjunto);
-
-        while ($pendientes) {
-            $avanzo = false;
-
-            foreach ($pendientes as $i => $tabla) {
-                $padres = array_intersect($this->padres()[$tabla] ?? [], $conjunto);
-
-                if (! array_diff($padres, $orden)) {
-                    $orden[] = $tabla;
-                    unset($pendientes[$i]);
-                    $avanzo = true;
-                }
-            }
-
-            if (! $avanzo) {
-                return array_merge($orden, array_values($pendientes));
-            }
-        }
-
-        return $orden;
     }
 
     // ------------------------------------------------------------------
@@ -556,16 +551,16 @@ class BackupController extends Controller
             throw new \RuntimeException('No se restauró nada: en esa copia tu cuenta está desactivada y te quedarías sin acceso.');
         }
 
-        $esJefe = DB::table('model_has_roles')
+        $esAdministrador = DB::table('model_has_roles')
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('model_has_roles.model_id', $yo->id)
             ->where('model_has_roles.model_type', User::class)
-            ->where('roles.name', 'Jefe de mina')
+            ->whereIn('roles.name', Roles::ADMINISTRADORES)
             ->where('roles.is_active', true)
             ->exists();
 
-        if (! $esJefe) {
-            throw new \RuntimeException('No se restauró nada: con esa copia tu cuenta dejaría de ser Jefe de mina.');
+        if (! $esAdministrador) {
+            throw new \RuntimeException('No se restauró nada: con esa copia tu cuenta perdería el acceso al panel de administración.');
         }
     }
 }

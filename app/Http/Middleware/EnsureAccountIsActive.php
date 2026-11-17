@@ -18,7 +18,7 @@ class EnsureAccountIsActive
     {
         // Estas rutas deben funcionar aunque la cuenta esté desactivada:
         // entrar con otra cuenta y cerrar sesión.
-        if ($request->is('api/login', 'api/logout', 'api/register', 'api/forgot-password', 'api/reset-password', 'api/dev-login/*', 'api/email/verify/*')) {
+        if ($request->is('api/session', 'api/login', 'api/logout', 'api/register', 'api/forgot-password', 'api/reset-password', 'api/email/verify/*')) {
             return $next($request);
         }
 

@@ -10,17 +10,12 @@ use Illuminate\Support\Facades\DB;
 use Mockery;
 use App\Dashboard\Sections\LocationsSection;
 use App\Models\Equipment;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class LocationsSectionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_location_inventory_includes_equipment_classification(): void
-    {
-        $categoryId = DB::table('location_category')->insertGetId([
     public function test_breaks_down_equipment_by_consumable_category(): void
     {
         $locationCategoryId = DB::table('location_category')->insertGetId([

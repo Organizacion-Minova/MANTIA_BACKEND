@@ -25,7 +25,7 @@ class RecordarMedicionGases extends Command
     protected $description = 'Avisa si falta la medición de gases del día o si el formato tiene campos sin llenar';
 
     /** Quienes pueden llenar el formato de gases. */
-    private const ROLES = ['Jefe de mina', 'SST', 'Operario gases'];
+    private const ROLES = ['Superadministrador', 'Jefe de mina', 'SST', 'Operario gases'];
 
     private const NIVELES = [1 => 'info', 2 => 'warning', 3 => 'danger'];
 

@@ -19,12 +19,12 @@ class GasMeasurementObserver extends AlertaObserverBase
         return "Medición de gases del {$model->measurement_date}";
     }
 
-    protected function rolDestino(): array|string|null { return ['Jefe de mina', 'SST']; }
+    protected function rolDestino(): array|string|null { return ['Superadministrador', 'Jefe de mina', 'SST']; }
 
     public function created(Model $model): void
     {
         if ($model instanceof GasMeasurement) {
-            foreach (['Jefe de mina', 'SST'] as $rol) {
+            foreach (['Superadministrador', 'Jefe de mina', 'SST'] as $rol) {
                 AlertaService::porRol(
                     $rol,
                     $this->tipo(),

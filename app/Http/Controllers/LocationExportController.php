@@ -39,7 +39,8 @@ class LocationExportController extends Controller
                 $this->nombreArchivo($ubicacion, 'xlsx')
             );
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al generar Excel del inventario', 'message' => $e->getMessage()], 500);
+            report($e);
+            return response()->json(['error' => 'Error al generar Excel del inventario', 'message' => 'Error al generar Excel del inventario. Intenta de nuevo.'], 500);
         }
     }
 
@@ -59,7 +60,8 @@ class LocationExportController extends Controller
 
             return $pdf->download($this->nombreArchivo($ubicacion, 'pdf'));
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al generar PDF del inventario', 'message' => $e->getMessage()], 500);
+            report($e);
+            return response()->json(['error' => 'Error al generar PDF del inventario', 'message' => 'Error al generar PDF del inventario. Intenta de nuevo.'], 500);
         }
     }
 
