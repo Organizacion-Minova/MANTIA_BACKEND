@@ -35,7 +35,8 @@ class AlertaExportController extends Controller
                 "Alertas_{$datos['fecha_inicio']}_al_{$datos['fecha_fin']}.xlsx"
             );
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al generar Excel de alertas', 'message' => $e->getMessage()], 500);
+            report($e);
+            return response()->json(['error' => 'Error al generar Excel de alertas', 'message' => 'Error al generar Excel de alertas. Intenta de nuevo.'], 500);
         }
     }
 
@@ -57,7 +58,8 @@ class AlertaExportController extends Controller
 
             return $pdf->download("Alertas_{$datos['fecha_inicio']}_al_{$datos['fecha_fin']}.pdf");
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al generar PDF de alertas', 'message' => $e->getMessage()], 500);
+            report($e);
+            return response()->json(['error' => 'Error al generar PDF de alertas', 'message' => 'Error al generar PDF de alertas. Intenta de nuevo.'], 500);
         }
     }
 

@@ -2,9 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -35,7 +33,7 @@ class RoleAndAdminSeeder extends Seeder
         Role::where('name', 'Administrador')->update(['name' => 'Jefe de mina']);
 
         $nombres = [
-            'Jefe de mina', 'SST', 'Mantenimiento',
+            'Superadministrador', 'Jefe de mina', 'SST', 'Mantenimiento',
             'Operario mantenimiento', 'Operario gases',
             'Almacenista', 'Visitante',
         ];
@@ -53,6 +51,7 @@ class RoleAndAdminSeeder extends Seeder
             'inspection.view', 'inspection.create', 'inspection.update', 'inspection.delete',
         ];
 
+        Role::findByName('Superadministrador')->syncPermissions(Permission::all());
         Role::findByName('Jefe de mina')->syncPermissions(Permission::all());
         Role::findByName('SST')->syncPermissions(Permission::all());
 
@@ -92,23 +91,6 @@ class RoleAndAdminSeeder extends Seeder
             }
             $rol->delete();
         }
-
-        // 5) Usuario Jefe de mina. Se busca por dev_letter (es unica).
-        $jefe = User::where('dev_letter', 'A')->first();
-
-        if ($jefe) {
-            $jefe->update(['email' => 'MantiaCM@gmail.com', 'status' => 'approved']);
-        } else {
-            $jefe = User::create([
-                'email' => 'MantiaCM@gmail.com',
-                'name' => 'Administrador Mantia',
-                'password' => Hash::make(env('ADMIN_SEED_PASSWORD', 'Mantita123')),
-                'status' => 'approved',
-                'dev_letter' => 'A',
-            ]);
-        }
-
-        $jefe->syncRoles(['Jefe de mina']);
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }

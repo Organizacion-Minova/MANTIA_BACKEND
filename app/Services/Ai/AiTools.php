@@ -39,9 +39,9 @@ class AiTools
         'equipment_status'         => ['permiso' => 'equipment.view'],
         'recent_inspections'       => ['permiso' => 'inspection.view'],
         'daily_usage'              => ['permiso' => 'daily-use.view'],
-        'general_summary'          => ['roles' => ['Jefe de mina', 'SST']],
-        'catalogs'                 => ['roles' => ['Jefe de mina', 'SST']],
-        'pending_account_requests' => ['roles' => ['Jefe de mina']],
+        'general_summary'          => ['roles' => ['Superadministrador', 'Jefe de mina', 'SST']],
+        'catalogs'                 => ['roles' => ['Superadministrador', 'Jefe de mina', 'SST']],
+        'pending_account_requests' => ['roles' => ['Superadministrador', 'Jefe de mina']],
         // alerts_summary: son las alertas del propio usuario, no necesita regla
     ];
 
@@ -611,7 +611,7 @@ class AiTools
 
     private function esAdmin(?User $usuario): bool
     {
-        return (bool) $usuario?->hasRole('Jefe de mina');
+        return \App\Support\Roles::esAdministrador($usuario);
     }
 
     private function limite(mixed $valor, int $defecto): int

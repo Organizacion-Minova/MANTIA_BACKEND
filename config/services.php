@@ -28,12 +28,29 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+        // Proveedor de la IA: gemini (necesita internet) u ollama (local, sin internet)
+        'ai' => [
+        'provider' => env('AI_PROVIDER', 'gemini'),
+    ],
+
+        'ollama' => [
+        'url' => env('OLLAMA_URL', 'http://127.0.0.1:11434'),
+        'model' => env('OLLAMA_MODEL', 'qwen2.5:3b'),
+        'timeout' => env('OLLAMA_TIMEOUT', 120),
+        'contexto' => env('OLLAMA_CONTEXTO', 8192),
+    ],
+
         'gemini' => [
         'key' => env('GEMINI_API_KEY'),
         'model' => env('GEMINI_MODEL', 'gemini-3.5-flash-lite'),
     ],
-    'turnstile' => [
-        'secret' => env('TURNSTILE_SECRET_KEY'),
+    // Captcha local (funciona sin internet). CAPTCHA_ENABLED=false lo apaga.
+    'captcha' => [
+        'enabled' => env('CAPTCHA_ENABLED', true),
+    ],
+
+    'backups' => [
+        'admin_key' => env('BACKUP_ADMIN_KEY'),
     ],
 
     'slack' => [

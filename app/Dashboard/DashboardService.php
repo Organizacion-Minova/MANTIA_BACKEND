@@ -29,8 +29,8 @@ class DashboardService
         'nonConsumables'           => ['permiso' => 'tool.view'],
         'dailyUsage'               => ['permiso' => 'daily-use.view'],
         'gases'                    => ['permiso' => 'gas-measurements.view'],
-        'locations'                => ['roles' => ['Jefe de mina', 'SST']],
-        'activity'                 => ['roles' => ['Jefe de mina', 'SST']],
+        'locations'                => ['roles' => ['Superadministrador', 'Jefe de mina', 'SST']],
+        'activity'                 => ['roles' => ['Superadministrador', 'Jefe de mina', 'SST']],
     ];
 
     /** Solo las secciones que el usuario actual puede ver. @return array<string, SectionResult> */

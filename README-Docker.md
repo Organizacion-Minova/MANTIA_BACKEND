@@ -15,7 +15,7 @@ git clone URL_DEL_FRONTEND MANTIA_FRONTEND
 1. Copiar .env.example a .env.
 2. Configurar DB_PASSWORD.
 3. Copiar MANTIA_BACKEND/.env.docker.example a MANTIA_BACKEND/.env.docker.
-4. Configurar las variables necesarias y generar APP_KEY.
+4. Configurar las variables necesarias, generar APP_KEY y definir un BACKUP_ADMIN_KEY aleatorio y privado. Se pedirá para las acciones de backup posteriores a la primera copia.
 
 ## Iniciar el proyecto
 

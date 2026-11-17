@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Auth\Events\PasswordReset;
+use App\Support\ReglasUsuario;
 
 class AuthController extends Controller
 {
@@ -26,35 +27,17 @@ class AuthController extends Controller
             ->where('verification_expires_at', '<', now())
             ->delete();
 
+        ReglasUsuario::normalizar($request);
+        $tipo = $request->input('document_type');
+
         $request->validate([
-            'name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email:rfc|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'document_type' => 'required|in:CC,CE,TI,PA',
-            'document_number' => 'required|string|max:20|unique:users',
-        ], [
-            'name.required' => 'El nombre es obligatorio.',
-            'name.string' => 'El nombre debe ser texto.',
-            'name.max' => 'El nombre no puede superar los 255 caracteres.',
-            'last_name.required' => 'El apellido es obligatorio.',
-            'last_name.string' => 'El apellido debe ser texto.',
-            'last_name.max' => 'El apellido no puede superar los 255 caracteres.',
-            'email.required' => 'El correo electrónico es obligatorio.',
-            'email.string' => 'El correo electrónico debe ser texto.',
-            'email.email' => 'El correo electrónico no es válido.',
-            'email.max' => 'El correo electrónico no puede superar los 255 caracteres.',
-            'email.unique' => 'Ya existe una cuenta con este correo electrónico.',
-            'password.required' => 'La contraseña es obligatoria.',
-            'password.string' => 'La contraseña debe ser texto.',
-            'password.min' => 'La contraseña debe tener mínimo 8 caracteres.',
-            'document_type.required' => 'El tipo de documento es obligatorio.',
-            'document_type.in' => 'El tipo de documento seleccionado no es válido.',
-            'document_number.required' => 'El número de documento es obligatorio.',
-            'document_number.string' => 'El número de documento debe ser texto.',
-            'document_number.max' => 'El número de documento no puede superar los 20 caracteres.',
-            'document_number.unique' => 'Ya existe una cuenta con este número de documento.',
-        ]);
+            'name' => ReglasUsuario::nombre(),
+            'last_name' => ReglasUsuario::nombre(),
+            'email' => ReglasUsuario::correo(),
+            'password' => [...ReglasUsuario::contrasena(), 'confirmed'],
+            'document_type' => ReglasUsuario::tipoDocumento(),
+            'document_number' => ReglasUsuario::numeroDocumento(is_string($tipo) ? $tipo : null),
+        ], ReglasUsuario::mensajes(is_string($tipo) ? $tipo : null));
 
         // El rol NUNCA viene del formulario: siempre Visitante.
         $user = User::create([
@@ -86,49 +69,55 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // Enlace del correo: activa la cuenta y avisa al Jefe de mina.
-    public function verifyEmail(Request $request, $id)
-    {
-        $front = rtrim(env('FRONTEND_URL', 'http://localhost:5173'), '/');
-        $user = User::find($id);
+   // Enlace del correo: verifica el correo y avisa al Jefe de mina.
+// La cuenta queda PENDIENTE hasta que un administrador la apruebe.
+public function verifyEmail(Request $request, $id)
+{
+    $front = rtrim(config('app.frontend_url'), '/');
+    $user = User::find($id);
 
-        if (! $user || ! $user->verification_expires_at) {
-            return redirect("{$front}/login?verificado=0");
-        }
-
-        if ($user->verification_expires_at->isPast()) {
-            return redirect("{$front}/login?verificado=expirado");
-        }
-
-        $user->email_verified_at = now();
-        $user->status = 'approved';
-        $user->verification_expires_at = null;
-        $user->save();
-
-        try {
-            $jefes = User::role('Jefe de mina')->get();
-            if ($jefes->isNotEmpty()) {
-                Notification::send($jefes, new NewAccountRequestNotification($user));
-            }
-        } catch (\Throwable $e) {
-            report($e);
-        }
-
-        return redirect("{$front}/login?verificado=1");
+    if (! $user || ! $user->verification_expires_at) {
+        return redirect("{$front}/login?verificado=0");
     }
 
+    if ($user->verification_expires_at->isPast()) {
+        return redirect("{$front}/login?verificado=expirado");
+    }
+
+    $user->email_verified_at = now();
+    // status se queda en 'pending': lo cambia el administrador al aprobar
+    $user->verification_expires_at = null;
+    $user->save();
+
+    try {
+        $jefes = User::role(\App\Support\Roles::ADMINISTRADORES)->get();
+        if ($jefes->isNotEmpty()) {
+            Notification::send($jefes, new NewAccountRequestNotification($user));
+        }
+    } catch (\Throwable $e) {
+        report($e);
+    }
+
+    return redirect("{$front}/login?verificado=1");
+}
     public function login(Request $request)
     {
+        $request->merge(['email' => is_string($request->email) ? mb_strtolower(trim($request->email)) : $request->email]);
+
         $request->validate([
-            'email' => 'required|email:rfc',
-            'password' => 'required',
+            'email' => 'required|string|max:100|email:rfc',
+            'password' => 'required|string|max:64',
         ], [
+            'email.string' => 'El correo electrónico no es válido.',
+            'email.max' => 'El correo electrónico no es válido.',
+            'password.string' => 'La contraseña no es válida.',
+            'password.max' => 'Credenciales inválidas',
             'email.required' => 'El correo electrónico es obligatorio.',
             'email.email' => 'El correo electrónico no es válido.',
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::whereRaw('lower(email) = ?', [$request->email])->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Credenciales inválidas'], 401);
@@ -168,24 +157,28 @@ class AuthController extends Controller
     public function forgotPassword(Request $request)
     {
         // Sin "exists": así nadie puede descubrir qué correos están registrados.
-        $request->validate(['email' => 'required|email:rfc'], [
+        $request->merge(['email' => is_string($request->email) ? mb_strtolower(trim($request->email)) : $request->email]);
+
+        $request->validate(['email' => 'required|string|max:100|email:rfc,strict'], [
             'email.required' => 'El correo electrónico es obligatorio.',
+            'email.string' => 'El correo electrónico no es válido.',
+            'email.max' => 'El correo electrónico no puede superar los 100 caracteres.',
             'email.email' => 'El correo electrónico no es válido.',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::whereRaw('lower(email) = ?', [$request->email])->first();
 
         if ($user) {
             $code = random_int(100000, 999999);
 
             DB::table('password_reset_tokens')->updateOrInsert(
-                ['email' => $request->email],
+                ['email' => $user->email],
                 [
                     'token' => Hash::make((string) $code),
                     'created_at' => now(),
                 ]
             );
-            Cache::forget('reset_intentos:' . $request->email);
+            Cache::forget('reset_intentos:' . $user->email);
 
             try {
                 $user->notify(new ResetCodeNotification($code));
@@ -200,22 +193,31 @@ class AuthController extends Controller
 
     public function resetPassword(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email:rfc',
-            'code' => 'required|string|size:6',
-            'password' => 'required|string|min:8',
-        ], [
-            'email.required' => 'El correo electrónico es obligatorio.',
-            'email.email' => 'El correo electrónico no es válido.',
-            'code.required' => 'El código es obligatorio.',
-            'code.string' => 'El código debe ser texto.',
-            'code.size' => 'El código debe tener exactamente 6 caracteres.',
-            'password.required' => 'La contraseña es obligatoria.',
-            'password.string' => 'La contraseña debe ser texto.',
-            'password.min' => 'La contraseña debe tener mínimo 8 caracteres.',
+        $request->merge([
+            'email' => is_string($request->email) ? mb_strtolower(trim($request->email)) : $request->email,
+            'code' => is_string($request->code) ? trim($request->code) : $request->code,
         ]);
 
-        $email = $request->email;
+        $request->validate([
+            'email' => 'required|string|max:100|email:rfc,strict',
+            'code' => ['required', 'string', 'regex:/^[0-9]{6}$/'],
+            'password' => [...ReglasUsuario::contrasena('La nueva contraseña'), 'confirmed'],
+        ], [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.string' => 'El correo electrónico no es válido.',
+            'email.max' => 'El correo electrónico no puede superar los 100 caracteres.',
+            'email.email' => 'El correo electrónico no es válido.',
+            'code.required' => 'El código es obligatorio.',
+            'code.string' => 'El código no es válido.',
+            'code.regex' => 'El código debe tener exactamente 6 números.',
+            'password.required' => 'La nueva contraseña es obligatoria.',
+            'password.string' => 'La nueva contraseña debe ser texto.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
+        ]);
+
+        // El correo se busca sin importar mayúsculas; el código quedó guardado con el correo real
+        $user = User::whereRaw('lower(email) = ?', [$request->email])->first();
+        $email = $user?->email ?? $request->email;
         $record = DB::table('password_reset_tokens')->where('email', $email)->first();
 
         // El código dura 15 minutos
@@ -243,13 +245,17 @@ class AuthController extends Controller
             return response()->json(['message' => 'El código de recuperación es inválido o ha expirado.'], 400);
         }
 
-        $user = User::where('email', $email)->first();
         if (! $user) {
             return response()->json(['message' => 'El código de recuperación es inválido o ha expirado.'], 400);
         }
 
         $user->password = Hash::make($request->password);
         $user->save();
+
+        // Por seguridad se cierran las sesiones que la cuenta tuviera abiertas en otros equipos
+        if (config('session.driver') === 'database') {
+            DB::table(config('session.table', 'sessions'))->where('user_id', $user->id)->delete();
+        }
 
         DB::table('password_reset_tokens')->where('email', $email)->delete();
         Cache::forget($clave);

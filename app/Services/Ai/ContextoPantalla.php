@@ -45,7 +45,7 @@ class ContextoPantalla
         '/gases/compare_gases' => ['nombre' => 'Comparar mediciones de gases', 'permiso' => 'gas-measurements.view'],
         '/inspection' => ['nombre' => 'Inspecciones', 'permiso' => 'inspection.view'],
         '/alerts' => ['nombre' => 'Alertas'],
-        '/admin' => ['nombre' => 'Panel de administración', 'roles' => ['Jefe de mina']],
+        '/admin' => ['nombre' => 'Panel de administración', 'roles' => ['Superadministrador', 'Jefe de mina']],
         '/help' => ['nombre' => 'Ayuda'],
         '/about' => ['nombre' => 'Acerca de'],
     ];

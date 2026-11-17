@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'last_name', 'email', 'password', 'status', 'is_active', 'dev_letter', 'document_type', 'document_number', 'requested_role', 'technician_type'])]
+#[Fillable(['name', 'last_name', 'email', 'password', 'status', 'is_active', 'document_type', 'document_number'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -35,6 +35,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'verification_expires_at' => 'datetime', // <-- AGREGADO: corrige el error isPast() on string
             'password' => 'hashed',
             'is_active' => 'boolean',
         ];

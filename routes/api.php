@@ -5,18 +5,18 @@
 | Rutas API MANTIA — versión integrada
 |--------------------------------------------------------------------------
 | Integra las rutas del repositorio y de la versión local:
-| - Conserva CompanyController y VerifyTurnstile de la versión local.
+| - Conserva CompanyController. El captcha es LOCAL (VerifyCaptcha), funciona sin internet.
 | - Conserva autenticación, administración, equipos, herramientas, IA,
 |   mediciones, exportaciones y demás rutas compartidas.
 | - Mantiene permisos específicos en inspecciones y límites de solicitudes.
-| - Permite confirmar/cancelar acciones de IA a Administrador y Jefe de mina.
+| - Permite confirmar/cancelar acciones de IA a Jefe de mina y Superadministrador.
+| - Superadministrador: acceso completo, historial con reversión y pruebas automatizadas.
 |--------------------------------------------------------------------------
 */
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DevAuthController;
 use App\Http\Controllers\MachineCategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminApprovalController;
@@ -41,7 +41,8 @@ use App\Http\Controllers\InspectionEquipmentController;
 use App\Http\Controllers\InspectionFormatMachineController;
 use App\Http\Controllers\MachineRecordController;
 use App\Http\Controllers\GasMeasurementExportController;
-use App\Http\Middleware\VerifyTurnstile;
+use App\Http\Middleware\VerifyCaptcha;
+use App\Services\CaptchaLocal;
 use App\Http\Controllers\TechnicalSheetExportController;
 use App\Http\Controllers\DailyUseExportController;
 use App\Http\Controllers\InspectionEquipmentExportController;
@@ -49,15 +50,21 @@ use App\Http\Controllers\ToolsMachineController;
 use App\Http\Controllers\InspectionOverviewController;
 use App\Http\Controllers\InspectionMachineExportController;
 use App\Http\Controllers\PreoperationalMachineExportController;
+use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\TestRunnerController;
 use App\Http\Controllers\AlertaExportController;
 use App\Http\Controllers\LocationInventoryController;
 use App\Http\Controllers\LocationExportController;
 // Auth públicas
-Route::post('/register', [AuthController::class, 'register'])->middleware(['throttle:10,10', VerifyTurnstile::class]);
+// Imagen del captcha local (sin internet). Cada imagen sirve una sola vez y vence en 5 minutos.
+Route::get('/captcha', fn () => response()->json(CaptchaLocal::crear())
+    ->header('Cache-Control', 'no-store'))->middleware('throttle:30,1,captcha');
+
+Route::post('/register', [AuthController::class, 'register'])->middleware(['throttle:10,10,register', VerifyCaptcha::class]);
 Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
-Route::post('/login', [AuthController::class, 'login'])->middleware(['throttle:10,1', VerifyTurnstile::class]);
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware(['throttle:5,10', VerifyTurnstile::class]);
-Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,10');
+Route::post('/login', [AuthController::class, 'login'])->middleware(['throttle:10,1,login', VerifyCaptcha::class]);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware(['throttle:5,10,forgot-password', VerifyCaptcha::class]);
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,10,reset-password');
 
 Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
     Auth::guard('web')->logout();
@@ -67,60 +74,78 @@ Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
     return response()->json(['message' => 'Sesión cerrada']);
 });
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    // Solo cuentan los roles ACTIVOS: un rol desactivado no da permisos
-    $user = $request->user()->load(['roles' => fn ($q) => $q->where('is_active', true)->with('permissions')]);
-
-    $permisos = $user->roles
-        ->flatMap(fn ($rol) => $rol->permissions->pluck('name'))
-        ->merge($user->getDirectPermissions()->pluck('name'))
-        ->unique()
-        ->values();
-
-    $user->roles->each(fn ($rol) => $rol->unsetRelation('permissions'));
-    $user->setAttribute('permission_names', $permisos);
-
-    return $user;
-});
+Route::middleware('auth:sanctum')->get('/user', fn (Request $request) => \App\Support\Roles::usuarioConPermisos($request->user()));
 
 // Perfil propio: datos, foto y contraseña
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile', [ProfileController::class, 'update']);
-    Route::put('/profile/password', [ProfileController::class, 'password'])->middleware('throttle:5,1');
+    Route::put('/profile/password', [ProfileController::class, 'password'])->middleware('throttle:5,1,profile-password');
 });
 
 Route::middleware(['auth:sanctum', 'permission:daily-use.create|daily-use.update|machine.create|machine.update'])
     ->get('/roles-responsables', [RoleManagementController::class, 'responsables']);
 
-Route::middleware(['auth:sanctum', 'role:Jefe de mina'])->group(function () {
+// Sesión actual SIN exigir login: responde 200 con user = null si no hay sesión.
+// La usa el frontend al cargar, así las páginas públicas no muestran un 401 en la consola.
+Route::get('/session', function (Request $request) {
+    $user = Auth::guard('web')->user();
+
+    // Cuenta desactivada o sin roles activos: se cierra la sesión y se responde como "sin sesión"
+    $bloqueada = $user && (
+        in_array($user->status, ['inactive', 'rejected', 'pending'], true)
+        || $user->is_active === false
+        || ($user->roles()->exists() && ! $user->roles()->where('roles.is_active', true)->exists())
+    );
+
+    if ($bloqueada) {
+        Auth::guard('web')->logout();
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+        $user = null;
+    }
+
+    return response()->json(['user' => $user ? \App\Support\Roles::usuarioConPermisos($user) : null]);
+})->middleware('throttle:120,1,session');
+
+// Panel de administración: Jefe de mina y Superadministrador
+Route::middleware(['auth:sanctum', 'role:Jefe de mina|Superadministrador'])->group(function () {
     Route::get('/admin/requests', [AdminApprovalController::class, 'pendingRequests']);
-    Route::post('/admin/approve/{id}', [AdminApprovalController::class, 'approve']);
-    Route::post('/admin/reject/{id}', [AdminApprovalController::class, 'reject']);
+    Route::post('/admin/approve/{id}', [AdminApprovalController::class, 'approve'])->whereNumber('id');
+    Route::post('/admin/reject/{id}', [AdminApprovalController::class, 'reject'])->whereNumber('id');
 
     Route::get('/admin/users', [UserManagementController::class, 'index']);
-    Route::put('/admin/users/{id}/toggle-active', [UserManagementController::class, 'toggleActive']);
-    Route::put('/admin/users/{id}/password', [UserManagementController::class, 'resetPassword']);
-    Route::put('/admin/users/{id}/role', [UserManagementController::class, 'changeRole']);
+    Route::post('/admin/users', [UserManagementController::class, 'store'])->middleware('throttle:20,1,admin-users');
+    Route::put('/admin/users/{id}/toggle-active', [UserManagementController::class, 'toggleActive'])->whereNumber('id');
+    Route::put('/admin/users/{id}/password', [UserManagementController::class, 'resetPassword'])->whereNumber('id')->middleware('throttle:10,1,admin-users-id-password');
+    Route::put('/admin/users/{id}/role', [UserManagementController::class, 'changeRole'])->whereNumber('id');
 
     Route::get('/admin/roles', [RoleManagementController::class, 'index']);
     Route::post('/admin/roles', [RoleManagementController::class, 'store']);
-    Route::put('/admin/roles/{id}', [RoleManagementController::class, 'update']);
-    Route::put('/admin/roles/{id}/toggle-active', [RoleManagementController::class, 'toggleActive']);
-    Route::delete('/admin/roles/{id}', [RoleManagementController::class, 'destroy']);
-
-    Route::get('/admin/backups/options', [BackupController::class, 'options']);
-    Route::get('/admin/backups', [BackupController::class, 'index']);
-    Route::post('/admin/backups', [BackupController::class, 'store']);
-    // Descargar, restaurar y eliminar piden la contraseña del usuario (por eso son POST/DELETE con body)
-    Route::post('/admin/backups/{archivo}/download', [BackupController::class, 'download'])->middleware('throttle:6,1');
-    Route::post('/admin/backups/{archivo}/restore', [BackupController::class, 'restore'])->middleware('throttle:6,1');
+    Route::put('/admin/roles/{id}', [RoleManagementController::class, 'update'])->whereNumber('id');
+    Route::put('/admin/roles/{id}/toggle-active', [RoleManagementController::class, 'toggleActive'])->whereNumber('id');
+    Route::delete('/admin/roles/{id}', [RoleManagementController::class, 'destroy'])->whereNumber('id');
     Route::get('/admin/permissions', [RoleManagementController::class, 'permissionsDisponibles']);
-    Route::delete('/admin/backups/{archivo}', [BackupController::class, 'destroy'])->middleware('throttle:6,1');
+
+    // Copias de seguridad generales: la primera copia confirma la contraseña; las siguientes acciones usan BACKUP_ADMIN_KEY.
+    Route::get('/admin/backups', [BackupController::class, 'index']);
+    Route::post('/admin/backups', [BackupController::class, 'store'])->middleware('throttle:6,1,admin-backups');
+    Route::post('/admin/backups/{archivo}/download', [BackupController::class, 'download'])->middleware('throttle:6,1,admin-backups-archivo-download');
+    Route::post('/admin/backups/{archivo}/restore', [BackupController::class, 'restore'])->middleware('throttle:6,1,admin-backups-archivo-restore');
+    Route::delete('/admin/backups/{archivo}', [BackupController::class, 'destroy'])->middleware('throttle:6,1,admin-backups-archivo');
+
+    // Historial de cambios (el Jefe de mina no ve lo del Superadministrador ni de los Visitantes)
+    Route::get('/admin/activity', [ActivityLogController::class, 'index']);
+    Route::get('/admin/activity/{id}', [ActivityLogController::class, 'show'])->whereNumber('id');
 });
 
-if (app()->environment('local')) {
-    Route::post('/dev-login/{letra}', [DevAuthController::class, 'quickLogin']);
-}
+// Solo el Superadministrador
+Route::middleware(['auth:sanctum', 'role:Superadministrador'])->group(function () {
+    Route::post('/admin/activity/{id}/revert', [ActivityLogController::class, 'revert'])->whereNumber('id')->middleware('throttle:10,1,admin-activity-id-revert');
+    Route::get('/admin/tests', [TestRunnerController::class, 'show']);
+    Route::post('/admin/tests/run', [TestRunnerController::class, 'run'])->middleware('throttle:3,1,admin-tests-run');
+});
 
 Route::middleware(['auth:sanctum', 'permission:machine-category.view'])->get('/machine-categories', [MachineCategoryController::class, 'index']);
 Route::middleware(['auth:sanctum', 'permission:machine-category.create'])->post('/machine-categories', [MachineCategoryController::class, 'store']);
@@ -200,7 +225,10 @@ Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('/machine-op
 
 Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('consumable-tools', [ToolsMachineController::class, 'catalog']);
 
-Route::middleware(['auth:sanctum', 'permission:machine.view'])->apiResource('machine-tools', ToolsMachineController::class)->except(['show']);
+Route::middleware(['auth:sanctum', 'permission:machine.view'])->get('machine-tools', [ToolsMachineController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:machine.update'])->post('machine-tools', [ToolsMachineController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:machine.update'])->put('machine-tools/{machine_tool}', [ToolsMachineController::class, 'update']);
+Route::middleware(['auth:sanctum', 'permission:machine.update'])->delete('machine-tools/{machine_tool}', [ToolsMachineController::class, 'destroy']);
 
 # Medición de gases
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements', [GasMeasurementController::class, 'index']);
@@ -218,10 +246,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notificaciones/{id}/leer', [NotificacionController::class, 'leer']);
 });
 // Asistente de IA (MANTIA IA): solo usuarios autenticados, máx. 20 mensajes por minuto
-Route::middleware(['auth:sanctum', 'throttle:20,1'])->post('/ai/chat', [AiController::class, 'chat']);
+Route::middleware(['auth:sanctum', 'throttle:20,1,ai-chat'])->post('/ai/chat', [AiController::class, 'chat']);
 
-// Botones "Confirmar" / "Cancelar" de las acciones que propone MANTIA IA: solo el Jefe de mina
-Route::middleware(['auth:sanctum', 'role:Administrador|Jefe de mina', 'throttle:10,1'])->group(function () {
+// Botones "Confirmar" / "Cancelar" de las acciones que propone MANTIA IA: Jefe de mina y Superadministrador
+Route::middleware(['auth:sanctum', 'role:Jefe de mina|Superadministrador', 'throttle:10,1,ai-acciones'])->group(function () {
     Route::post('/ai/acciones/{id}/confirmar', [AiActionController::class, 'confirmar']);
     Route::post('/ai/acciones/{id}/cancelar', [AiActionController::class, 'cancelar']);
 });
@@ -245,47 +273,47 @@ Route::middleware(['auth:sanctum', 'permission:daily-use.update'])->put('/dailyu
 
 # Formato inspeccion equipos
 
-Route::middleware(['auth:sanctum'])->get('/inspection-formats-equipment', [InspectionFormatEquipmentController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-formats-equipment', [InspectionFormatEquipmentController::class, 'index']);
 
-Route::middleware(['auth:sanctum'])->get('/inspection-formats-equipment/{id}', [InspectionFormatEquipmentController::class, 'show']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-formats-equipment/{id}', [InspectionFormatEquipmentController::class, 'show']);
 
-Route::middleware(['auth:sanctum'])->post('/inspection-formats-equipment', [InspectionFormatEquipmentController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:inspection.update'])->post('/inspection-formats-equipment', [InspectionFormatEquipmentController::class, 'store']);
 
-Route::middleware(['auth:sanctum'])->put('/inspection-formats-equipment/{id}', [InspectionFormatEquipmentController::class, 'update']);
+Route::middleware(['auth:sanctum', 'permission:inspection.update'])->put('/inspection-formats-equipment/{id}', [InspectionFormatEquipmentController::class, 'update']);
 
-Route::middleware(['auth:sanctum'])->get('/equipment/{id}/inspection-format', [InspectionFormatEquipmentController::class, 'byEquipment']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment/{id}/inspection-format', [InspectionFormatEquipmentController::class, 'byEquipment']);
 
-Route::middleware(['auth:sanctum'])->get('/equipment/{id}/has-inspection-format', [InspectionFormatEquipmentController::class, 'hasFormat']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment/{id}/has-inspection-format', [InspectionFormatEquipmentController::class, 'hasFormat']);
 
-Route::middleware(['auth:sanctum'])->get('/equipment/{id}/inspections', [InspectionEquipmentController::class, 'indexByEquipment']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment/{id}/inspections', [InspectionEquipmentController::class, 'indexByEquipment']);
 
-Route::middleware(['auth:sanctum'])->get('/inspection-formats/{id}/week', [InspectionEquipmentController::class, 'week']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-formats/{id}/week', [InspectionEquipmentController::class, 'week']);
 
-Route::middleware(['auth:sanctum'])->get('/inspections/{id}', [InspectionEquipmentController::class, 'show']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspections/{id}', [InspectionEquipmentController::class, 'show']);
 
-Route::middleware(['auth:sanctum'])->post('/inspections', [InspectionEquipmentController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/inspections', [InspectionEquipmentController::class, 'store']);
 
 # Formato inspeccion y preoperacional maquinas
 
-Route::middleware(['auth:sanctum'])->get('/machines/{id}/inspection-format', [InspectionFormatMachineController::class, 'byMachine']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view|daily-use.view'])->get('/machines/{id}/inspection-format', [InspectionFormatMachineController::class, 'byMachine']);
 
-Route::middleware(['auth:sanctum'])->post('/inspection-formats-machine', [InspectionFormatMachineController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:inspection.update'])->post('/inspection-formats-machine', [InspectionFormatMachineController::class, 'store']);
 
-Route::middleware(['auth:sanctum'])->put('/inspection-formats-machine/{id}', [InspectionFormatMachineController::class, 'update']);
+Route::middleware(['auth:sanctum', 'permission:inspection.update'])->put('/inspection-formats-machine/{id}', [InspectionFormatMachineController::class, 'update']);
 
-Route::middleware(['auth:sanctum'])->get('/machines/{id}/records/{kind}', [MachineRecordController::class, 'index']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/machines/{id}/records/{kind}', [MachineRecordController::class, 'index']);
 
-Route::middleware(['auth:sanctum'])->get('/machines/{id}/records/{kind}/period', [MachineRecordController::class, 'period']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/machines/{id}/records/{kind}/period', [MachineRecordController::class, 'period']);
 
-Route::middleware(['auth:sanctum'])->get('/machine-records/{kind}/{id}', [MachineRecordController::class, 'show']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/machine-records/{kind}/{id}', [MachineRecordController::class, 'show']);
 
-Route::middleware(['auth:sanctum'])->post('/machine-records/{kind}', [MachineRecordController::class, 'store']);
+Route::middleware(['auth:sanctum', 'permission:inspection.create'])->post('/machine-records/{kind}', [MachineRecordController::class, 'store']);
 
 # Vista general de inspecciones: equipos y máquinas
 
-Route::middleware(['auth:sanctum'])->get('/inspection-overview/equipment', [InspectionOverviewController::class, 'equipment']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-overview/equipment', [InspectionOverviewController::class, 'equipment']);
 
-Route::middleware(['auth:sanctum'])->get('/inspection-overview/machines', [InspectionOverviewController::class, 'machines']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-overview/machines', [InspectionOverviewController::class, 'machines']);
 
 # Exportaciones unitarias Medición de gases
 Route::middleware(['auth:sanctum', 'permission:gas-measurements.view'])->get('/gas-measurements/{id}/export/excel', [GasMeasurementExportController::class, 'unitaryGasExcel']);
@@ -308,25 +336,25 @@ Route::middleware(['auth:sanctum', 'permission:daily-use.view'])->get('/dailyuse
 Route::middleware(['auth:sanctum', 'permission:daily-use.view'])->get('/dailyuse/{id}/export/pdf', [DailyUseExportController::class, 'dailyUsePdf']);
 
 # Exportaciones unitarias para Inspección de equipos
-Route::middleware(['auth:sanctum'])->get('/inspection-equipment/{id}/export/excel', [InspectionEquipmentExportController::class, 'inspectionEquipmentExcel']);
-Route::middleware(['auth:sanctum'])->get('/inspection-equipment/{id}/export/pdf', [InspectionEquipmentExportController::class, 'inspectionEquipmentPdf']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-equipment/{id}/export/excel', [InspectionEquipmentExportController::class, 'inspectionEquipmentExcel']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-equipment/{id}/export/pdf', [InspectionEquipmentExportController::class, 'inspectionEquipmentPdf']);
 
 # Exportaciones por rango de fechas para Inspección de equipos
-Route::middleware(['auth:sanctum'])->get('/equipment/{equipmentId}/inspection-equipment/export/range/excel', [InspectionEquipmentExportController::class, 'rangeInspectionEquipmentExcel']);
-Route::middleware(['auth:sanctum'])->get('/equipment/{equipmentId}/inspection-equipment/export/range/pdf', [InspectionEquipmentExportController::class, 'rangeInspectionEquipmentPdf']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment/{equipmentId}/inspection-equipment/export/range/excel', [InspectionEquipmentExportController::class, 'rangeInspectionEquipmentExcel']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/equipment/{equipmentId}/inspection-equipment/export/range/pdf', [InspectionEquipmentExportController::class, 'rangeInspectionEquipmentPdf']);
 
 # Exportaciones unitarias para Inspección de máquinas
-Route::middleware(['auth:sanctum'])->get('/inspection-machine/{id}/export/excel', [InspectionMachineExportController::class, 'inspectionMachineExcel']);
-Route::middleware(['auth:sanctum'])->get('/inspection-machine/{id}/export/pdf', [InspectionMachineExportController::class, 'inspectionMachinePdf']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-machine/{id}/export/excel', [InspectionMachineExportController::class, 'inspectionMachineExcel']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/inspection-machine/{id}/export/pdf', [InspectionMachineExportController::class, 'inspectionMachinePdf']);
 
 # Exportaciones por rango de fechas para Inspección de máquinas
-Route::middleware(['auth:sanctum'])->get('/machines/{machineId}/inspection-machine/export/range/excel', [InspectionMachineExportController::class, 'rangeInspectionMachineExcel']);
-Route::middleware(['auth:sanctum'])->get('/machines/{machineId}/inspection-machine/export/range/pdf', [InspectionMachineExportController::class, 'rangeInspectionMachinePdf']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/machines/{machineId}/inspection-machine/export/range/excel', [InspectionMachineExportController::class, 'rangeInspectionMachineExcel']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/machines/{machineId}/inspection-machine/export/range/pdf', [InspectionMachineExportController::class, 'rangeInspectionMachinePdf']);
 
 # Exportaciones unitarias para Preoperacional de máquinas
-Route::middleware(['auth:sanctum'])->get('/preoperational-machine/{id}/export/excel', [PreoperationalMachineExportController::class, 'preoperationalMachineExcel']);
-Route::middleware(['auth:sanctum'])->get('/preoperational-machine/{id}/export/pdf', [PreoperationalMachineExportController::class, 'preoperationalMachinePdf']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/preoperational-machine/{id}/export/excel', [PreoperationalMachineExportController::class, 'preoperationalMachineExcel']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/preoperational-machine/{id}/export/pdf', [PreoperationalMachineExportController::class, 'preoperationalMachinePdf']);
 
 # Exportaciones por rango de fechas para Preoperacional de máquinas
-Route::middleware(['auth:sanctum'])->get('/machines/{machineId}/preoperational-machine/export/range/excel', [PreoperationalMachineExportController::class, 'rangePreoperationalMachineExcel']);
-Route::middleware(['auth:sanctum'])->get('/machines/{machineId}/preoperational-machine/export/range/pdf', [PreoperationalMachineExportController::class, 'rangePreoperationalMachinePdf']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/machines/{machineId}/preoperational-machine/export/range/excel', [PreoperationalMachineExportController::class, 'rangePreoperationalMachineExcel']);
+Route::middleware(['auth:sanctum', 'permission:inspection.view'])->get('/machines/{machineId}/preoperational-machine/export/range/pdf', [PreoperationalMachineExportController::class, 'rangePreoperationalMachinePdf']);
