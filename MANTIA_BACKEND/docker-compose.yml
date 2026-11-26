@@ -1,0 +1,93 @@
+# MANTIA con Docker. Se ejecuta DESDE ESTA CARPETA (MANTIA_BACKEND):
+#   docker compose up --build -d
+# Las carpetas MANTIA_BACKEND y MANTIA_FRONTEND deben estar una al lado de la otra.
+# Toda la configuración está en .env.docker (cópialo de .env.docker.example).
+name: mantia
+
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: mantia-backend
+  restart: unless-stopped
+  working_dir: /var/www/html
+  env_file:
+    - .env.docker
+  volumes:
+    # Fotos, firmas, backups y resultados de pruebas: no se pierden al reconstruir
+    - mantia_storage:/var/www/html/storage/app
+  extra_hosts:
+    # Para llegar a Ollama instalado en el PC (IA local): http://host.docker.internal:11434
+    - "host.docker.internal:host-gateway"
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:18
+    container_name: mantia_db
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "5433:5432"
+    volumes:
+      - mantia_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    <<: *backend
+    container_name: mantia_backend
+    environment:
+      # Solo este contenedor corre las migraciones al iniciar
+      RUN_MIGRATIONS: "true"
+      # Atiende varias peticiones a la vez (si no, la página se siente lenta)
+      PHP_CLI_SERVER_WORKERS: "4"
+    ports:
+      - "8000:8000"
+
+  # Envía los correos que quedan en cola (código de recuperación, cuenta aprobada...)
+  worker:
+    <<: *backend
+    container_name: mantia_worker
+    command: ["php", "artisan", "queue:work", "--tries=3", "--sleep=3"]
+
+  # Tareas programadas (recordatorios de medición de gases)
+  scheduler:
+    <<: *backend
+    container_name: mantia_scheduler
+    command: ["php", "artisan", "schedule:work"]
+
+  # Bandeja de correo local (sin internet): http://localhost:8025
+  mailpit:
+    image: axllent/mailpit
+    container_name: mantia_mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  frontend:
+    build:
+      context: ../MANTIA_FRONTEND
+      dockerfile: Dockerfile
+    image: mantia-frontend
+    container_name: mantia_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  # Se mantiene el nombre del volumen que ya existe en el PC del líder (no se pierden datos).
+  # En los demás PCs Docker lo crea solo.
+  mantia_postgres_data:
+    name: proyectos_mantia_postgres_data
+  mantia_storage:
+    name: mantia_storage
