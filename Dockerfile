@@ -26,7 +26,6 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copiar dependencias de Composer
 # Copiar el proyecto completo
 COPY . .
 
@@ -43,6 +42,12 @@ RUN mkdir -p storage/framework/cache \
     bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
+# Script de inicio: revisa APP_KEY y aplica migraciones.
+# sed quita los saltos de línea de Windows por si Git los convirtió.
+COPY docker/entrypoint.sh /usr/local/bin/mantia-entrypoint
+RUN sed -i 's/\r$//' /usr/local/bin/mantia-entrypoint && chmod +x /usr/local/bin/mantia-entrypoint
+
 EXPOSE 8000
 
+ENTRYPOINT ["mantia-entrypoint"]
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
